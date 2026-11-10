@@ -1,0 +1,5 @@
+# Packages GPT Researcher needs on B3OS beyond requirements.txt. A build lockfile in b3os.yaml.
+# The firecrawl scraper (SCRAPER=firecrawl) imports firecrawl-py and would pip-install it at run time otherwise,
+# which the service's egress refuses. gpt_researcher/scraper/firecrawl/firecrawl.py calls FirecrawlApp.scrape(),
+# the v4.6.0+ API.
+firecrawl-py>=4.6.0,<5

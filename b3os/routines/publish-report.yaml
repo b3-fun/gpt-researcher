@@ -1,0 +1,47 @@
+name: publish-report
+description: Screenshot a finished GPT Researcher report and post it to Slack with a link to the report.
+# Started by backend/server/b3os_publish.py after each report (POST /v1/routines/publish-report/runs).
+# The service sends the report as HTML: render draws it with no network access, so the screenshot does not depend on
+# the preview URL being reachable from render, and the Slack message links to the report on the preview URL.
+inputs:
+  type: object
+  additionalProperties: false
+  required: [research_id, task, html]
+  properties:
+    research_id: { type: string, minLength: 1, maxLength: 200 }
+    task: { type: string, maxLength: 1000 }
+    html: { type: string, minLength: 1, maxLength: 4194304 }
+    report_url: { type: string, maxLength: 4096, default: "" }
+    channel: { type: string, default: "C0000000000" } # placeholder: the Slack channel id
+defaults:
+  timeout_ms: 120000
+steps:
+  - id: shot
+    name: Screenshot the report
+    uses: render/screenshot@1
+    with:
+      html: ${{ inputs.html }}
+      viewport: { width: 1440, height: 900 }
+  - id: post
+    name: Post to Slack
+    uses: io.b3os/slack/send-message@1
+    # The token key is not bound here, so the step uses the project's newest io.b3os/slack connection without a
+    # subject: the one b3os.yaml names (slack-bot, a placeholder label).
+    with:
+      channel: ${{ inputs.channel }}
+      text: "Research report: ${{ inputs.task }}"
+      blocks:
+        - type: section
+          text:
+            type: mrkdwn
+            text: "${{ inputs.report_url != '' ? format('*<{0}|{1}>*', inputs.report_url, inputs.task) : format('*{0}*', inputs.task) }}"
+        - type: image
+          image_url: ${{ steps.shot.outputs.artifacts[0].url }}
+          alt_text: "Screenshot of the report"
+        - type: context
+          elements:
+            - type: mrkdwn
+              text: "GPT Researcher on B3OS, report ${{ inputs.research_id }}"
+output:
+  screenshot: ${{ steps.shot.outputs.artifacts[0].url }}
+  message_ts: ${{ steps.post.outputs.data.ret.ts }}
