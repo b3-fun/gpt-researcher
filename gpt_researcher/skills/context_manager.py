@@ -144,6 +144,9 @@ class ContextManager:
                 self.researcher.websocket,
             )
 
+        # CONTEXT_FILTER=keyword or none calls no embedding model, here as in context/select.py.
+        if str(getattr(self.researcher.cfg, "context_filter", "") or "").strip().lower() in ("keyword", "none"):
+            return rank_written_sections(query, written_contents, max_results=max_results)
         try:
             embeddings = self.researcher.memory.get_embeddings()
         except Exception as e:
