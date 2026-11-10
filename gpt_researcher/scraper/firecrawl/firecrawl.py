@@ -89,7 +89,9 @@ class FireCrawl:
 
         try:
             # Fixed: Changed from scrape_url() to scrape() to match FireCrawl SDK v4.6.0+
-            response = self.firecrawl.scrape(url=self.link, formats=["markdown"])
+            # No options: Markdown is the default format. Any option makes firecrawl-py 4.x add its defaults,
+            # fastMode among them, which B3OS's Firecrawl compat layer refuses (400 unrecognized_keys).
+            response = self.firecrawl.scrape(url=self.link)
 
             # Check if the page has been scraped successfully
             # Fixed: Access metadata attributes directly (not as dict keys)
