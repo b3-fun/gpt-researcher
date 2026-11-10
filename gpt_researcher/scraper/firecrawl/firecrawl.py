@@ -1,5 +1,6 @@
 import asyncio
 import os
+from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
 
@@ -19,6 +20,26 @@ def _get_semaphore() -> asyncio.Semaphore:
     return _semaphore
 
 
+def _keep_base_path(app, api_url: str) -> None:
+    """firecrawl-py 4.x joins "/v2/scrape" onto api_url with urljoin, which drops a base path such as
+    /compat/firecrawl (B3OS's Firecrawl compat layer) and sends the request to the host's /v2/scrape.
+    When api_url has a path, append the endpoint to the whole base instead."""
+    base = api_url.rstrip("/")
+    if not urlparse(base).path:
+        return
+    http = getattr(getattr(app, "_v2_client", None), "http_client", None)
+    original = getattr(http, "_build_url", None)
+    if original is None:
+        return
+
+    def build(endpoint: str) -> str:
+        if endpoint.startswith("/") and not urlparse(endpoint).netloc:
+            return base + endpoint
+        return original(endpoint)
+
+    http._build_url = build
+
+
 class FireCrawl:
 
     def __init__(self, link, session=None):
@@ -26,6 +47,7 @@ class FireCrawl:
         self.session = session
         from firecrawl import FirecrawlApp
         self.firecrawl = FirecrawlApp(api_key=self.get_api_key(), api_url=self.get_server_url())
+        _keep_base_path(self.firecrawl, self.get_server_url())
 
     def get_api_key(self) -> str:
         """
