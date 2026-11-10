@@ -19,6 +19,12 @@ Operators who intentionally scrape internal or self-hosted resources can opt out
 of the private-address check by setting the environment variable
 ``ALLOW_PRIVATE_URLS=true`` (or by passing ``allow_private=True``).
 
+Where the process has no DNS for the internet and pages are fetched by a remote
+scraping service (``SCRAPER=firecrawl`` in a sandbox whose only network is that
+service), every public host fails to resolve here. ``ALLOW_UNRESOLVED_URLS=true``
+lets a host that does not resolve through; a host that does resolve is still
+checked, and IP literals and ``localhost`` are still blocked.
+
 Note: resolving the host here and letting the HTTP client re-resolve it later
 leaves a small TOCTOU/DNS-rebinding window. Closing it fully requires pinning the
 validated IP into the connection; this guard is intended as defence-in-depth that
@@ -43,6 +49,18 @@ class UnsafeURLError(ValueError):
 
 def _private_urls_allowed() -> bool:
     return os.getenv("ALLOW_PRIVATE_URLS", "").strip().lower() in _TRUTHY
+
+
+def _unresolved_urls_allowed() -> bool:
+    return os.getenv("ALLOW_UNRESOLVED_URLS", "").strip().lower() in _TRUTHY
+
+
+def _is_ip_literal(host: str) -> bool:
+    try:
+        ipaddress.ip_address(host)
+        return True
+    except ValueError:
+        return False
 
 
 def _is_disallowed_ip(ip) -> bool:
@@ -97,6 +115,8 @@ def validate_url(url: str, *, allow_private: bool | None = None) -> str:
     try:
         addrinfo = socket.getaddrinfo(host, None)
     except socket.gaierror as exc:
+        if _unresolved_urls_allowed() and not _is_ip_literal(host):
+            return url
         raise UnsafeURLError(f"Could not resolve host {host!r}: {exc}") from exc
 
     for info in addrinfo:

@@ -59,6 +59,10 @@ services:
       CRW_API_KEY: in-sandbox
       MAX_SEARCH_RESULTS_PER_QUERY: "5"
       SCRAPER: firecrawl
+      # The sandbox has no DNS for the internet: pages are fetched by B3OS vision, so GPT Researcher's SSRF check
+      # would skip every URL as "Could not resolve host". This lets an unresolved host through; IP literals,
+      # localhost and hosts that resolve to private addresses stay blocked (gpt_researcher/utils/url_security.py).
+      ALLOW_UNRESOLVED_URLS: "true"
       FIRECRAWL_SERVER_URL: http://127.0.0.1:7700/compat/firecrawl
       FIRECRAWL_API_KEY: in-sandbox
       FIRECRAWL_CONCURRENCY: "4"

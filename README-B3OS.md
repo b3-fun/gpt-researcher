@@ -38,6 +38,7 @@ Upstream files changed (every line, with its reason):
 | `backend/server/app.py` | 336, 354 | `write_report` takes `base_url` and calls `publish_report` after the DOCX and PDF are written | the same for `POST /report/` |
 | `backend/server/app.py` | 376, 378, 381, 385 | `generate_report` takes the `Request`, reads its base URL and passes it on | the report link needs the preview URL, which only the request's `X-Forwarded-*` headers carry |
 | `gpt_researcher/skills/context_manager.py` | 147-149 | with `CONTEXT_FILTER` `keyword` or `none`, rank written sections by keywords instead of embeddings | the detailed report called an embedding model here whatever `CONTEXT_FILTER` said; B3OS answers `404 model_not_available` for embeddings, which failed the report |
+| `gpt_researcher/utils/url_security.py` | 20-24, 54-63, 118 | `ALLOW_UNRESOLVED_URLS=true` lets a host that does not resolve past the SSRF check; IP literals and hosts that resolve to private addresses stay blocked | the sandbox has no DNS for the internet (vision fetches the pages), so every URL was skipped as "Could not resolve host" and the first report on B3OS had no sources |
 | `.env.example` | renamed `env.example` | content unchanged | B3OS refuses to deploy a service root that tracks a file whose name starts with `.env`, and the GitHub App path has no `--allow-secret-files`. Copy `env.example` to `.env` for a local run, as upstream's README says for `.env.example` |
 
 Checked and left alone: the download links the report message carries (`outputs/<name>.pdf`, `.docx`, `.md`,
@@ -140,8 +141,9 @@ Anthropic) needs a vault connection as a secret and `api.anthropic.com` in egres
   and JSON work. The multi-agent report's PDF step fails the same way.
 - **Synchronous `POST /report/` over 65 seconds.** With `generate_in_background: false` the request answers only
   when the research ends, and the preview drops any response that has not started within 65 s. Use the page (its
-  WebSocket may stay open for an hour), or `generate_in_background: true` (the default) and then
-  `GET /api/reports/{id}`.
+  WebSocket may stay open for an hour), or `generate_in_background: true` (the default). Upstream's background
+  path does not save the report in the report store, so `GET /api/reports/{id}` answers 404 for it; the result is
+  the Word file at `outputs/<research_id>.docx` (also `GET /report/<research_id>`).
 - **Reports lost at redeploy.** `outputs/` and `data/reports.json` live on the sandbox's disk. Each deploy, rollback
   and recreate is a new sandbox, so earlier reports, their download links and the page's server-side history are
   gone (the page's own history in the browser keeps links that then 404). The URL changes too: each generation has

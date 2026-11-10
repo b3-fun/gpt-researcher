@@ -90,3 +90,29 @@ def test_allow_private_env_var_bypasses_check(monkeypatch):
     assert is_safe_url("http://192.168.0.10/") is True
     monkeypatch.setenv("ALLOW_PRIVATE_URLS", "false")
     assert is_safe_url("http://192.168.0.10/") is False
+
+
+# --- Hosts that do not resolve here (a sandbox that scrapes through a remote service)
+
+def _no_dns(*args, **kwargs):
+    raise socket.gaierror(-3, "Temporary failure in name resolution")
+
+
+def test_unresolved_host_rejected_by_default(monkeypatch):
+    monkeypatch.delenv("ALLOW_UNRESOLVED_URLS", raising=False)
+    monkeypatch.setattr(socket, "getaddrinfo", _no_dns)
+    with pytest.raises(UnsafeURLError):
+        validate_url("https://example.com/page")
+
+
+def test_unresolved_host_allowed_with_env_var(monkeypatch):
+    monkeypatch.setenv("ALLOW_UNRESOLVED_URLS", "true")
+    monkeypatch.setattr(socket, "getaddrinfo", _no_dns)
+    assert validate_url("https://example.com/page") == "https://example.com/page"
+
+
+def test_unresolved_opt_in_still_blocks_internal_addresses(monkeypatch):
+    monkeypatch.setenv("ALLOW_UNRESOLVED_URLS", "true")
+    for url in ("http://127.0.0.1:7700/v1/infer", "http://169.254.169.254/", "http://[::1]/", "http://localhost/"):
+        with pytest.raises(UnsafeURLError):
+            validate_url(url)
