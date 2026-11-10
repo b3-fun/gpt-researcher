@@ -25,6 +25,7 @@ import logging
 import hashlib
 
 from .multi_agent_runner import run_multi_agent_task
+from .b3os_publish import public_base, publish_report
 
 # Import chat agent
 try:
@@ -184,6 +185,7 @@ async def handle_start_command(websocket, data: str, manager):
     # Add JSON log path to file_paths
     file_paths["json"] = os.path.relpath(logs_handler.log_file)
     await send_file_paths(websocket, file_paths)
+    await publish_report(sanitized_filename, task, report, file_paths.get("md", ""), public_base(websocket.headers))
 
 
 async def handle_human_feedback(data: str):

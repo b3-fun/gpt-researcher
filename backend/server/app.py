@@ -35,6 +35,7 @@ from gpt_researcher.utils.enum import Tone
 from chat.chat import ChatAgentWithMemory
 
 from server.report_store import ReportStore
+from server.b3os_publish import public_base, publish_report
 
 # MongoDB services removed - no database persistence needed
 
@@ -332,7 +333,7 @@ async def research_report_chat(research_id: str, request: Request):
 
 
 
-async def write_report(research_request: ResearchRequest, research_id: str = None):
+async def write_report(research_request: ResearchRequest, research_id: str = None, base_url: str = ""):
     report_information = await run_agent(
         task=research_request.task,
         report_type=research_request.report_type,
@@ -350,6 +351,7 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
 
     docx_path = await write_md_to_word(report_information[0], research_id)
     pdf_path = await write_md_to_pdf(report_information[0], research_id)
+    await publish_report(research_id, research_request.task, report_information[0], docx_path, base_url)
     if research_request.report_type != "multi_agents":
         report, researcher = report_information
         response = {
@@ -371,15 +373,16 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
     return response
 
 @app.post("/report/")
-async def generate_report(research_request: ResearchRequest, background_tasks: BackgroundTasks):
+async def generate_report(research_request: ResearchRequest, background_tasks: BackgroundTasks, request: Request):
     research_id = sanitize_filename(f"task_{int(time.time())}_{research_request.task}")
+    base_url = public_base(request.headers)
 
     if research_request.generate_in_background:
-        background_tasks.add_task(write_report, research_request=research_request, research_id=research_id)
+        background_tasks.add_task(write_report, research_request=research_request, research_id=research_id, base_url=base_url)
         return {"message": "Your report is being generated in the background. Please check back later.",
                 "research_id": research_id}
     else:
-        response = await write_report(research_request, research_id)
+        response = await write_report(research_request, research_id, base_url)
         return response
 
 
