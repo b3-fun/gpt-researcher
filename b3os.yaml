@@ -2,11 +2,14 @@
 #
 # One service: GPT Researcher's FastAPI server (the web page, the REST API and the WebSocket stream) in a B3OS
 # sandbox. Its model, its web search and its page reads all go through B3OS at http://127.0.0.1:7700, with no key in
-# the sandbox. After each report a routine screenshots the report and posts it to Slack.
+# the sandbox.
+#
+# The Slack publish is off here. b3os.slack.yaml is this file plus the publish routine (a screenshot of each report,
+# posted to Slack), the Slack pack and its connection, and the hook's switch B3OS_PUBLISH=on: once the connection
+# slack-bot is stored and SLACK_CHANNEL is set there, deploy it with `b3os apply -f b3os.slack.yaml`.
 version: 1
 name: gpt-researcher
-description: GPT Researcher on the node's model, searching and reading with B3OS vision, and posting each report to
-  Slack with a screenshot through a routine.
+description: GPT Researcher on the node's model, searching and reading with B3OS vision.
 
 # The node's model, for all three of GPT Researcher's roles (fast, smart, strategic).
 infer:
@@ -14,17 +17,6 @@ infer:
     - id: b3os/default
       kind: chat
       min_context_tokens: 32768
-
-# Slack, through a connection stored in B3OS once (`b3os connect io.b3os/slack --label slack-bot`). Placeholder label.
-actions:
-  packs:
-    - id: io.b3os/slack
-      connections:
-        token: slack-bot
-
-# render/screenshot@1 of the finished report, then io.b3os/slack/send-message@1 (backend/server/b3os_publish.py).
-routines:
-  - file: b3os/routines/publish-report.yaml
 
 services:
   - name: researcher
@@ -73,8 +65,7 @@ services:
       MAX_SCRAPER_WORKERS: "4"
       DEEP_RESEARCH_CONCURRENCY: "2"
       TIKTOKEN_CACHE_DIR: /workspace/app/.tiktoken
-      B3OS_PUBLISH_ROUTINE: publish-report
-      SLACK_CHANNEL: C0000000000 # placeholder: the channel id the routine posts in
+      B3OS_PUBLISH: "off" # the publish hook's switch; on in b3os.slack.yaml
     # For a frontier planner (off the node; B3OS has no gateway route on the beta), add:
     #   secrets:
     #     ANTHROPIC_API_KEY: { connection: anthropic-key, field: token }
@@ -90,13 +81,10 @@ services:
     uses:
       - model/b3os/default
       - vision
-      - render
-      - routine/publish-report
-      - pack/io.b3os/slack
     grant:
       spend_cap_usd: 5
     egress:
-      mode: allowlist # nothing direct: the model, search, scraping and Slack all go through B3OS
+      mode: allowlist # nothing direct: the model, search and scraping all go through B3OS
     timeout_s: 3600
     restart: on-failure
     drain_s: 30

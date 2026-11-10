@@ -61,8 +61,12 @@ Why some files moved: `b3os/env.b3os` is not named `.env.b3os`, and `.env.exampl
 
 ## The publish hook
 
-`backend/server/b3os_publish.py` runs only when `B3OS_API_URL` (set by B3OS in every sandbox) and
-`B3OS_PUBLISH_ROUTINE` are both set. After each report it sends
+The publish is off by default. `b3os.yaml` deploys without the routine, the Slack pack and its connection, and sets
+`B3OS_PUBLISH=off`. `b3os.slack.yaml` is the same file with all three and `B3OS_PUBLISH=on`; once the Slack connection
+is stored and `SLACK_CHANNEL` is set in it, `b3os apply -f b3os.slack.yaml` deploys the service with the publish.
+
+`backend/server/b3os_publish.py` runs only when `B3OS_PUBLISH` is `1`, `true` or `on`, and `B3OS_API_URL` (set by
+B3OS in every sandbox) and `B3OS_PUBLISH_ROUTINE` are both set. After each report it sends
 `POST $B3OS_API_URL/v1/routines/publish-report/runs` with the report rendered to HTML (mistune, raw HTML escaped),
 the task, the report's id and its link, and `Idempotency-Key: gptr-publish-<id>`. The link is built from the
 `X-Forwarded-Proto`, `X-Forwarded-Host` and `X-Forwarded-Prefix` headers the preview adds, so it is the URL the user
@@ -81,9 +85,9 @@ Before either path:
 - A B3OS project key with `routines:read`, `routines:write`, `routines:run`, `sandboxes:read`, `sandboxes:write`,
   `sandboxes:run`, `vault:read`, `vault:run`, `actions:read`, `actions:run`, `infer:read`, `infer:run`,
   `vision:run` and `render:run`, a spend cap and an expiry.
-- A Slack connection in the same project, labelled `slack-bot` (`b3os connect io.b3os/slack --label slack-bot`), and
-  the bot invited to the channel. Put the channel id in `SLACK_CHANNEL` in `b3os.yaml` (now `C0000000000`, a
-  placeholder) or in the routine's `channel` default.
+- For the Slack publish only (`b3os.slack.yaml`): a Slack connection in the same project, labelled `slack-bot` (`b3os connect io.b3os/slack --label slack-bot`), and
+  the bot invited to the channel. Put the channel id in `SLACK_CHANNEL` (now `C0000000000`, a
+  placeholder) in `b3os.slack.yaml` or in the routine's `channel` default.
 
 ### With the GitHub App
 

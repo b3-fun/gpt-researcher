@@ -1,0 +1,105 @@
+# GPT Researcher on B3OS, with the Slack publish (b3os.yaml version 1, a draft format). README-B3OS.md explains
+# every choice. b3os.yaml is this file without the publish routine, the Slack pack and the switch. To deploy with
+# the publish: store the connection slack-bot, set SLACK_CHANNEL, then `b3os apply -f b3os.slack.yaml`.
+#
+# One service: GPT Researcher's FastAPI server (the web page, the REST API and the WebSocket stream) in a B3OS
+# sandbox. Its model, its web search and its page reads all go through B3OS at http://127.0.0.1:7700, with no key in
+# the sandbox. After each report a routine screenshots the report and posts it to Slack.
+version: 1
+name: gpt-researcher
+description: GPT Researcher on the node's model, searching and reading with B3OS vision, and posting each report to
+  Slack with a screenshot through a routine.
+
+# The node's model, for all three of GPT Researcher's roles (fast, smart, strategic).
+infer:
+  models:
+    - id: b3os/default
+      kind: chat
+      min_context_tokens: 32768
+
+# Slack, through a connection stored in B3OS once (`b3os connect io.b3os/slack --label slack-bot`). Placeholder label.
+actions:
+  packs:
+    - id: io.b3os/slack
+      connections:
+        token: slack-bot
+
+# render/screenshot@1 of the finished report, then io.b3os/slack/send-message@1 (backend/server/b3os_publish.py).
+routines:
+  - file: b3os/routines/publish-report.yaml
+
+services:
+  - name: researcher
+    description: GPT Researcher (FastAPI + WebSocket page). Model, search and scraping go through B3OS.
+    build:
+      template: base # Ubuntu 24.04, Python 3.12 with venv and pip, Node 24, git; 4 GiB disk
+      lockfiles: [requirements.txt, multi_agents/requirements.txt, b3os/requirements-b3os.txt]
+      # Runs with only the lockfiles present, then B3OS snapshots /workspace/app (the venv and the tiktoken cache) and
+      # reuses it until a lockfile, this command or `env` changes. The tiktoken file is fetched here because the
+      # service's egress cannot reach openaipublic.blob.core.windows.net.
+      install: >-
+        python3 -m venv .venv &&
+        .venv/bin/pip install --no-cache-dir --prefer-binary
+        -r requirements.txt -r multi_agents/requirements.txt -r b3os/requirements-b3os.txt &&
+        .venv/bin/python -c "import tiktoken; tiktoken.get_encoding('o200k_base')"
+      env:
+        TIKTOKEN_CACHE_DIR: /workspace/app/.tiktoken
+        PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      egress:
+        mode: allowlist
+        allow: [pypi.org, files.pythonhosted.org, openaipublic.blob.core.windows.net]
+      timeout_s: 1800
+    command: [.venv/bin/uvicorn, main:app, --host, 0.0.0.0, --port, "8000", --workers, "1"]
+    # The integration map. The same values, with comments, are in b3os/env.b3os.
+    env:
+      OPENAI_BASE_URL: http://127.0.0.1:7700/v1/infer
+      OPENAI_API_KEY: in-sandbox # not checked inside a sandbox; the grant decides
+      FAST_LLM: openai:b3os/default
+      SMART_LLM: openai:b3os/default
+      STRATEGIC_LLM: openai:b3os/default
+      FAST_TOKEN_LIMIT: "2000"
+      SMART_TOKEN_LIMIT: "4096"
+      STRATEGIC_TOKEN_LIMIT: "2000"
+      SUMMARY_TOKEN_LIMIT: "700"
+      BROWSE_CHUNK_MAX_LENGTH: "4000"
+      TOTAL_WORDS: "900"
+      CONTEXT_FILTER: keyword
+      RETRIEVER: crw
+      CRW_API_URL: http://127.0.0.1:7700/compat/firecrawl
+      CRW_API_KEY: in-sandbox
+      MAX_SEARCH_RESULTS_PER_QUERY: "5"
+      SCRAPER: firecrawl
+      FIRECRAWL_SERVER_URL: http://127.0.0.1:7700/compat/firecrawl
+      FIRECRAWL_API_KEY: in-sandbox
+      FIRECRAWL_CONCURRENCY: "4"
+      MAX_SCRAPER_WORKERS: "4"
+      DEEP_RESEARCH_CONCURRENCY: "2"
+      TIKTOKEN_CACHE_DIR: /workspace/app/.tiktoken
+      B3OS_PUBLISH: "on" # the hook's switch (backend/server/b3os_publish.py)
+      B3OS_PUBLISH_ROUTINE: publish-report
+      SLACK_CHANNEL: C0000000000 # placeholder: the channel id the routine posts in
+    # For a frontier planner (off the node; B3OS has no gateway route on the beta), add:
+    #   secrets:
+    #     ANTHROPIC_API_KEY: { connection: anthropic-key, field: token }
+    # with STRATEGIC_LLM: anthropic:<model>, langchain-anthropic in b3os/requirements-b3os.txt, and
+    # api.anthropic.com under egress.allow below.
+    ports:
+      - { port: 8000, public: true } # a 7-day URL per generation; the test opens it in Chrome
+    readiness:
+      http: { port: 8000, path: / }
+      timeout_s: 180
+    vcpu: 2
+    memory_mib: 2048 # the beta's sandboxes.memory_max
+    uses:
+      - model/b3os/default
+      - vision
+      - render
+      - routine/publish-report
+      - pack/io.b3os/slack
+    grant:
+      spend_cap_usd: 5
+    egress:
+      mode: allowlist # nothing direct: the model, search, scraping and Slack all go through B3OS
+    timeout_s: 3600
+    restart: on-failure
+    drain_s: 30

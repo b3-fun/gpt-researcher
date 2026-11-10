@@ -1,7 +1,8 @@
 """Publish each finished report through a B3OS routine: a screenshot of the report, posted to Slack.
 
-Only inside a B3OS sandbox, where B3OS_API_URL is set and needs no key. B3OS_PUBLISH_ROUTINE names the routine
-(b3os/routines/publish-report.yaml); without it nothing is published.
+Off unless B3OS_PUBLISH is 1, true or on. Then only inside a B3OS sandbox, where B3OS_API_URL is set and needs no
+key. B3OS_PUBLISH_ROUTINE names the routine (b3os/routines/publish-report.yaml); without it nothing is published.
+b3os.yaml deploys without the routine and the Slack pack; b3os.slack.yaml is the same file with them and the switch on.
 """
 
 import logging
@@ -21,6 +22,11 @@ _PAGE = (
 )
 
 
+def publish_enabled() -> bool:
+    """The switch: B3OS_PUBLISH=1|true|on turns publishing on; anything else, or unset, leaves it off."""
+    return os.getenv("B3OS_PUBLISH", "").strip().lower() in ("1", "true", "on")
+
+
 def public_base(headers) -> str:
     """The URL the page was opened at, from the preview's X-Forwarded-* headers, ending in '/'; '' when not proxied."""
     prefix, host = headers.get("x-forwarded-prefix"), headers.get("x-forwarded-host")
@@ -32,7 +38,7 @@ def public_base(headers) -> str:
 async def publish_report(research_id: str, task: str, report: str, report_path: str = "", base_url: str = "") -> None:
     """Start the publish routine for one report. Never raises: a report is finished whether or not it is published."""
     routine, api = os.getenv("B3OS_PUBLISH_ROUTINE"), os.getenv("B3OS_API_URL")
-    if not routine or not api or not report:
+    if not publish_enabled() or not routine or not api or not report:
         return
     try:
         payload = {
