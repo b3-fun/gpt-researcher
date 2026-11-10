@@ -120,6 +120,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# Behind the B3OS preview (X-Forwarded-Prefix set), keep responses out of shared caches: a cached static file
+# answered the preview's later requests with 503 node_unavailable (README-B3OS.md). Browsers still cache and revalidate.
+@app.middleware("http")
+async def private_behind_preview(request: Request, call_next):
+    response = await call_next(request)
+    if request.headers.get("x-forwarded-prefix") and "cache-control" not in response.headers:
+        response.headers["Cache-Control"] = "private, no-cache"
+    return response
+
 # Use default JSON response class
 
 # Mount static files for frontend
