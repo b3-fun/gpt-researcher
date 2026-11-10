@@ -1,0 +1,151 @@
+# GPT Researcher on B3OS
+
+This fork of [assafelovic/gpt-researcher](https://github.com/assafelovic/gpt-researcher) (Apache-2.0, at upstream
+commit `ddd4db3`) deploys to [B3OS](https://beta.b3os.org) as one service. GPT Researcher's own FastAPI server, with
+its web page, REST API and WebSocket stream, runs in a B3OS sandbox. Its model, web search and page reads go through
+B3OS with no API key inside the sandbox, and each finished report is screenshotted and posted to Slack by a B3OS
+routine.
+
+B3OS's deploy product (`b3os.yaml` version 1, `b3os apply`, the GitHub App) is a draft that ships with release 11-10
+and CLI 0.2.0. Nothing had been deployed with it against beta.b3os.org before this fork.
+
+## What runs where
+
+| GPT Researcher needs | Upstream default | On B3OS |
+|---|---|---|
+| LLM, all three roles | OpenAI (`gpt-5.4-mini`, `gpt-6-sol`, `gpt-5.4`) | `b3os/default` (Qwen3.5 9B, 32,768-token context) at `http://127.0.0.1:7700/v1/infer`, OpenAI wire format |
+| Web search | Tavily | The `crw` retriever, which speaks Firecrawl's `POST /v1/search`, against B3OS's Firecrawl compat at `/compat/firecrawl` (vision search) |
+| Page reads | `bs` (direct HTTP from the process) | The `firecrawl` scraper (firecrawl-py `scrape()`) against the same compat layer (vision scrape) |
+| Context filter | `auto` (Jev with a TypeSafe key, else keyword) | `keyword` (BM25, local): B3OS serves no embedding model |
+| Process and disk | The Dockerfile's container | A B3OS sandbox from the `base` template (Ubuntu 24.04, Python 3.12), restored from a build snapshot |
+| Publishing | none | `b3os/routines/publish-report.yaml`: `render/screenshot@1` of the report, then `io.b3os/slack/send-message@1` |
+
+The service's egress is an allowlist with nothing on it: everything above reaches the internet only through B3OS,
+under the sandbox's grant (`uses` in `b3os.yaml`) and a 5 USD spend cap.
+
+## What changed, and why
+
+Upstream files changed (every line, with its reason):
+
+| File | Lines | Change | Why |
+|---|---|---|---|
+| `frontend/index.html` | 9, 10, 11 | `/site/vendor/css/bootstrap.min.css`, `/site/vendor/css/fontawesome.min.css`, `/site/styles.css` -> without the leading `/` | B3OS serves the page under `/sbx/<host>/<port>/<token>/`. An absolute path drops that prefix and 404s; a relative one resolves under it, and the same way at `/` for a local run |
+| `frontend/index.html` | 150 | `/static/gptr-logo.png` -> `static/gptr-logo.png` | same |
+| `frontend/index.html` | 408, 409, 410 | `/site/vendor/js/showdown.min.js`, `/site/vendor/js/purify.min.js`, `/site/scripts.js` -> relative | same |
+| `backend/server/server_utils.py` | 28 | import `public_base`, `publish_report` | the publish hook |
+| `backend/server/server_utils.py` | 188 | after the WebSocket path sends the report's file paths, `await publish_report(...)` with the report, its `.md` path and the URL the page was opened at | start the publish routine after each report from the page |
+| `backend/server/app.py` | 38 | import `public_base`, `publish_report` | the publish hook |
+| `backend/server/app.py` | 336, 354 | `write_report` takes `base_url` and calls `publish_report` after the DOCX and PDF are written | the same for `POST /report/` |
+| `backend/server/app.py` | 376, 378, 381, 385 | `generate_report` takes the `Request`, reads its base URL and passes it on | the report link needs the preview URL, which only the request's `X-Forwarded-*` headers carry |
+| `gpt_researcher/skills/context_manager.py` | 147-149 | with `CONTEXT_FILTER` `keyword` or `none`, rank written sections by keywords instead of embeddings | the detailed report called an embedding model here whatever `CONTEXT_FILTER` said; B3OS answers `404 model_not_available` for embeddings, which failed the report |
+| `.env.example` | renamed `env.example` | content unchanged | B3OS refuses to deploy a service root that tracks a file whose name starts with `.env`, and the GitHub App path has no `--allow-secret-files`. Copy `env.example` to `.env` for a local run, as upstream's README says for `.env.example` |
+
+Checked and left alone: the download links the report message carries (`outputs/<name>.pdf`, `.docx`, `.md`,
+`.json`) are already relative, so they resolve under the prefix; the WebSocket URL is built from
+`location.pathname` plus `ws`, which already carries the prefix; `frontend/styles.css` loads its logo with
+`./static/...` relative to the stylesheet; the favicon link is relative.
+
+New files:
+
+| File | What it is |
+|---|---|
+| `b3os.yaml` | The deploy manifest (version 1) |
+| `b3os/routines/publish-report.yaml` | The publish routine |
+| `b3os/env.b3os` | The integration map as a commented dotenv file, no secrets (same values as `b3os.yaml`'s `env`) |
+| `b3os/requirements-b3os.txt` | `firecrawl-py`, which the firecrawl scraper needs and `requirements.txt` leaves out (it would otherwise pip-install it at run time, which egress refuses) |
+| `backend/server/b3os_publish.py` | The publish hook, 55 lines |
+| `README-B3OS.md` | This file |
+
+Why some files moved: `b3os/env.b3os` is not named `.env.b3os`, and `.env.example` became `env.example`, for the
+`.env*` rule above.
+
+## The publish hook
+
+`backend/server/b3os_publish.py` runs only when `B3OS_API_URL` (set by B3OS in every sandbox) and
+`B3OS_PUBLISH_ROUTINE` are both set. After each report it sends
+`POST $B3OS_API_URL/v1/routines/publish-report/runs` with the report rendered to HTML (mistune, raw HTML escaped),
+the task, the report's id and its link, and `Idempotency-Key: gptr-publish-<id>`. The link is built from the
+`X-Forwarded-Proto`, `X-Forwarded-Host` and `X-Forwarded-Prefix` headers the preview adds, so it is the URL the user
+opened, token included. A failure is logged and never fails the report.
+
+The routine screenshots the HTML (`render/screenshot@1` with `html`, 1440x900), not the page on the preview URL:
+render draws inline HTML with no network access, so the screenshot does not depend on render reaching
+`usercontent.b3os.org`. It then posts the task, the link and the screenshot to Slack with
+`io.b3os/slack/send-message@1` (Block Kit image block). Its grant comes from the service's `uses`: `render`,
+`routine/publish-report` and `pack/io.b3os/slack`.
+
+## Deploy it
+
+Before either path:
+
+- A B3OS project key with `routines:read`, `routines:write`, `routines:run`, `sandboxes:read`, `sandboxes:write`,
+  `sandboxes:run`, `vault:read`, `vault:run`, `actions:read`, `actions:run`, `infer:read`, `infer:run`,
+  `vision:run` and `render:run`, a spend cap and an expiry.
+- A Slack connection in the same project, labelled `slack-bot` (`b3os connect io.b3os/slack --label slack-bot`), and
+  the bot invited to the channel. Put the channel id in `SLACK_CHANNEL` in `b3os.yaml` (now `C0000000000`, a
+  placeholder) or in the routine's `channel` default.
+
+### With the GitHub App
+
+1. Push this fork to a GitHub repository (public if you can).
+2. In the console, Applications, connect the repository through the B3OS GitHub App, choose the branch, and link it
+   as the application `gpt-researcher` (the file's `name`; a different name fails with `app_mismatch`).
+3. Each push to the linked branch plans, builds and deploys; the console shows the plan and the timeline. While a
+   deploy is live the App runs a keepalive every 10 minutes, so no workflow is needed.
+
+The App is not registered on beta.b3os.org yet; until it is, use the CLI.
+
+### With `b3os apply` and a project key
+
+From a clone, with the key in `B3OS_API_KEY`. CLI 0.2.0 is not published yet, so run the CLI from a b3os-beta
+checkout (`node --conditions=b3os-source packages/cli/src/main.ts` in place of `b3os`):
+
+```bash
+b3os manifest validate                 # offline: the file, its schema, the routine file
+b3os apply --dry-run                   # reads the project, compiles the routine; changes nothing
+b3os apply --yes                       # publish the routine, build, start the service
+b3os app status                        # what the application runs, with the preview URL
+b3os apply --keepalive --yes           # every 10 minutes, or the service ends within its 3,600 s timeout
+b3os app down --app gpt-researcher --yes
+```
+
+`apply` deploys the committed tree only (`git archive` of tracked files). For a schedule, copy
+`examples/b3os-yaml/github-actions/b3os.yml` from b3os-beta into `.github/workflows/` with the key as the
+repository secret `B3OS_API_KEY`.
+
+The first build runs `pip install` of `requirements.txt`, `multi_agents/requirements.txt` and
+`b3os/requirements-b3os.txt` into `.venv` and fetches tiktoken's `o200k_base` file into `.tiktoken` (both in
+`/workspace/app`), then snapshots the sandbox. Later deploys restore that snapshot until a lockfile, the install
+command or the build's `env` changes.
+
+## Environment
+
+Every value is in `b3os.yaml` (`services[0].env`) and, with comments, in `b3os/env.b3os`. In short: model
+`openai:b3os/default` for `FAST_LLM`, `SMART_LLM` and `STRATEGIC_LLM` at `OPENAI_BASE_URL=http://127.0.0.1:7700/v1/infer`;
+search `RETRIEVER=crw` at `CRW_API_URL=http://127.0.0.1:7700/compat/firecrawl`; scrape `SCRAPER=firecrawl` at
+`FIRECRAWL_SERVER_URL` (same URL); token limits `FAST_TOKEN_LIMIT=2000`, `SMART_TOKEN_LIMIT=4096`,
+`STRATEGIC_TOKEN_LIMIT=2000`, `BROWSE_CHUNK_MAX_LENGTH=4000`, `TOTAL_WORDS=900`; `CONTEXT_FILTER=keyword`; scraper
+workers `MAX_SCRAPER_WORKERS=4`, `FIRECRAWL_CONCURRENCY=4`, `DEEP_RESEARCH_CONCURRENCY=2`; keys are the placeholder
+`in-sandbox` (not checked inside a sandbox). No secret is needed. An optional frontier planner (`STRATEGIC_LLM` on
+Anthropic) needs a vault connection as a secret and `api.anthropic.com` in egress; see the comments in `b3os.yaml`.
+
+## Known not to work
+
+- **PDF export.** WeasyPrint (through md2pdf) needs Pango and Cairo, which the `base` template does not have and
+  `b3os.yaml` cannot install (no apt step, no Dockerfile). The PDF link is missing from each report; Markdown, Word
+  and JSON work. The multi-agent report's PDF step fails the same way.
+- **Synchronous `POST /report/` over 65 seconds.** With `generate_in_background: false` the request answers only
+  when the research ends, and the preview drops any response that has not started within 65 s. Use the page (its
+  WebSocket may stay open for an hour), or `generate_in_background: true` (the default) and then
+  `GET /api/reports/{id}`.
+- **Reports lost at redeploy.** `outputs/` and `data/reports.json` live on the sandbox's disk. Each deploy, rollback
+  and recreate is a new sandbox, so earlier reports, their download links and the page's server-side history are
+  gone (the page's own history in the browser keeps links that then 404). The URL changes too: each generation has
+  its own preview URL. Slack keeps the screenshot.
+- **Browser scrapers, PDFs and arXiv.** `SCRAPER=browser` and `nodriver` need a local Chromium; PDF links go to
+  pymupdf and arXiv links to the arxiv package, both of which fetch directly and are refused by egress. Those
+  sources are skipped. The firecrawl scraper's image pass fetches each page directly too and is skipped quietly.
+- **Generated images** (`IMAGE_GENERATION_ENABLED`, off by default) need a Google key and write absolute
+  `/outputs/images/...` links that miss the prefix.
+- **Embeddings mode** (`CONTEXT_FILTER=embeddings`) and Jev (`TYPESAFE_API_KEY`): no embedding model on the node;
+  Jev would need its host in egress.
