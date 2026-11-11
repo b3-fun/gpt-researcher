@@ -156,6 +156,7 @@
     phase = 'lost';
     setFactsNote('');
     stopRunClock();
+    renderFacts();
     setConn('lost');
     $('stop').hidden = true;
     renderSteps();
@@ -300,12 +301,13 @@
 
   function startRunClock() { stopRunClock(); tick = setInterval(renderFacts, 1000); }
   function stopRunClock() { clearInterval(tick); tick = null; }
-  // While it runs: the time against the length's estimate ("8 s of about 30 s"); past the estimate, the time alone.
+  // While it runs: the time against the length's estimate ("8 s of about 30 s"); past the estimate, or once the run
+  // has stopped, the time alone.
   function renderFacts() {
     if (!run) return;
     const ms = (run.endedAt || Date.now()) - run.startedAt;
     const [est, words] = ESTIMATE[run.type] || ESTIMATE.research_report;
-    $('factsText').textContent = ms < est * 1000 ? `${fmtDur(ms)} of ${words}` : fmtDur(ms);
+    $('factsText').textContent = phase === 'running' && ms < est * 1000 ? `${fmtDur(ms)} of ${words}` : fmtDur(ms);
   }
 
   function stopResearch() {
@@ -316,6 +318,7 @@
     phase = 'stopped';
     setFactsNote('');
     stopRunClock();
+    renderFacts();
     setConn('idle');
     $('stop').hidden = true;
     renderSteps();
@@ -330,6 +333,7 @@
     closeSocket();
     stopHeartbeat();
     stopRunClock();
+    renderFacts();
     setConn('idle');
     $('stop').hidden = true;
     renderSteps();
