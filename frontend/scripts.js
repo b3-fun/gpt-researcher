@@ -283,7 +283,8 @@
   function renderFacts() {
     if (!run) return;
     const parts = [fmtDur((run.endedAt || Date.now()) - run.startedAt)];
-    if (run.urls.size) parts.push(plural(run.urls.size, 'source', 'sources'));
+    // A source is a page the server read; what its searches found is under Search.
+    if (run.read) parts.push(plural(run.read, 'source', 'sources'));
     $('facts').textContent = parts.join(' · ');
   }
 
@@ -645,7 +646,7 @@
     const parts = [];
     if (run.endedAt && run.startedAt) parts.push(`Done in ${fmtDur(run.endedAt - run.startedAt)}`);
     else if (run.savedAt) parts.push(fmtWhen(run.savedAt));
-    if (run.urls.size) parts.push(plural(run.urls.size, 'source', 'sources'));
+    if (run.read) parts.push(plural(run.read, 'source', 'sources'));
     else if (run.sourceCount) parts.push(plural(run.sourceCount, 'source', 'sources'));
     const words = countWords(run.md);
     if (words) parts.push(plural(words, 'word', 'words'));
@@ -838,7 +839,7 @@
       links: { pdf: l.pdf || '', docx: l.docx || '', md: l.md || '', json: l.json || '' },
       timestamp: new Date().toISOString(),
       type: run.type,
-      stats: [Math.round((run.endedAt - run.startedAt) / 1000), run.urls.size],
+      stats: [Math.round((run.endedAt - run.startedAt) / 1000), run.read],
     });
     persistHistory();
   }
