@@ -646,7 +646,7 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
 .report__missing { color: var(--ink-3); }
 
 /* ---------- Follow-up ---------- */
-.followup { max-width: 72ch; margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--line); }
+.followup { max-width: 72ch; margin-top: 32px; padding-top: 0; border-top: 0; }   /* the Sources list's last rule divides */
 .thread { display: flex; flex-direction: column; gap: 24px; margin-bottom: 24px; }
 .thread:empty { display: none; }
 .qa__q { margin: 0 0 8px; color: var(--ink); font-weight: 600; overflow-wrap: anywhere; white-space: pre-line; }
