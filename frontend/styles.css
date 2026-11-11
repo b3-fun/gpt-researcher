@@ -439,6 +439,7 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
 .run__more { margin-top: 4px; }
 .run__meta { display: flex; align-items: center; gap: 12px; min-height: 40px; margin-top: 8px; }
 .facts { margin: 0; color: var(--ink-3); font-size: 14px; font-variant-numeric: tabular-nums; }
+.nowrap, #factsText { white-space: nowrap; }
 /* A passing connection message takes the facts' place: one plain line, nothing moves. */
 .facts__note { color: var(--ink-2); }
 .facts__note:empty { display: none; }

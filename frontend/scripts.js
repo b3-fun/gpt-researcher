@@ -68,11 +68,18 @@
   const fmtWhen = (iso) => {
     const d = new Date(iso);
     if (Number.isNaN(+d)) return '';
-    const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
     const today = new Date();
     if (d.toDateString() === today.toDateString()) return `Today, ${time}`;
     return `${d.toLocaleDateString([], { day: 'numeric', month: 'short', year: d.getFullYear() === today.getFullYear() ? undefined : 'numeric' })}, ${time}`;
   };
+
+  // A line of facts: each part kept on one line, so a break can only fall after a separator.
+  function setParts(node, parts) {
+    const kids = [];
+    parts.forEach((p, i) => { if (i) kids.push('\u00a0· '); kids.push(el('span', { class: 'nowrap', text: p })); });
+    node.replaceChildren(...kids);
+  }
 
   // ---------- connection ----------
   function setConn(state) {
@@ -711,7 +718,7 @@
     if (n) parts.push(plural(n, 'source', 'sources'));
     const words = countWords(run.md);
     if (words) parts.push(plural(words, 'word', 'words'));
-    $('doneText').textContent = parts.join(' · ');
+    setParts($('doneText'), parts);
     $('stepsToggle').hidden = !run.log.length;
   }
   function toggleSteps() {
@@ -997,7 +1004,7 @@
     $('runMeta').hidden = true;
     $('doneline').hidden = false;
     $('stepsToggle').hidden = true;
-    $('doneText').textContent = [LENGTHS[run.type], fmtWhen(e.timestamp)].filter(Boolean).join(' · ');
+    setParts($('doneText'), [LENGTHS[run.type], fmtWhen(e.timestamp)].filter(Boolean));
     $('report').replaceChildren(el('p', { class: 'report__missing' }, el('span', { class: 'spin', 'aria-hidden': 'true' }), ' Opening the report'));
     let md = null;
     try {
@@ -1019,7 +1026,7 @@
     if (n) parts.push(plural(n, 'source', 'sources'));
     parts.push(plural(countWords(md), 'word', 'words'));
     parts.push(fmtWhen(e.timestamp));
-    $('doneText').textContent = parts.join(' · ');
+    setParts($('doneText'), parts);
     buildDownloads();
     $('actions').hidden = false;
     $('followup').hidden = false;
