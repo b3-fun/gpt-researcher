@@ -159,6 +159,7 @@
     renderFacts();
     setConn('lost');
     $('stop').hidden = true;
+    $('runMeta').hidden = true;   // the notice says what happened; the time alone would say nothing
     renderSteps();
     showNotice('danger', 'Connection lost. The research stopped.', [runAgainBtn(), editBtn()]);
   }
@@ -329,6 +330,7 @@
     renderFacts();
     setConn('idle');
     $('stop').hidden = true;
+    $('runMeta').hidden = true;
     renderSteps();
     addLog('Stopped.');
     showNotice('info', 'Stopped.', [runAgainBtn(), editBtn()]);
@@ -344,10 +346,11 @@
     renderFacts();
     setConn('idle');
     $('stop').hidden = true;
+    $('runMeta').hidden = true;
     renderSteps();
     const msg = String(text || '').replace(/^Error:\s*/, '').trim();
     const sentence = /openai API|context_length|model_not_available|rate.?limit|Failed to get response/i.test(msg)
-      ? 'The research stopped: the model did not answer.'
+      ? 'The model did not answer.'
       : `The research stopped: ${msg.length > 160 ? msg.slice(0, 157) + '…' : msg || 'the server reported an error.'}`;
     showNotice('danger', sentence, [runAgainBtn(), editBtn()]);
   }
