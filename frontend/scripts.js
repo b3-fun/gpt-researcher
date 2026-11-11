@@ -208,12 +208,12 @@
     return {
       request: req, task: req.task, type: req.report_type,
       startedAt: Date.now(), endedAt: null, restarts: 0, received: 0,
-      step: 0, questions: 0, searches: 0, urls: new Set(), pending: [], batches: [], queued: 0, read: 0, domains: [],
+      step: 0, questions: 0, searches: 0, urls: new Set(), pending: [], queued: 0, read: 0, domains: [], starts: 0,
       sectionsPlanned: 0, sectionsWritten: 0, md: '', links: null, log: [],
     };
   }
   function resetProgress() {
-    Object.assign(run, { startedAt: Date.now(), received: 0, step: 0, questions: 0, searches: 0, urls: new Set(), pending: [], batches: [], queued: 0, read: 0, domains: [], sectionsPlanned: 0, sectionsWritten: 0, md: '' });
+    Object.assign(run, { startedAt: Date.now(), received: 0, step: 0, questions: 0, searches: 0, urls: new Set(), pending: [], queued: 0, read: 0, domains: [], starts: 0, sectionsPlanned: 0, sectionsWritten: 0, md: '' });
     $('report').replaceChildren();
     renderSteps();
   }
@@ -358,14 +358,14 @@
       }
       case 'scraping_urls':
         run.queued += n;
-        run.batches.push(run.pending.splice(0));
         break;
       case 'scraping_content': {
+        // The server says how many pages it read, not which: the domains are taken in the order the URLs came.
         run.read += n;
-        const batch = run.batches.shift() || [];
-        for (const u of batch.slice(0, n)) { const d = domainOf(u); if (d && !run.domains.includes(d)) run.domains.push(d); }
+        for (const u of run.pending.splice(0, n)) { const d = domainOf(u); if (d && !run.domains.includes(d)) run.domains.push(d); }
         break;
       }
+      case 'starting_research': run.starts++; break;
       case 'generating_draft_sections': run.sectionsPlanned++; break;
       case 'report_written': if (run.type === 'detailed_report') run.sectionsWritten++; break;
       default: break;
@@ -396,7 +396,7 @@
     if (run.links.md) {
       fetch(run.links.md, { cache: 'no-store' })
         .then((r) => (r.ok ? r.text() : null))
-        .then((md) => { if (md && md.trim() && run && run.links === m.output) { run.md = md; renderReport(true); updateDoneLine(); } })
+        .then((md) => { if (md && md.trim() && run && run.links === m.output) { run.md = md; renderReport(true); updateDoneLine(); renderSteps(); } })
         .catch(() => {});
     }
     saveToHistory();
@@ -412,8 +412,9 @@
       case 'write': {
         const words = countWords(r.md);
         const parts = [];
-        if (r.type === 'detailed_report' && r.sectionsPlanned) parts.push(`${r.sectionsWritten} of ${plural(r.sectionsPlanned, 'section', 'sections')}`);
+        const planned = Math.max(r.sectionsPlanned, r.starts - 1);
         if (words) parts.push(plural(words, 'word', 'words'));
+        if (r.type === 'detailed_report' && planned > 0) parts.push(`${r.sectionsWritten} of ${plural(planned, 'section', 'sections')}`);
         return parts.join(', ');
       }
       default: return '';
@@ -666,11 +667,33 @@
       { label: 'Markdown', hint: '.md', href: links.md, file: `${name}.md` },
       links.pdf ? { label: 'PDF', hint: '.pdf', href: links.pdf, file: `${name}.pdf` } : { label: 'PDF', hint: 'print', print: true },
       { label: 'Word', hint: '.docx', href: links.docx, file: `${name}.docx` },
-      { label: 'JSON', hint: '.json', href: links.json, file: `${name}.json` },
-    ].filter((i) => i.href || i.print);
-    $('dlList').replaceChildren(...items.map((i) => el('li', { role: 'none' }, i.print
-      ? el('button', { type: 'button', role: 'menuitem', class: 'menu__item', tabindex: '-1', onclick: () => { closeMenu(); window.print(); } }, i.label, el('small', { text: i.hint }))
+      { label: 'JSON', hint: '.json', json: true },
+    ].filter((i) => i.href || i.print || i.json);
+    $('dlList').replaceChildren(...items.map((i) => el('li', { role: 'none' }, i.print || i.json
+      ? el('button', { type: 'button', role: 'menuitem', class: 'menu__item', tabindex: '-1', onclick: () => { closeMenu(); if (i.print) window.print(); else downloadJson(`${name}.json`); } }, i.label, el('small', { text: i.hint }))
       : el('a', { role: 'menuitem', class: 'menu__item', tabindex: '-1', href: i.href, download: i.file, onclick: () => closeMenu() }, i.label, el('small', { text: i.hint })))));
+  }
+  // The server's JSON file is the run's event log; it does not hold the report. This one holds both.
+  async function downloadJson(file) {
+    const links = run.links || {};
+    let log = null;
+    if (links.json) { try { const r = await fetch(links.json, { cache: 'no-store' }); if (r.ok) log = await r.json(); } catch {} }
+    const sources = [...$('report').querySelectorAll('.sources a')].map((a) => ({ n: +a.querySelector('.sources__n').textContent, title: a.querySelector('.sources__title').textContent, url: a.href }));
+    const data = {
+      question: run.task,
+      report_type: run.type,
+      finished_at: run.endedAt ? new Date(run.endedAt).toISOString() : run.savedAt || null,
+      duration_s: run.endedAt && run.startedAt ? Math.round((run.endedAt - run.startedAt) / 1000) : null,
+      words: countWords(run.md),
+      sources,
+      report_markdown: run.md,
+      files: { markdown: links.md || null, word: links.docx || null, pdf: links.pdf || null, log: links.json || null },
+      log,
+    };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+    const a = el('a', { href: url, download: file });
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   const menuItems = () => [...$('dlList').querySelectorAll('[role="menuitem"]')];
   function openMenu(focusLast = false) {

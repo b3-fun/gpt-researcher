@@ -15,6 +15,7 @@
 //                                      dropMode=recover (default: later connections work) or forever (refused)
 //   /__stub/config?error=50            send the server's error message before frame 50 and stop, as a failed run does
 //   /__stub/config?scenario=tablecode  report with tables and code; scenario=sources40: one with 40 sources
+//   /__stub/config?session=detailed    replay the recorded Detailed run (recording/session-detailed.json) instead
 //   /__stub/config?chatError=1         answer the next chat with the server's chat error text
 //   /__stub/config?reset=1             back to the defaults
 //   /__stub/state                      where the replay is (frame index, held, connections)
@@ -32,9 +33,14 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, all) => (
 const PORT = +(args.port || 8765);
 let PREFIX = args.prefix || '/preview/app/8000/';
 if (!PREFIX.endsWith('/')) PREFIX += '/';
-const session = JSON.parse(fs.readFileSync(path.join(REC, 'session.json'), 'utf8'));
+const SESSIONS = {
+  summary: JSON.parse(fs.readFileSync(path.join(REC, 'session.json'), 'utf8')),
+  detailed: JSON.parse(fs.readFileSync(path.join(REC, 'session-detailed.json'), 'utf8')),
+};
+const session = SESSIONS.summary;   // chat answers and /api/reports come from here
+const current = () => SESSIONS[config.session] || SESSIONS.summary;
 
-const DEFAULTS = { speed: +(args.speed || 1), hold: null, drop: null, dropMode: 'recover', error: null, scenario: args.scenario || 'default', refuse: false, chatError: false };
+const DEFAULTS = { session: args.session || 'summary', speed: +(args.speed || 1), hold: null, drop: null, dropMode: 'recover', error: null, scenario: args.scenario || 'default', refuse: false, chatError: false };
 let config = { ...DEFAULTS };
 let state = { frame: -1, held: false, running: false, connections: 0, runs: 0, chats: 0 };
 const holders = new Set();   // resolvers of replays waiting at a hold
@@ -46,9 +52,10 @@ const SCENARIOS = {
   sources40: () => fs.readFileSync(path.join(HERE, 'scenarios', 'sources40.md'), 'utf8'),
 };
 function framesFor(task) {
-  const recQ = session.start.task;
+  const rec = current();
+  const recQ = rec.start.task;
   const swapQ = (data) => (task && task !== recQ ? data.split(JSON.stringify(recQ).slice(1, -1)).join(JSON.stringify(task).slice(1, -1)) : data);
-  let frames = session.frames.map((f) => ({ t: f.t, data: swapQ(f.data) }));
+  let frames = rec.frames.map((f) => ({ t: f.t, data: swapQ(f.data) }));
   const make = SCENARIOS[config.scenario];
   if (!make) return frames;
   const md = make();
@@ -118,7 +125,7 @@ function control(url, res) {
   if (url.pathname === '/__stub/release') { config.hold = null; releaseAll(); return json(res, { released: true }); }
   if (url.pathname === '/__stub/state') return json(res, { ...state, config });
   if (url.pathname === '/__stub/frames') {
-    return json(res, framesFor(session.start.task).map((f, i) => { const j = JSON.parse(f.data); return { i, t: f.t, type: j.type ?? null, content: j.content ?? null }; }));
+    return json(res, framesFor(current().start.task).map((f, i) => { const j = JSON.parse(f.data); return { i, t: f.t, type: j.type ?? null, content: j.content ?? null }; }));
   }
   if (url.pathname !== '/__stub/config') return notFound(res);
   if (q.reset) { config = { ...DEFAULTS }; releaseAll(); }
@@ -128,6 +135,7 @@ function control(url, res) {
   if (q.dropMode) config.dropMode = q.dropMode;
   if (q.error) config.error = q.error === 'none' ? null : +q.error;
   if (q.scenario) config.scenario = q.scenario;
+  if (q.session) config.session = q.session;
   if (q.refuse) config.refuse = q.refuse === '1';
   if (q.chatError) config.chatError = q.chatError === '1';
   if (config.hold === null) releaseAll();

@@ -1,0 +1,1251 @@
+{
+ "about": "One real Detailed run on the live app gpt-researcher (beta.b3os.org, fork commit 687dab4, the new page), recorded 2026-11-11 14:15 UTC from the browser. Times are ms after the start command. Pongs (answers to the page heartbeat) left out. Test data for frontend-dev/stub.mjs (session=detailed).",
+ "start": {
+  "task": "How are AI data centers changing US electricity demand and prices in 2026?",
+  "report_type": "detailed_report",
+  "report_source": "web",
+  "source_urls": [],
+  "tone": "Objective",
+  "agent": "Auto Agent",
+  "query_domains": [],
+  "max_search_results": 5
+ },
+ "frames": [
+  {
+   "t": 87,
+   "data": "{\"query\":\"How are AI data centers changing US electricity demand and prices in 2026?\",\"sources\":[],\"context\":[],\"report\":\"\"}"
+  },
+  {
+   "t": 628,
+   "data": "{\"type\":\"logs\",\"content\":\"starting_research\",\"output\":\"🔍 Starting the research task for 'How are AI data centers changing US electricity demand and prices in 2026?'...\",\"metadata\":null}"
+  },
+  {
+   "t": 629,
+   "data": "{\"type\":\"logs\",\"content\":\"agent_generated\",\"output\":\"⚡ Energy Analyst Agent\",\"metadata\":null}"
+  },
+  {
+   "t": 629,
+   "data": "{\"type\":\"logs\",\"content\":\"planning_research\",\"output\":\"🌐 Browsing the web to learn more about the task: How are AI data centers changing US electricity demand and prices in 2026?...\",\"metadata\":null}"
+  },
+  {
+   "t": 1135,
+   "data": "{\"type\":\"logs\",\"content\":\"planning_research\",\"output\":\"🤔 Planning the research strategy and subtasks...\",\"metadata\":null}"
+  },
+  {
+   "t": 1468,
+   "data": "{\"type\":\"logs\",\"content\":\"subqueries\",\"output\":\"🗂️ I will conduct my research based on the following queries: ['How are AI data centers driving US electricity demand and price increases in 2026', 'What is the impact of the AI data center boom on wholesale electricity prices in 2026', 'How much will US electricity demand grow in 2026 due to AI data centers', 'How are AI data centers changing US electricity demand and prices in 2026?']...\",\"metadata\":[\"How are AI data centers driving US electricity demand and price increases in 2026\",\"What is the impact of the AI data center boom on wholesale electricity prices in 2026\",\"How much will US electricity demand grow in 2026 due to AI data centers\",\"How are AI data centers changing US electricity demand and prices in 2026?\"]}"
+  },
+  {
+   "t": 1469,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.consumerreports.org/data-centers/ai-data-centers-impact-on-electric-bills-water-and-more-a1040338678/\\n\",\"metadata\":\"https://www.consumerreports.org/data-centers/ai-data-centers-impact-on-electric-bills-water-and-more-a1040338678/\"}"
+  },
+  {
+   "t": 1469,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.cnbc.com/2026/02/12/electricity-price-data-center-ai-inflation-goldman.html\\n\",\"metadata\":\"https://www.cnbc.com/2026/02/12/electricity-price-data-center-ai-inflation-goldman.html\"}"
+  },
+  {
+   "t": 1469,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.tftc.io/eia-record-us-power-demand-2026-2027-ai-data-centers\\n\",\"metadata\":\"https://www.tftc.io/eia-record-us-power-demand-2026-2027-ai-data-centers\"}"
+  },
+  {
+   "t": 1471,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.cnn.com/2026/01/18/business/ai-data-centers-electricity-prices\\n\",\"metadata\":\"https://www.cnn.com/2026/01/18/business/ai-data-centers-electricity-prices\"}"
+  },
+  {
+   "t": 1471,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://usafacts.org/articles/are-ai-data-centers-driving-up-your-electric-bill/\\n\",\"metadata\":\"https://usafacts.org/articles/are-ai-data-centers-driving-up-your-electric-bill/\"}"
+  },
+  {
+   "t": 1471,
+   "data": "{\"type\":\"logs\",\"content\":\"researching\",\"output\":\"🤔 Researching for relevant information across multiple sources...\\n\",\"metadata\":null}"
+  },
+  {
+   "t": 1471,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_urls\",\"output\":\"🌐 Scraping content from 5 URLs...\",\"metadata\":null}"
+  },
+  {
+   "t": 2321,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_content\",\"output\":\"📄 Scraped 5 pages of content\",\"metadata\":null}"
+  },
+  {
+   "t": 2321,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_images\",\"output\":\"🖼️ Selected 0 new images from 0 total images\",\"metadata\":[]}"
+  },
+  {
+   "t": 2321,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_complete\",\"output\":\"🌐 Scraping complete\",\"metadata\":null}"
+  },
+  {
+   "t": 2325,
+   "data": "{\"type\":\"logs\",\"content\":\"fetching_query_content\",\"output\":\"📚 Getting relevant content based on query: How are AI data centers changing US electricity demand and prices in 2026?...\",\"metadata\":null}"
+  },
+  {
+   "t": 2338,
+   "data": "{\"type\":\"logs\",\"content\":\"running_subquery_research\",\"output\":\"\\n🔍 Running research for 'How are AI data centers driving US electricity demand and price increases in 2026'...\",\"metadata\":null}"
+  },
+  {
+   "t": 2338,
+   "data": "{\"type\":\"logs\",\"content\":\"running_subquery_research\",\"output\":\"\\n🔍 Running research for 'What is the impact of the AI data center boom on wholesale electricity prices in 2026'...\",\"metadata\":null}"
+  },
+  {
+   "t": 2338,
+   "data": "{\"type\":\"logs\",\"content\":\"running_subquery_research\",\"output\":\"\\n🔍 Running research for 'How much will US electricity demand grow in 2026 due to AI data centers'...\",\"metadata\":null}"
+  },
+  {
+   "t": 2338,
+   "data": "{\"type\":\"logs\",\"content\":\"running_subquery_research\",\"output\":\"\\n🔍 Running research for 'How are AI data centers changing US electricity demand and prices in 2026?'...\",\"metadata\":null}"
+  },
+  {
+   "t": 2474,
+   "data": "{\"type\":\"logs\",\"content\":\"researching\",\"output\":\"🤔 Researching for relevant information across multiple sources...\\n\",\"metadata\":null}"
+  },
+  {
+   "t": 2474,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_urls\",\"output\":\"🌐 Scraping content from 0 URLs...\",\"metadata\":null}"
+  },
+  {
+   "t": 2474,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_content\",\"output\":\"📄 Scraped 0 pages of content\",\"metadata\":null}"
+  },
+  {
+   "t": 2474,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_images\",\"output\":\"🖼️ Selected 0 new images from 0 total images\",\"metadata\":[]}"
+  },
+  {
+   "t": 2484,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_complete\",\"output\":\"🌐 Scraping complete\",\"metadata\":null}"
+  },
+  {
+   "t": 2484,
+   "data": "{\"type\":\"logs\",\"content\":\"subquery_context_not_found\",\"output\":\"🤷 No content found for 'How are AI data centers changing US electricity demand and prices in 2026?'...\",\"metadata\":null}"
+  },
+  {
+   "t": 2839,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.bloomberg.com/graphics/2025-ai-data-centers-electricity-prices/\\n\",\"metadata\":\"https://www.bloomberg.com/graphics/2025-ai-data-centers-electricity-prices/\"}"
+  },
+  {
+   "t": 2839,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.dallasfed.org/~/media/documents/research/papers/2026/wp2606.pdf\\n\",\"metadata\":\"https://www.dallasfed.org/~/media/documents/research/papers/2026/wp2606.pdf\"}"
+  },
+  {
+   "t": 2839,
+   "data": "{\"type\":\"logs\",\"content\":\"researching\",\"output\":\"🤔 Researching for relevant information across multiple sources...\\n\",\"metadata\":null}"
+  },
+  {
+   "t": 2843,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_urls\",\"output\":\"🌐 Scraping content from 2 URLs...\",\"metadata\":null}"
+  },
+  {
+   "t": 2910,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.cbsnews.com/news/artificial-intelligene-ai-data-centers-electricity-bill-energy-costs/\\n\",\"metadata\":\"https://www.cbsnews.com/news/artificial-intelligene-ai-data-centers-electricity-bill-energy-costs/\"}"
+  },
+  {
+   "t": 2911,
+   "data": "{\"type\":\"logs\",\"content\":\"researching\",\"output\":\"🤔 Researching for relevant information across multiple sources...\\n\",\"metadata\":null}"
+  },
+  {
+   "t": 2911,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_urls\",\"output\":\"🌐 Scraping content from 1 URLs...\",\"metadata\":null}"
+  },
+  {
+   "t": 2942,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.channelnewsasia.com/business/us-power-demand-beat-record-highs-in-2026-and-2027-ai-use-surges-eia-says-6540446\\n\",\"metadata\":\"https://www.channelnewsasia.com/business/us-power-demand-beat-record-highs-in-2026-and-2027-ai-use-surges-eia-says-6540446\"}"
+  },
+  {
+   "t": 2942,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://insideai.news/news/ai-hardware-infrastructure/us-power-demand-ai-data-centers/14912/\\n\",\"metadata\":\"https://insideai.news/news/ai-hardware-infrastructure/us-power-demand-ai-data-centers/14912/\"}"
+  },
+  {
+   "t": 2942,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.investing.com/news/commodities-news/us-power-demand-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says-5016495\\n\",\"metadata\":\"https://www.investing.com/news/commodities-news/us-power-demand-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says-5016495\"}"
+  },
+  {
+   "t": 2942,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://boereport.com/2026/11/10/us-power-demand-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says/\\n\",\"metadata\":\"https://boereport.com/2026/11/10/us-power-demand-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says/\"}"
+  },
+  {
+   "t": 2946,
+   "data": "{\"type\":\"logs\",\"content\":\"researching\",\"output\":\"🤔 Researching for relevant information across multiple sources...\\n\",\"metadata\":null}"
+  },
+  {
+   "t": 2947,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_urls\",\"output\":\"🌐 Scraping content from 4 URLs...\",\"metadata\":null}"
+  },
+  {
+   "t": 3050,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_content\",\"output\":\"📄 Scraped 1 pages of content\",\"metadata\":null}"
+  },
+  {
+   "t": 3052,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_images\",\"output\":\"🖼️ Selected 0 new images from 0 total images\",\"metadata\":[]}"
+  },
+  {
+   "t": 3052,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_complete\",\"output\":\"🌐 Scraping complete\",\"metadata\":null}"
+  },
+  {
+   "t": 3052,
+   "data": "{\"type\":\"logs\",\"content\":\"fetching_query_content\",\"output\":\"📚 Getting relevant content based on query: How are AI data centers driving US electricity demand and price increases in 2026...\",\"metadata\":null}"
+  },
+  {
+   "t": 3055,
+   "data": "{\"type\":\"logs\",\"content\":\"context_combined\",\"output\":\"📚 Combined research context: 0 MCP sources, web content\",\"metadata\":null}"
+  },
+  {
+   "t": 4389,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_content\",\"output\":\"📄 Scraped 4 pages of content\",\"metadata\":null}"
+  },
+  {
+   "t": 4389,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_images\",\"output\":\"🖼️ Selected 0 new images from 0 total images\",\"metadata\":[]}"
+  },
+  {
+   "t": 4389,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_complete\",\"output\":\"🌐 Scraping complete\",\"metadata\":null}"
+  },
+  {
+   "t": 4389,
+   "data": "{\"type\":\"logs\",\"content\":\"fetching_query_content\",\"output\":\"📚 Getting relevant content based on query: How much will US electricity demand grow in 2026 due to AI data centers...\",\"metadata\":null}"
+  },
+  {
+   "t": 4393,
+   "data": "{\"type\":\"logs\",\"content\":\"context_combined\",\"output\":\"📚 Combined research context: 0 MCP sources, web content\",\"metadata\":null}"
+  },
+  {
+   "t": 6568,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_content\",\"output\":\"📄 Scraped 1 pages of content\",\"metadata\":null}"
+  },
+  {
+   "t": 6568,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_images\",\"output\":\"🖼️ Selected 0 new images from 0 total images\",\"metadata\":[]}"
+  },
+  {
+   "t": 6572,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_complete\",\"output\":\"🌐 Scraping complete\",\"metadata\":null}"
+  },
+  {
+   "t": 6576,
+   "data": "{\"type\":\"logs\",\"content\":\"fetching_query_content\",\"output\":\"📚 Getting relevant content based on query: What is the impact of the AI data center boom on wholesale electricity prices in 2026...\",\"metadata\":null}"
+  },
+  {
+   "t": 6586,
+   "data": "{\"type\":\"logs\",\"content\":\"context_combined\",\"output\":\"📚 Combined research context: 0 MCP sources, web content\",\"metadata\":null}"
+  },
+  {
+   "t": 6586,
+   "data": "{\"type\":\"logs\",\"content\":\"research_step_finalized\",\"output\":\"Finalized research step.\\n💸 Total Research Costs: $0.007665\",\"metadata\":null}"
+  },
+  {
+   "t": 6589,
+   "data": "{\"type\":\"logs\",\"content\":\"generating_subtopics\",\"output\":\"🌳 Generating subtopics for 'How are AI data centers changing US electricity demand and prices in 2026?'...\",\"metadata\":null}"
+  },
+  {
+   "t": 7669,
+   "data": "{\"type\":\"logs\",\"content\":\"subtopics_generated\",\"output\":\"📊 Subtopics generated for 'How are AI data centers changing US electricity demand and prices in 2026?'\",\"metadata\":null}"
+  },
+  {
+   "t": 7671,
+   "data": "{\"type\":\"logs\",\"content\":\"writing_introduction\",\"output\":\"✍️ Writing introduction for 'How are AI data centers changing US electricity demand and prices in 2026?'...\",\"metadata\":null}"
+  },
+  {
+   "t": 8273,
+   "data": "{\"type\":\"report\",\"output\":\"# The Structural Repricing of the US Grid: AI Data Centers and Electricity Markets in 2026\\n\\n\"}"
+  },
+  {
+   "t": 9950,
+   "data": "{\"type\":\"report\",\"output\":\"The United States energy landscape is undergoing a paradigm shift in 2026, characterized by record-breaking electricity consumption driven primarily by the explosive growth of artificial intelligence (AI) data centers. According to the U.S. Energy Information Administration's October 2026 Short-Term Energy Outlook, national electricity demand is projected to reach 4,288 billion kWh in 2026, marking the third consecutive year of record consumption and cementing AI as the dominant marginal driver of this surge ([TFTC](https://www.tftc.io/eia-record-us-power-demand-2026-2027-ai-data-centers)). This unprecedented load growth is not merely cyclical but represents a structural change in grid dynamics, with wholesale electricity prices forecast to average approximately $52/MWh in 2026, an 11% increase from the previous year ([TFTC](https://www.tftc.io/eia-record-us-power-demand-2026-2027-ai-data-centers)). While national averages may mask regional disparities, the correlation between data center density and price volatility is stark; Bloomberg analysis indicates that wholesale prices in areas with significant data center activity have risen by as much as 267% compared to five years prior, with nearly three-quarters of price-increase nodes located within 50 miles of these facilities ([Bloomberg](https://www.bloomberg.com/graphics/2025-ai-data-centers-electricity-prices/)). Consequently, the intersection of AI infrastructure and energy markets in 2026 presents a complex challenge of balancing rapid technological expansion against grid stability, affordability, and equitable cost allocation for residential consumers.\"}"
+  },
+  {
+   "t": 9953,
+   "data": "{\"type\":\"logs\",\"content\":\"introduction_written\",\"output\":\"📝 Introduction written for 'How are AI data centers changing US electricity demand and prices in 2026?'\",\"metadata\":null}"
+  },
+  {
+   "t": 9979,
+   "data": "{\"type\":\"logs\",\"content\":\"starting_research\",\"output\":\"🔍 Starting the research task for 'Analyze EIA projections for record US power demand in 2026 and 2027 driven by AI data centers.'...\",\"metadata\":null}"
+  },
+  {
+   "t": 9980,
+   "data": "{\"type\":\"logs\",\"content\":\"agent_generated\",\"output\":\"⚡ Energy Analyst Agent\",\"metadata\":null}"
+  },
+  {
+   "t": 9980,
+   "data": "{\"type\":\"logs\",\"content\":\"planning_research\",\"output\":\"🌐 Browsing the web to learn more about the task: Analyze EIA projections for record US power demand in 2026 and 2027 driven by AI data centers....\",\"metadata\":null}"
+  },
+  {
+   "t": 9998,
+   "data": "{\"type\":\"logs\",\"content\":\"starting_research\",\"output\":\"🔍 Starting the research task for 'Evaluate the impact of AI data center demand on wholesale electricity prices and regional grid stability.'...\",\"metadata\":null}"
+  },
+  {
+   "t": 9998,
+   "data": "{\"type\":\"logs\",\"content\":\"agent_generated\",\"output\":\"⚡ Energy Analyst Agent\",\"metadata\":null}"
+  },
+  {
+   "t": 9999,
+   "data": "{\"type\":\"logs\",\"content\":\"planning_research\",\"output\":\"🌐 Browsing the web to learn more about the task: Evaluate the impact of AI data center demand on wholesale electricity prices and regional grid stability....\",\"metadata\":null}"
+  },
+  {
+   "t": 10021,
+   "data": "{\"type\":\"logs\",\"content\":\"starting_research\",\"output\":\"🔍 Starting the research task for 'Assess the disparity between national-level electricity price trends and localized residential bill increases caused by data centers.'...\",\"metadata\":null}"
+  },
+  {
+   "t": 10021,
+   "data": "{\"type\":\"logs\",\"content\":\"agent_generated\",\"output\":\"⚡ Energy Analyst Agent\",\"metadata\":null}"
+  },
+  {
+   "t": 10021,
+   "data": "{\"type\":\"logs\",\"content\":\"planning_research\",\"output\":\"🌐 Browsing the web to learn more about the task: Assess the disparity between national-level electricity price trends and localized residential bill increases caused by data centers....\",\"metadata\":null}"
+  },
+  {
+   "t": 10500,
+   "data": "{\"type\":\"logs\",\"content\":\"planning_research\",\"output\":\"🤔 Planning the research strategy and subtasks...\",\"metadata\":null}"
+  },
+  {
+   "t": 10552,
+   "data": "{\"type\":\"logs\",\"content\":\"planning_research\",\"output\":\"🤔 Planning the research strategy and subtasks...\",\"metadata\":null}"
+  },
+  {
+   "t": 10594,
+   "data": "{\"type\":\"logs\",\"content\":\"planning_research\",\"output\":\"🤔 Planning the research strategy and subtasks...\",\"metadata\":null}"
+  },
+  {
+   "t": 10902,
+   "data": "{\"type\":\"logs\",\"content\":\"subqueries\",\"output\":\"🗂️ I will conduct my research based on the following queries: ['2026 data center impact on US residential electricity bills versus national price trends', 'regional electricity price disparities caused by AI data center construction in 2026', 'analysis of local household energy bill increases linked to data center demand in 2026']...\",\"metadata\":[\"2026 data center impact on US residential electricity bills versus national price trends\",\"regional electricity price disparities caused by AI data center construction in 2026\",\"analysis of local household energy bill increases linked to data center demand in 2026\"]}"
+  },
+  {
+   "t": 10902,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://economy.ac/review/2026/10/202610295766\\n\",\"metadata\":\"https://economy.ac/review/2026/10/202610295766\"}"
+  },
+  {
+   "t": 10913,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://cepr.org/voxeu/columns/how-data-centres-affect-electricity-prices-and-whom\\n\",\"metadata\":\"https://cepr.org/voxeu/columns/how-data-centres-affect-electricity-prices-and-whom\"}"
+  },
+  {
+   "t": 10914,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://arxiv.org/pdf/2606.19777\\n\",\"metadata\":\"https://arxiv.org/pdf/2606.19777\"}"
+  },
+  {
+   "t": 10914,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.brookings.edu/articles/confronting-and-addressing-rising-energy-bills-linked-to-data-centers/\\n\",\"metadata\":\"https://www.brookings.edu/articles/confronting-and-addressing-rising-energy-bills-linked-to-data-centers/\"}"
+  },
+  {
+   "t": 10914,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.factcheck.org/2026/10/data-centers-and-electricity-prices-its-not-as-simple-as-voters-may-think/\\n\",\"metadata\":\"https://www.factcheck.org/2026/10/data-centers-and-electricity-prices-its-not-as-simple-as-voters-may-think/\"}"
+  },
+  {
+   "t": 10914,
+   "data": "{\"type\":\"logs\",\"content\":\"researching\",\"output\":\"🤔 Researching for relevant information across multiple sources...\\n\",\"metadata\":null}"
+  },
+  {
+   "t": 10919,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_urls\",\"output\":\"🌐 Scraping content from 5 URLs...\",\"metadata\":null}"
+  },
+  {
+   "t": 10944,
+   "data": "{\"type\":\"logs\",\"content\":\"subqueries\",\"output\":\"🗂️ I will conduct my research based on the following queries: ['EIA October 2026 Short-Term Energy Outlook AI data center power demand projections 2026 2027', 'how AI data centers are driving US electricity price increases in 2026', 'record US power demand 2026 2027 EIA analysis AI and cryptocurrency data centers']...\",\"metadata\":[\"EIA October 2026 Short-Term Energy Outlook AI data center power demand projections 2026 2027\",\"how AI data centers are driving US electricity price increases in 2026\",\"record US power demand 2026 2027 EIA analysis AI and cryptocurrency data centers\"]}"
+  },
+  {
+   "t": 10944,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.reuters.com/business/energy/us-power-use-beat-record-highs-2026-2027-ai-use-surges-eia-says-2026-06-09/\\n\",\"metadata\":\"https://www.reuters.com/business/energy/us-power-use-beat-record-highs-2026-2027-ai-use-surges-eia-says-2026-06-09/\"}"
+  },
+  {
+   "t": 10944,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://za.investing.com/news/commodities-news/us-power-demand-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says-4565869\\n\",\"metadata\":\"https://za.investing.com/news/commodities-news/us-power-demand-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says-4565869\"}"
+  },
+  {
+   "t": 10944,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.reuters.com/business/energy/us-power-use-beat-record-highs-2026-2027-ai-use-surges-eia-says-2026-05-12/\\n\",\"metadata\":\"https://www.reuters.com/business/energy/us-power-use-beat-record-highs-2026-2027-ai-use-surges-eia-says-2026-05-12/\"}"
+  },
+  {
+   "t": 10946,
+   "data": "{\"type\":\"logs\",\"content\":\"researching\",\"output\":\"🤔 Researching for relevant information across multiple sources...\\n\",\"metadata\":null}"
+  },
+  {
+   "t": 10946,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_urls\",\"output\":\"🌐 Scraping content from 3 URLs...\",\"metadata\":null}"
+  },
+  {
+   "t": 10954,
+   "data": "{\"type\":\"logs\",\"content\":\"subqueries\",\"output\":\"🗂️ I will conduct my research based on the following queries: ['How much have AI data centers increased wholesale electricity prices in the US by 2026 according to Dallas Fed research', 'impact of concentrated AI data center clusters on regional grid stability and power quality issues in 2026', 'analysis of AI data center demand effects on state GDP and wholesale electricity price spikes without new power capacity']...\",\"metadata\":[\"How much have AI data centers increased wholesale electricity prices in the US by 2026 according to Dallas Fed research\",\"impact of concentrated AI data center clusters on regional grid stability and power quality issues in 2026\",\"analysis of AI data center demand effects on state GDP and wholesale electricity price spikes without new power capacity\"]}"
+  },
+  {
+   "t": 10955,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://arxiv.org/html/2509.07218v3\\n\",\"metadata\":\"https://arxiv.org/html/2509.07218v3\"}"
+  },
+  {
+   "t": 10955,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://arxiv.org/html/2509.07218\\n\",\"metadata\":\"https://arxiv.org/html/2509.07218\"}"
+  },
+  {
+   "t": 10958,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.hec.edu/en/dare/sustainability-society/ai-data-centers-amplify-grid-and-energy-price-risks\\n\",\"metadata\":\"https://www.hec.edu/en/dare/sustainability-society/ai-data-centers-amplify-grid-and-energy-price-risks\"}"
+  },
+  {
+   "t": 10959,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.belfercenter.org/research-analysis/ai-data-centers-us-electric-grid\\n\",\"metadata\":\"https://www.belfercenter.org/research-analysis/ai-data-centers-us-electric-grid\"}"
+  },
+  {
+   "t": 10960,
+   "data": "{\"type\":\"logs\",\"content\":\"researching\",\"output\":\"🤔 Researching for relevant information across multiple sources...\\n\",\"metadata\":null}"
+  },
+  {
+   "t": 10960,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_urls\",\"output\":\"🌐 Scraping content from 4 URLs...\",\"metadata\":null}"
+  },
+  {
+   "t": 11806,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_content\",\"output\":\"📄 Scraped 3 pages of content\",\"metadata\":null}"
+  },
+  {
+   "t": 11809,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_images\",\"output\":\"🖼️ Selected 0 new images from 0 total images\",\"metadata\":[]}"
+  },
+  {
+   "t": 11809,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_complete\",\"output\":\"🌐 Scraping complete\",\"metadata\":null}"
+  },
+  {
+   "t": 11809,
+   "data": "{\"type\":\"logs\",\"content\":\"fetching_query_content\",\"output\":\"📚 Getting relevant content based on query: Assess the disparity between national-level electricity price trends and localized residential bill increases caused by data centers....\",\"metadata\":null}"
+  },
+  {
+   "t": 11820,
+   "data": "{\"type\":\"logs\",\"content\":\"running_subquery_research\",\"output\":\"\\n🔍 Running research for '2026 data center impact on US residential electricity bills versus national price trends'...\",\"metadata\":null}"
+  },
+  {
+   "t": 11825,
+   "data": "{\"type\":\"logs\",\"content\":\"running_subquery_research\",\"output\":\"\\n🔍 Running research for 'regional electricity price disparities caused by AI data center construction in 2026'...\",\"metadata\":null}"
+  },
+  {
+   "t": 11825,
+   "data": "{\"type\":\"logs\",\"content\":\"running_subquery_research\",\"output\":\"\\n🔍 Running research for 'analysis of local household energy bill increases linked to data center demand in 2026'...\",\"metadata\":null}"
+  },
+  {
+   "t": 12324,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://krdo.com/stacker-business-economy/2026/11/09/how-data-center-demand-is-reshaping-electricity-costs-across-the-us/\\n\",\"metadata\":\"https://krdo.com/stacker-business-economy/2026/11/09/how-data-center-demand-is-reshaping-electricity-costs-across-the-us/\"}"
+  },
+  {
+   "t": 12324,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://kvia.com/stacker-business-economy/2026/11/10/how-data-center-demand-is-reshaping-electricity-costs-across-the-us/\\n\",\"metadata\":\"https://kvia.com/stacker-business-economy/2026/11/10/how-data-center-demand-is-reshaping-electricity-costs-across-the-us/\"}"
+  },
+  {
+   "t": 12325,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.whio.com/news/how-data-center/EZXZIDKMFYZ6PK7LB7OCPYQNYI/\\n\",\"metadata\":\"https://www.whio.com/news/how-data-center/EZXZIDKMFYZ6PK7LB7OCPYQNYI/\"}"
+  },
+  {
+   "t": 12329,
+   "data": "{\"type\":\"logs\",\"content\":\"researching\",\"output\":\"🤔 Researching for relevant information across multiple sources...\\n\",\"metadata\":null}"
+  },
+  {
+   "t": 12334,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_urls\",\"output\":\"🌐 Scraping content from 3 URLs...\",\"metadata\":null}"
+  },
+  {
+   "t": 12385,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=7580459\\n\",\"metadata\":\"https://papers.ssrn.com/sol3/papers.cfm?abstract_id=7580459\"}"
+  },
+  {
+   "t": 12393,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.cnbc.com/2026/03/13/ai-data-centers-electricity-prices-backlash-ratepayer-protection.html\\n\",\"metadata\":\"https://www.cnbc.com/2026/03/13/ai-data-centers-electricity-prices-backlash-ratepayer-protection.html\"}"
+  },
+  {
+   "t": 12394,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.tomshardware.com/tech-industry/ai-data-centers-trigger-massive-irreversible-76-percent-electricity-price-spike-in-largest-us-region-federal-watchdog-demands-tech-giants-pay-for-their-own-power-infrastructure\\n\",\"metadata\":\"https://www.tomshardware.com/tech-industry/ai-data-centers-trigger-massive-irreversible-76-percent-electricity-price-spike-in-largest-us-region-federal-watchdog-demands-tech-giants-pay-for-their-own-power-infrastructure\"}"
+  },
+  {
+   "t": 12397,
+   "data": "{\"type\":\"logs\",\"content\":\"researching\",\"output\":\"🤔 Researching for relevant information across multiple sources...\\n\",\"metadata\":null}"
+  },
+  {
+   "t": 12397,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_urls\",\"output\":\"🌐 Scraping content from 3 URLs...\",\"metadata\":null}"
+  },
+  {
+   "t": 12777,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.ethree.com/wp-content/uploads/2026/05/Understanding-the-Drivers-of-Rising-Electricity-Rates-and-the-Role-of-Data-Centers_E3-2026.pdf\\n\",\"metadata\":\"https://www.ethree.com/wp-content/uploads/2026/05/Understanding-the-Drivers-of-Rising-Electricity-Rates-and-the-Role-of-Data-Centers_E3-2026.pdf\"}"
+  },
+  {
+   "t": 12777,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.lw.com/en/people/admin/upload/SiteAttachments/The-Rise-in-Data-Centers-and-Energy-Bills-2026.pdf\\n\",\"metadata\":\"https://www.lw.com/en/people/admin/upload/SiteAttachments/The-Rise-in-Data-Centers-and-Energy-Bills-2026.pdf\"}"
+  },
+  {
+   "t": 12779,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.forbes.com/sites/maryroeloffs/2026/11/02/data-centers-are-key-issue-in-midterm-battleground-states-as-household-electric-rates-soar/\\n\",\"metadata\":\"https://www.forbes.com/sites/maryroeloffs/2026/11/02/data-centers-are-key-issue-in-midterm-battleground-states-as-household-electric-rates-soar/\"}"
+  },
+  {
+   "t": 12779,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://policylab.rutgers.edu/publication/are-data-centers-raising-your-electric-bill-mostly-not-yet/\\n\",\"metadata\":\"https://policylab.rutgers.edu/publication/are-data-centers-raising-your-electric-bill-mostly-not-yet/\"}"
+  },
+  {
+   "t": 12781,
+   "data": "{\"type\":\"logs\",\"content\":\"researching\",\"output\":\"🤔 Researching for relevant information across multiple sources...\\n\",\"metadata\":null}"
+  },
+  {
+   "t": 12781,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_urls\",\"output\":\"🌐 Scraping content from 4 URLs...\",\"metadata\":null}"
+  },
+  {
+   "t": 12782,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_content\",\"output\":\"📄 Scraped 1 pages of content\",\"metadata\":null}"
+  },
+  {
+   "t": 12785,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_images\",\"output\":\"🖼️ Selected 0 new images from 0 total images\",\"metadata\":[]}"
+  },
+  {
+   "t": 12785,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_complete\",\"output\":\"🌐 Scraping complete\",\"metadata\":null}"
+  },
+  {
+   "t": 12791,
+   "data": "{\"type\":\"logs\",\"content\":\"fetching_query_content\",\"output\":\"📚 Getting relevant content based on query: Analyze EIA projections for record US power demand in 2026 and 2027 driven by AI data centers....\",\"metadata\":null}"
+  },
+  {
+   "t": 12794,
+   "data": "{\"type\":\"logs\",\"content\":\"running_subquery_research\",\"output\":\"\\n🔍 Running research for 'EIA October 2026 Short-Term Energy Outlook AI data center power demand projections 2026 2027'...\",\"metadata\":null}"
+  },
+  {
+   "t": 12794,
+   "data": "{\"type\":\"logs\",\"content\":\"running_subquery_research\",\"output\":\"\\n🔍 Running research for 'how AI data centers are driving US electricity price increases in 2026'...\",\"metadata\":null}"
+  },
+  {
+   "t": 12794,
+   "data": "{\"type\":\"logs\",\"content\":\"running_subquery_research\",\"output\":\"\\n🔍 Running research for 'record US power demand 2026 2027 EIA analysis AI and cryptocurrency data centers'...\",\"metadata\":null}"
+  },
+  {
+   "t": 13066,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_content\",\"output\":\"📄 Scraped 2 pages of content\",\"metadata\":null}"
+  },
+  {
+   "t": 13069,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_images\",\"output\":\"🖼️ Selected 0 new images from 0 total images\",\"metadata\":[]}"
+  },
+  {
+   "t": 13069,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_complete\",\"output\":\"🌐 Scraping complete\",\"metadata\":null}"
+  },
+  {
+   "t": 13069,
+   "data": "{\"type\":\"logs\",\"content\":\"fetching_query_content\",\"output\":\"📚 Getting relevant content based on query: Evaluate the impact of AI data center demand on wholesale electricity prices and regional grid stability....\",\"metadata\":null}"
+  },
+  {
+   "t": 13084,
+   "data": "{\"type\":\"logs\",\"content\":\"running_subquery_research\",\"output\":\"\\n🔍 Running research for 'How much have AI data centers increased wholesale electricity prices in the US by 2026 according to Dallas Fed research'...\",\"metadata\":null}"
+  },
+  {
+   "t": 13084,
+   "data": "{\"type\":\"logs\",\"content\":\"running_subquery_research\",\"output\":\"\\n🔍 Running research for 'impact of concentrated AI data center clusters on regional grid stability and power quality issues in 2026'...\",\"metadata\":null}"
+  },
+  {
+   "t": 13088,
+   "data": "{\"type\":\"logs\",\"content\":\"running_subquery_research\",\"output\":\"\\n🔍 Running research for 'analysis of AI data center demand effects on state GDP and wholesale electricity price spikes without new power capacity'...\",\"metadata\":null}"
+  },
+  {
+   "t": 13216,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://boereport.com/2026/10/06/us-power-use-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says-7/\\n\",\"metadata\":\"https://boereport.com/2026/10/06/us-power-use-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says-7/\"}"
+  },
+  {
+   "t": 13216,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://money.usnews.com/investing/news/articles/2026-10-06/us-power-use-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says\\n\",\"metadata\":\"https://money.usnews.com/investing/news/articles/2026-10-06/us-power-use-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says\"}"
+  },
+  {
+   "t": 13219,
+   "data": "{\"type\":\"logs\",\"content\":\"researching\",\"output\":\"🤔 Researching for relevant information across multiple sources...\\n\",\"metadata\":null}"
+  },
+  {
+   "t": 13220,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_urls\",\"output\":\"🌐 Scraping content from 2 URLs...\",\"metadata\":null}"
+  },
+  {
+   "t": 13321,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.cnbc.com/2025/11/26/ai-data-center-frenzy-is-pushing-up-your-electric-bill-heres-why.html\\n\",\"metadata\":\"https://www.cnbc.com/2025/11/26/ai-data-center-frenzy-is-pushing-up-your-electric-bill-heres-why.html\"}"
+  },
+  {
+   "t": 13321,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://techjournal.org/ai-data-centers-raising-your-electric-bill\\n\",\"metadata\":\"https://techjournal.org/ai-data-centers-raising-your-electric-bill\"}"
+  },
+  {
+   "t": 13322,
+   "data": "{\"type\":\"logs\",\"content\":\"researching\",\"output\":\"🤔 Researching for relevant information across multiple sources...\\n\",\"metadata\":null}"
+  },
+  {
+   "t": 13322,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_urls\",\"output\":\"🌐 Scraping content from 2 URLs...\",\"metadata\":null}"
+  },
+  {
+   "t": 13526,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.reuters.com/business/energy/us-power-use-beat-record-highs-2026-2027-ai-use-surges-eia-says-2026-04-07/\\n\",\"metadata\":\"https://www.reuters.com/business/energy/us-power-use-beat-record-highs-2026-2027-ai-use-surges-eia-says-2026-04-07/\"}"
+  },
+  {
+   "t": 13531,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.technology.org/2026/07/08/us-power-demand-record-2026-2027-eia/\\n\",\"metadata\":\"https://www.technology.org/2026/07/08/us-power-demand-record-2026-2027-eia/\"}"
+  },
+  {
+   "t": 13531,
+   "data": "{\"type\":\"logs\",\"content\":\"researching\",\"output\":\"🤔 Researching for relevant information across multiple sources...\\n\",\"metadata\":null}"
+  },
+  {
+   "t": 13532,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_urls\",\"output\":\"🌐 Scraping content from 2 URLs...\",\"metadata\":null}"
+  },
+  {
+   "t": 13826,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_content\",\"output\":\"📄 Scraped 3 pages of content\",\"metadata\":null}"
+  },
+  {
+   "t": 13830,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_images\",\"output\":\"🖼️ Selected 0 new images from 0 total images\",\"metadata\":[]}"
+  },
+  {
+   "t": 13830,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_complete\",\"output\":\"🌐 Scraping complete\",\"metadata\":null}"
+  },
+  {
+   "t": 13831,
+   "data": "{\"type\":\"logs\",\"content\":\"fetching_query_content\",\"output\":\"📚 Getting relevant content based on query: 2026 data center impact on US residential electricity bills versus national price trends...\",\"metadata\":null}"
+  },
+  {
+   "t": 13850,
+   "data": "{\"type\":\"logs\",\"content\":\"context_combined\",\"output\":\"📚 Combined research context: 0 MCP sources, web content\",\"metadata\":null}"
+  },
+  {
+   "t": 13884,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.dallasfed.org/~/media/documents/research/papers/2026/wp2606r1.pdf\\n\",\"metadata\":\"https://www.dallasfed.org/~/media/documents/research/papers/2026/wp2606r1.pdf\"}"
+  },
+  {
+   "t": 13888,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.dallasfed.org/research/papers/2026/wp2606\\n\",\"metadata\":\"https://www.dallasfed.org/research/papers/2026/wp2606\"}"
+  },
+  {
+   "t": 13897,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.metirai.com/blog/ai-data-centers-electricity-bills-who-pays-2026\\n\",\"metadata\":\"https://www.metirai.com/blog/ai-data-centers-electricity-bills-who-pays-2026\"}"
+  },
+  {
+   "t": 13897,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://aintops.com/blog/ai-datacenter-electricity-costs/\\n\",\"metadata\":\"https://aintops.com/blog/ai-datacenter-electricity-costs/\"}"
+  },
+  {
+   "t": 13897,
+   "data": "{\"type\":\"logs\",\"content\":\"researching\",\"output\":\"🤔 Researching for relevant information across multiple sources...\\n\",\"metadata\":null}"
+  },
+  {
+   "t": 13897,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_urls\",\"output\":\"🌐 Scraping content from 4 URLs...\",\"metadata\":null}"
+  },
+  {
+   "t": 14066,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.gspublishing.com/content/research/en/reports/2026/02/11/cefdda9f-3b7c-4a53-9950-dfcfa3c6bbc2.html\\n\",\"metadata\":\"https://www.gspublishing.com/content/research/en/reports/2026/02/11/cefdda9f-3b7c-4a53-9950-dfcfa3c6bbc2.html\"}"
+  },
+  {
+   "t": 14068,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.nature.com/articles/s41560-026-02163-x\\n\",\"metadata\":\"https://www.nature.com/articles/s41560-026-02163-x\"}"
+  },
+  {
+   "t": 14069,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://doi.org/10.3390/en19204890\\n\",\"metadata\":\"https://doi.org/10.3390/en19204890\"}"
+  },
+  {
+   "t": 14073,
+   "data": "{\"type\":\"logs\",\"content\":\"researching\",\"output\":\"🤔 Researching for relevant information across multiple sources...\\n\",\"metadata\":null}"
+  },
+  {
+   "t": 14073,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_urls\",\"output\":\"🌐 Scraping content from 3 URLs...\",\"metadata\":null}"
+  },
+  {
+   "t": 14089,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://arxiv.org/html/2509.07218v5\\n\",\"metadata\":\"https://arxiv.org/html/2509.07218v5\"}"
+  },
+  {
+   "t": 14089,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://arxiv.org/html/2604.06198v1\\n\",\"metadata\":\"https://arxiv.org/html/2604.06198v1\"}"
+  },
+  {
+   "t": 14090,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.researchgate.net/publication/415374459_AI_Data_Centers_Meet_Electrical_Grids_A_Review_of_Power_Challenges_and_Coordinated_Solutions\\n\",\"metadata\":\"https://www.researchgate.net/publication/415374459_AI_Data_Centers_Meet_Electrical_Grids_A_Review_of_Power_Challenges_and_Coordinated_Solutions\"}"
+  },
+  {
+   "t": 14090,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.mdpi.com/1996-1073/19/3/722\\n\",\"metadata\":\"https://www.mdpi.com/1996-1073/19/3/722\"}"
+  },
+  {
+   "t": 14108,
+   "data": "{\"type\":\"logs\",\"content\":\"researching\",\"output\":\"🤔 Researching for relevant information across multiple sources...\\n\",\"metadata\":null}"
+  },
+  {
+   "t": 14108,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_urls\",\"output\":\"🌐 Scraping content from 4 URLs...\",\"metadata\":null}"
+  },
+  {
+   "t": 14585,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_content\",\"output\":\"📄 Scraped 2 pages of content\",\"metadata\":null}"
+  },
+  {
+   "t": 14589,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_images\",\"output\":\"🖼️ Selected 0 new images from 0 total images\",\"metadata\":[]}"
+  },
+  {
+   "t": 14589,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_complete\",\"output\":\"🌐 Scraping complete\",\"metadata\":null}"
+  },
+  {
+   "t": 14589,
+   "data": "{\"type\":\"logs\",\"content\":\"fetching_query_content\",\"output\":\"📚 Getting relevant content based on query: how AI data centers are driving US electricity price increases in 2026...\",\"metadata\":null}"
+  },
+  {
+   "t": 14592,
+   "data": "{\"type\":\"logs\",\"content\":\"context_combined\",\"output\":\"📚 Combined research context: 0 MCP sources, web content\",\"metadata\":null}"
+  },
+  {
+   "t": 14650,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_content\",\"output\":\"📄 Scraped 1 pages of content\",\"metadata\":null}"
+  },
+  {
+   "t": 14651,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_images\",\"output\":\"🖼️ Selected 0 new images from 0 total images\",\"metadata\":[]}"
+  },
+  {
+   "t": 14654,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_complete\",\"output\":\"🌐 Scraping complete\",\"metadata\":null}"
+  },
+  {
+   "t": 14655,
+   "data": "{\"type\":\"logs\",\"content\":\"fetching_query_content\",\"output\":\"📚 Getting relevant content based on query: EIA October 2026 Short-Term Energy Outlook AI data center power demand projections 2026 2027...\",\"metadata\":null}"
+  },
+  {
+   "t": 14659,
+   "data": "{\"type\":\"logs\",\"content\":\"context_combined\",\"output\":\"📚 Combined research context: 0 MCP sources, web content\",\"metadata\":null}"
+  },
+  {
+   "t": 15648,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_content\",\"output\":\"📄 Scraped 1 pages of content\",\"metadata\":null}"
+  },
+  {
+   "t": 15648,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_images\",\"output\":\"🖼️ Selected 0 new images from 0 total images\",\"metadata\":[]}"
+  },
+  {
+   "t": 15648,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_complete\",\"output\":\"🌐 Scraping complete\",\"metadata\":null}"
+  },
+  {
+   "t": 15648,
+   "data": "{\"type\":\"logs\",\"content\":\"fetching_query_content\",\"output\":\"📚 Getting relevant content based on query: regional electricity price disparities caused by AI data center construction in 2026...\",\"metadata\":null}"
+  },
+  {
+   "t": 15648,
+   "data": "{\"type\":\"logs\",\"content\":\"context_combined\",\"output\":\"📚 Combined research context: 0 MCP sources, web content\",\"metadata\":null}"
+  },
+  {
+   "t": 16363,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_content\",\"output\":\"📄 Scraped 3 pages of content\",\"metadata\":null}"
+  },
+  {
+   "t": 16369,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_images\",\"output\":\"🖼️ Selected 0 new images from 0 total images\",\"metadata\":[]}"
+  },
+  {
+   "t": 16369,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_complete\",\"output\":\"🌐 Scraping complete\",\"metadata\":null}"
+  },
+  {
+   "t": 16371,
+   "data": "{\"type\":\"logs\",\"content\":\"fetching_query_content\",\"output\":\"📚 Getting relevant content based on query: How much have AI data centers increased wholesale electricity prices in the US by 2026 according to Dallas Fed research...\",\"metadata\":null}"
+  },
+  {
+   "t": 16379,
+   "data": "{\"type\":\"logs\",\"content\":\"context_combined\",\"output\":\"📚 Combined research context: 0 MCP sources, web content\",\"metadata\":null}"
+  },
+  {
+   "t": 16432,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_content\",\"output\":\"📄 Scraped 1 pages of content\",\"metadata\":null}"
+  },
+  {
+   "t": 16448,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_images\",\"output\":\"🖼️ Selected 0 new images from 0 total images\",\"metadata\":[]}"
+  },
+  {
+   "t": 16448,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_complete\",\"output\":\"🌐 Scraping complete\",\"metadata\":null}"
+  },
+  {
+   "t": 16449,
+   "data": "{\"type\":\"logs\",\"content\":\"fetching_query_content\",\"output\":\"📚 Getting relevant content based on query: record US power demand 2026 2027 EIA analysis AI and cryptocurrency data centers...\",\"metadata\":null}"
+  },
+  {
+   "t": 16455,
+   "data": "{\"type\":\"logs\",\"content\":\"context_combined\",\"output\":\"📚 Combined research context: 0 MCP sources, web content\",\"metadata\":null}"
+  },
+  {
+   "t": 16464,
+   "data": "{\"type\":\"logs\",\"content\":\"research_step_finalized\",\"output\":\"Finalized research step.\\n💸 Total Research Costs: $0.005795000000000001\",\"metadata\":null}"
+  },
+  {
+   "t": 16465,
+   "data": "{\"type\":\"logs\",\"content\":\"generating_draft_sections\",\"output\":\"📑 Generating draft section titles for 'Analyze EIA projections for record US power demand in 2026 and 2027 driven by AI data centers.'...\",\"metadata\":null}"
+  },
+  {
+   "t": 16499,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_content\",\"output\":\"📄 Scraped 1 pages of content\",\"metadata\":null}"
+  },
+  {
+   "t": 16499,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_images\",\"output\":\"🖼️ Selected 0 new images from 0 total images\",\"metadata\":[]}"
+  },
+  {
+   "t": 16499,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_complete\",\"output\":\"🌐 Scraping complete\",\"metadata\":null}"
+  },
+  {
+   "t": 16501,
+   "data": "{\"type\":\"logs\",\"content\":\"fetching_query_content\",\"output\":\"📚 Getting relevant content based on query: analysis of local household energy bill increases linked to data center demand in 2026...\",\"metadata\":null}"
+  },
+  {
+   "t": 16528,
+   "data": "{\"type\":\"logs\",\"content\":\"context_combined\",\"output\":\"📚 Combined research context: 0 MCP sources, web content\",\"metadata\":null}"
+  },
+  {
+   "t": 16528,
+   "data": "{\"type\":\"logs\",\"content\":\"research_step_finalized\",\"output\":\"Finalized research step.\\n💸 Total Research Costs: $0.00498\",\"metadata\":null}"
+  },
+  {
+   "t": 16528,
+   "data": "{\"type\":\"logs\",\"content\":\"generating_draft_sections\",\"output\":\"📑 Generating draft section titles for 'Assess the disparity between national-level electricity price trends and localized residential bill increases caused by data centers.'...\",\"metadata\":null}"
+  },
+  {
+   "t": 18166,
+   "data": "{\"type\":\"logs\",\"content\":\"draft_sections_generated\",\"output\":\"🗂️ Draft section titles generated for 'Assess the disparity between national-level electricity price trends and localized residential bill increases caused by data centers.'\",\"metadata\":null}"
+  },
+  {
+   "t": 18196,
+   "data": "{\"type\":\"logs\",\"content\":\"draft_sections_generated\",\"output\":\"🗂️ Draft section titles generated for 'Analyze EIA projections for record US power demand in 2026 and 2027 driven by AI data centers.'\",\"metadata\":null}"
+  },
+  {
+   "t": 18544,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_content\",\"output\":\"📄 Scraped 3 pages of content\",\"metadata\":null}"
+  },
+  {
+   "t": 18546,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_images\",\"output\":\"🖼️ Selected 0 new images from 0 total images\",\"metadata\":[]}"
+  },
+  {
+   "t": 18546,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_complete\",\"output\":\"🌐 Scraping complete\",\"metadata\":null}"
+  },
+  {
+   "t": 18546,
+   "data": "{\"type\":\"logs\",\"content\":\"fetching_query_content\",\"output\":\"📚 Getting relevant content based on query: analysis of AI data center demand effects on state GDP and wholesale electricity price spikes without new power capacity...\",\"metadata\":null}"
+  },
+  {
+   "t": 18556,
+   "data": "{\"type\":\"logs\",\"content\":\"context_combined\",\"output\":\"📚 Combined research context: 0 MCP sources, web content\",\"metadata\":null}"
+  },
+  {
+   "t": 20494,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_content\",\"output\":\"📄 Scraped 1 pages of content\",\"metadata\":null}"
+  },
+  {
+   "t": 20498,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_images\",\"output\":\"🖼️ Selected 0 new images from 0 total images\",\"metadata\":[]}"
+  },
+  {
+   "t": 20498,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_complete\",\"output\":\"🌐 Scraping complete\",\"metadata\":null}"
+  },
+  {
+   "t": 20498,
+   "data": "{\"type\":\"logs\",\"content\":\"fetching_query_content\",\"output\":\"📚 Getting relevant content based on query: impact of concentrated AI data center clusters on regional grid stability and power quality issues in 2026...\",\"metadata\":null}"
+  },
+  {
+   "t": 20500,
+   "data": "{\"type\":\"logs\",\"content\":\"context_combined\",\"output\":\"📚 Combined research context: 0 MCP sources, web content\",\"metadata\":null}"
+  },
+  {
+   "t": 20506,
+   "data": "{\"type\":\"logs\",\"content\":\"research_step_finalized\",\"output\":\"Finalized research step.\\n💸 Total Research Costs: $0.00446\",\"metadata\":null}"
+  },
+  {
+   "t": 20508,
+   "data": "{\"type\":\"logs\",\"content\":\"generating_draft_sections\",\"output\":\"📑 Generating draft section titles for 'Evaluate the impact of AI data center demand on wholesale electricity prices and regional grid stability.'...\",\"metadata\":null}"
+  },
+  {
+   "t": 22625,
+   "data": "{\"type\":\"logs\",\"content\":\"draft_sections_generated\",\"output\":\"🗂️ Draft section titles generated for 'Evaluate the impact of AI data center demand on wholesale electricity prices and regional grid stability.'\",\"metadata\":null}"
+  },
+  {
+   "t": 22631,
+   "data": "{\"type\":\"logs\",\"content\":\"fetching_relevant_written_content\",\"output\":\"🔎 Getting relevant written content based on query: Analyze EIA projections for record US power demand in 2026 and 2027 driven by AI data centers....\",\"metadata\":null}"
+  },
+  {
+   "t": 22634,
+   "data": "{\"type\":\"logs\",\"content\":\"writing_report\",\"output\":\"✍️ Writing report for 'Analyze EIA projections for record US power demand in 2026 and 2027 driven by AI data centers.'...\",\"metadata\":null}"
+  },
+  {
+   "t": 23030,
+   "data": "{\"type\":\"report\",\"output\":\"## EIA Projections for Record US Power Demand in 2026 and 2027\\n\\n\"}"
+  },
+  {
+   "t": 24407,
+   "data": "{\"type\":\"report\",\"output\":\"The United States Energy Information Administration (EIA) has issued its Short-Term Energy Outlook (STEO) projecting that national electricity consumption will breach historical peaks in both 2026 and 2027. This trajectory marks the third consecutive year of record-breaking demand, driven primarily by the exponential expansion of artificial intelligence (AI) data centers and broader electrification trends. The EIA forecasts that total power demand will rise from a record 4,195 billion kilowatt-hours (kWh) in 2025 to 4,288 billion kWh in 2026 and further increase to 4,356 billion kWh in 2027 ([Reuters](https://boereport.com/2026/10/06/us-power-use-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says-7/)). While some alternative reporting suggests slightly higher figures, such as 4,306 billion kWh for 2026, the consensus among federal projections indicates a sustained upward trend that challenges existing grid capacity ([Reuters](https://za.investing.com/news/commodities-news/us-power-demand-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says-4565869)).\\n\\n\"}"
+  },
+  {
+   "t": 26465,
+   "data": "{\"type\":\"report\",\"output\":\"The surge in demand is not uniform across all sectors; rather, it is heavily skewed toward the commercial sector, which houses the majority of hyperscale data center operations. The EIA estimates that power sales for commercial customers will reach 1,557 billion kWh in 2026, representing a significant jump from the 1,493 billion kWh recorded in 2025 ([BOE Report](https://boereport.com/2026/10/06/us-power-use-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says-7/)). This sector is expected to continue its growth momentum, with the agency predicting a 2.8% increase in commercial demand for 2027 alone ([BOE Report](https://boereport.com/2026/10/06/us-power-use-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says-7/)). In contrast, residential consumption is projected to remain relatively flat, rising only marginally to 1,546 billion kWh in 2026, despite the overall national increase ([Reuters](https://za.investing.com/news/commodities-news/us-power-demand-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says-4565869)). Industrial demand is also forecast to climb, reaching 1,061 billion kWh in 2026, surpassing the 2000 all-time high of 1,064 billion kWh when adjusted for inflation and efficiency gains ([BOE Report](https://boereport.com/2026/10/06/us-power-use-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says-7/)).\\n\\n\"}"
+  },
+  {
+   "t": 26465,
+   "data": "{\"type\":\"report\",\"output\":\"### Sector-Specific Demand Drivers and Commercial Growth\\n\\n\"}"
+  },
+  {
+   "t": 27207,
+   "data": "{\"type\":\"report\",\"output\":\"The divergence in growth rates between sectors highlights the specific role of AI infrastructure. The commercial sector's ability to absorb new capacity is directly linked to the deployment of hyperscale facilities designed to support large language models and high-performance computing. Unlike residential or industrial loads, which are often constrained by physical limits or efficiency standards, data center demand is elastic and tied to technological investment cycles. The EIA notes that the commercial sector's consumption is the primary engine for the projected national records, as these facilities operate at near-continuous capacity to meet global computing demands ([BOE Report](https://boereport.com/2026/10/06/us-power-use-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says-7/)).\\n\\n\"}"
+  },
+  {
+   "t": 28333,
+   "data": "{\"type\":\"report\",\"output\":\"Furthermore, the commercial sector's growth is compounded by the inclusion of cryptocurrency mining operations within the same classification, although AI workloads are the dominant factor in recent projections. The sheer scale of new construction is evident in the capital expenditure trends, with major technology companies investing over $400 billion in 2025, a figure expected to rise again in 2026 ([Technology Org](https://www.technology.org/2026/07/08/us-power-demand-record-2026-2027-eia/)). This investment pace outstrips global spending on oil and gas production, signaling a fundamental shift in energy allocation priorities. The EIA's projection that commercial demand will grow by 2.8% in 2027 suggests that the initial wave of construction is only the beginning of a longer-term expansion phase that will persist through the decade ([BOE Report](https://boereport.com/2026/10/06/us-power-use-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says-7/)).\\n\\n\"}"
+  },
+  {
+   "t": 28438,
+   "data": "{\"type\":\"report\",\"output\":\"### Comparative Analysis of Generation Mix and Fuel Sources\\n\\n\"}"
+  },
+  {
+   "t": 29780,
+   "data": "{\"type\":\"report\",\"output\":\"As demand surges, the composition of the electricity generation mix is undergoing a structural transformation. The EIA forecasts a continued decline in coal's share of generation, dropping from 17% in 2025 to 16% in 2026 and further to 15% in 2027 ([BOE Report](https://boereport.com/2026/10/06/us-power-use-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says-7/)). This decline is not necessarily due to a reduction in absolute output but rather a relative shift as other sources expand faster to meet the new demand. Natural gas remains the backbone of the grid, holding steady at 40% of generation in 2026 before easing slightly to 39% in 2027 ([BOE Report](https://boereport.com/2026/10/06/us-power-use-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says-7/)). The stability of natural gas usage is critical, as these facilities provide the flexible baseload power required to ramp up quickly for data center loads that may fluctuate with computational tasks.\\n\\n\"}"
+  },
+  {
+   "t": 30673,
+   "data": "{\"type\":\"report\",\"output\":\"Renewable energy generation is projected to see the most significant percentage growth, rising from approximately 24% in 2025 to 25% in 2026 and reaching 27% in 2027 ([BOE Report](https://boereport.com/2026/10/06/us-power-use-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says-7/)). Nuclear power maintains a steady contribution at 18% for both 2026 and 2027, matching 2025 levels ([BOE Report](https://boereport.com/2026/10/06/us-power-use-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says-7/)). The following table illustrates the projected shifts in generation sources:\\n\\n\"}"
+  },
+  {
+   "t": 30811,
+   "data": "{\"type\":\"report\",\"output\":\"| Generation Source | 2025 Share | 2026 Share | 2027 Share | Trend |\\n\"}"
+  },
+  {
+   "t": 30898,
+   "data": "{\"type\":\"report\",\"output\":\"| :--- | :--- | :--- | :--- | :--- |\\n\"}"
+  },
+  {
+   "t": 31023,
+   "data": "{\"type\":\"report\",\"output\":\"| **Natural Gas** | 40% | 40% | 39% | Stable/Declining |\\n\"}"
+  },
+  {
+   "t": 31148,
+   "data": "{\"type\":\"report\",\"output\":\"| **Renewables** | 24% | 25% | 27% | Increasing |\\n\"}"
+  },
+  {
+   "t": 31317,
+   "data": "{\"type\":\"report\",\"output\":\"| **Nuclear** | 18% | 18% | 18% | Stable |\\n\"}"
+  },
+  {
+   "t": 31397,
+   "data": "{\"type\":\"report\",\"output\":\"| **Coal** | 17% | 16% | 15% | Declining |\\n\\n\"}"
+  },
+  {
+   "t": 31776,
+   "data": "{\"type\":\"report\",\"output\":\"*Data sourced from EIA Short-Term Energy Outlook projections as reported by BOE Report ([BOE Report](https://boereport.com/2026/10/06/us-power-use-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says-7/)).*\\n\\n\"}"
+  },
+  {
+   "t": 32341,
+   "data": "{\"type\":\"report\",\"output\":\"The reliance on natural gas is particularly notable given the specific operational requirements of AI data centers, which often require rapid response times that renewables alone cannot guarantee without significant battery storage integration. The EIA's data indicates that while renewables are growing, the immediate capacity needed to meet the 2026 and 2027 peaks will continue to be supplied largely by gas-fired plants ([BOE Report](https://boereport.com/2026/10/06/us-power-use-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says-7/)).\\n\\n\"}"
+  },
+  {
+   "t": 32379,
+   "data": "{\"type\":\"report\",\"output\":\"### Regional Variations in Demand and Infrastructure Stress\\n\\n\"}"
+  },
+  {
+   "t": 33260,
+   "data": "{\"type\":\"report\",\"output\":\"The impact of AI-driven demand is not geographically uniform, creating distinct regional stress points within the national grid. States with favorable regulatory environments and existing transmission infrastructure are seeing the most aggressive data center buildouts. Virginia, for instance, has become a primary hub, with data centers accounting for approximately 40% of the state's total electricity use. This concentration has led to significant local rate pressures, with Dominion Energy reporting rate increases that add roughly $8.51 per month to the typical residential bill ([TechJournal](https://techjournal.org/ai-data-centers-raising-your-electric-bill)). Similarly, New Jersey faces intense pressure, with data centers responsible for about 70% of the state's new power demand, contributing to a 20% rise in residential bills in 2025 ([TechJournal](https://techjournal.org/ai-data-centers-raising-your-electric-bill)).\\n\\n\"}"
+  },
+  {
+   "t": 34138,
+   "data": "{\"type\":\"report\",\"output\":\"In contrast, other regions are grappling with the logistical challenges of connecting these massive loads. The PJM Interconnection region, covering 13 states, has seen capacity market prices skyrocket by 174% for the 2025-2026 delivery year, reflecting the scarcity of available generation capacity ([TechJournal](https://techjournal.org/ai-data-centers-raising-your-electric-bill)). The EIA's national figures mask these regional disparities, as the aggregate data averages out the extreme volatility in specific markets. For example, while national residential demand is projected to be flat, specific regions like the West and Northeast are experiencing price increases that outpace inflation due to localized grid constraints ([CNBC](https://www.cnbc.com/2025/11/26/ai-data-center-frenzy-is-pushing-up-your-electric-bill-heres-why.html)).\\n\\n\"}"
+  },
+  {
+   "t": 34805,
+   "data": "{\"type\":\"report\",\"output\":\"The geographic clustering of data centers also influences the type of generation mix required. Regions with high renewable penetration, such as parts of the Midwest and West, are seeing data centers co-locate with wind and solar farms, whereas areas with higher gas availability, like Texas and Virginia, are relying more on natural gas peaker plants to ensure reliability ([Technology Org](https://www.technology.org/2026/07/08/us-power-demand-record-2026-2027-eia/)). This regional differentiation suggests that the path to meeting the 2026 and 2027 demand targets will vary significantly depending on local resource availability and transmission planning capabilities.\\n\\n\"}"
+  },
+  {
+   "t": 34858,
+   "data": "{\"type\":\"report\",\"output\":\"### The Role of Electrification and Broader Market Conditions\\n\\n\"}"
+  },
+  {
+   "t": 35571,
+   "data": "{\"type\":\"report\",\"output\":\"While AI data centers are the primary driver of the projected record highs, they do not act in isolation. The broader trend of electrification in the residential and transportation sectors contributes to the baseline demand growth. The EIA notes that homes and businesses are increasingly relying on electricity for heating and transportation, reducing their dependence on fossil fuels ([Reuters](https://za.investing.com/news/commodities-news/us-power-demand-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says-4565869)). This structural shift means that even without the AI boom, demand would likely have continued to rise, but the AI factor has accelerated the pace and magnitude of this increase.\\n\\n\"}"
+  },
+  {
+   "t": 36540,
+   "data": "{\"type\":\"report\",\"output\":\"The interplay between these factors creates a complex market dynamic where capacity costs are rising faster than energy costs. The EIA's projections indicate that while the total volume of electricity sold is increasing, the cost per unit is also climbing due to the need for new infrastructure. Residential retail electricity prices were already up 7.4% in September 2025, reaching approximately 18 cents per kilowatt-hour, and are forecast to continue rising, potentially outpacing inflation through 2026 ([CNBC](https://www.cnbc.com/2025/11/26/ai-data-center-frenzy-is-pushing-up-your-electric-bill-heres-why.html)). The EIA specifically forecasts residential prices to reach 18.21 cents in 2026 and 18.68 cents in 2027 ([TechJournal](https://techjournal.org/ai-data-centers-raising-your-electric-bill)).\\n\\n\"}"
+  },
+  {
+   "t": 37343,
+   "data": "{\"type\":\"report\",\"output\":\"This price trajectory is influenced by the fact that data centers often require dedicated transmission lines and substations, costs that are frequently socialized across all ratepayers due to existing utility tariff structures. Consequently, the record demand figures are not just a reflection of increased usage but also of the capital-intensive nature of modernizing the grid to support these new loads ([TechJournal](https://techjournal.org/ai-data-centers-raising-your-electric-bill)). The EIA's outlook serves as a critical indicator for policymakers and utility planners, highlighting the urgent need for coordinated investment in generation and transmission to prevent potential shortages in key regions by 2027 ([Technology Org](https://www.technology.org/2026/07/08/us-power-demand-record-2026-2027-eia/)).\"}"
+  },
+  {
+   "t": 37348,
+   "data": "{\"type\":\"logs\",\"content\":\"report_written\",\"output\":\"📝 Report written for 'Analyze EIA projections for record US power demand in 2026 and 2027 driven by AI data centers.'\",\"metadata\":null}"
+  },
+  {
+   "t": 37368,
+   "data": "{\"type\":\"logs\",\"content\":\"fetching_relevant_written_content\",\"output\":\"🔎 Getting relevant written content based on query: Evaluate the impact of AI data center demand on wholesale electricity prices and regional grid stability....\",\"metadata\":null}"
+  },
+  {
+   "t": 37375,
+   "data": "{\"type\":\"logs\",\"content\":\"writing_report\",\"output\":\"✍️ Writing report for 'Evaluate the impact of AI data center demand on wholesale electricity prices and regional grid stability.'...\",\"metadata\":null}"
+  },
+  {
+   "t": 38001,
+   "data": "{\"type\":\"report\",\"output\":\"## Wholesale Electricity Price Dynamics and Regional Disparities\\n\\n\"}"
+  },
+  {
+   "t": 39011,
+   "data": "{\"type\":\"report\",\"output\":\"The integration of AI data centers into the U.S. power grid has fundamentally altered the mechanics of wholesale electricity pricing, shifting the market from a relatively stable baseline to one characterized by acute regional volatility and structural price inflation. While national averages may suggest a modest impact, the underlying economic reality reveals a bifurcated market where specific regions face disproportionate cost burdens due to localized supply constraints. Recent analysis indicates that the rapid expansion of data center capacity has already exerted upward pressure on wholesale prices, with the Federal Reserve Bank of Dallas estimating a 2% to 6% increase in average national wholesale prices attributable to existing AI-driven demand ([AIntOps](https://aintops.com/blog/ai-datacenter-electricity-costs/)). This trend is projected to accelerate significantly by 2028, with generation costs potentially climbing 20% to 30% higher than they would be in a world without the AI buildout ([AIntOps](https://aintops.com/blog/ai-datacenter-electricity-costs/)).\\n\\n\"}"
+  },
+  {
+   "t": 40135,
+   "data": "{\"type\":\"report\",\"output\":\"The mechanism driving these price increases is the interaction between fixed, high-volume demand and the marginal cost of the last unit of electricity generated. In regions where data centers are concentrated, the \\\"spare capacity\\\"—the buffer of generation available to handle peak demand—is being eroded. When this buffer diminishes, the supply curve steepens, meaning that every additional megawatt of demand required by a data center forces the market to dispatch more expensive generation assets, such as peaker plants running on natural gas. A study by HEC Paris modeling 420 U.S. data center developments found that while national spillovers to electricity prices might remain modest, the costs become exponentially larger in exposed regions ([HEC Paris](https://www.hec.edu/en/dare/sustainability-society/ai-data-centers-amplify-grid-and-energy-price-risks)). In these high-stress areas, wholesale prices could rise by 20% to 40% if no new generation is built to meet the demand ([HEC Paris](https://www.hec.edu/en/dare/sustainability-society/ai-data-centers-amplify-grid-and-energy-price-risks)).\\n\\n\"}"
+  },
+  {
+   "t": 41282,
+   "data": "{\"type\":\"report\",\"output\":\"Furthermore, the economic burden is not solely borne by the data center operators; it is increasingly socialized across the broader economy through capacity markets and congestion costs. The PJM Interconnection, the largest regional transmission organization in the U.S., has seen capacity market prices surge, with some projections indicating a tenfold increase in capacity prices driven by data center growth ([Nature Energy](https://www.nature.com/articles/s41560-026-02163-x)). Goldman Sachs research highlights that data centers are responsible for a significant portion of additional capacity-market revenues, with estimates reaching $16.6 billion across two auctions in PJM alone ([Goldman Sachs](https://www.gspublishing.com/content/research/en/reports/2026/02/11/cefdda9f-3b7c-4a53-9950-dfcfa3c6bbc2.html)). This indicates that the cost of securing reliability for AI workloads is being passed on to all ratepayers in the form of higher capacity payments, even if the data centers themselves are contractually obligated to pay for their specific energy consumption.\\n\\n\"}"
+  },
+  {
+   "t": 42389,
+   "data": "{\"type\":\"report\",\"output\":\"The disparity in pricing is heavily influenced by the specific supply mix of the region. Markets with a higher reliance on natural gas are particularly vulnerable to global fuel price volatility, which is amplified by the new demand load. For instance, a 20% increase in natural gas costs was modeled to cause a drop in non-data-center output of roughly 0.15% of GDP, an effect comparable to the entire projected data center demand shock in a scenario without new generation ([HEC Paris](https://www.hec.edu/en/dare/sustainability-society/ai-data-centers-amplify-grid-and-energy-price-risks)). Conversely, regions with robust renewable portfolios may see less price volatility, as renewables have low marginal costs and do not expose the grid to the same fuel-price risks as fossil-fuel plants ([HEC Paris](https://www.hec.edu/en/dare/sustainability-society/ai-data-centers-amplify-grid-and-energy-price-risks)). However, the transition to renewables is not instantaneous, and the interim period of building out new infrastructure often relies on existing gas assets, temporarily reinforcing exposure to volatile fuel markets.\\n\\n\"}"
+  },
+  {
+   "t": 42440,
+   "data": "{\"type\":\"report\",\"output\":\"### Regional Concentration and the \\\"Missing\\\" Capacity Buffer\\n\\n\"}"
+  },
+  {
+   "t": 43332,
+   "data": "{\"type\":\"report\",\"output\":\"While the national narrative often focuses on aggregate demand figures, the true impact on wholesale prices is dictated by the geographic concentration of data center buildouts and the local availability of transmission and generation. The HEC Paris study underscores that the national average conceals a sharply uneven map, with Texas, Virginia, and the Carolinas accounting for two-thirds of the projected loss in non-data-center output ([HEC Paris](https://www.hec.edu/en/dare/sustainability-society/ai-data-centers-amplify-grid-and-energy-price-risks)). This concentration creates a \\\"missing\\\" capacity buffer; the grid appears capable of absorbing the new annual demand on average, but the constant load from data centers consumes the reserve margin that protects the system during extreme weather or exceptional demand peaks ([HEC Paris](https://www.hec.edu/en/dare/sustainability-society/ai-data-centers-amplify-grid-and-energy-price-risks)).\\n\\n\"}"
+  },
+  {
+   "t": 43541,
+   "data": "{\"type\":\"report\",\"output\":\"The following table illustrates the projected impact of data center demand on wholesale electricity prices and GDP output losses in key regions, based on HEC Paris modeling scenarios where no new generation is built to meet the demand:\\n\\n\"}"
+  },
+  {
+   "t": 43664,
+   "data": "{\"type\":\"report\",\"output\":\"| Region | Projected Wholesale Price Increase | Projected GDP Output Loss (Non-Data Center) | Key Drivers of Stress |\\n\"}"
+  },
+  {
+   "t": 43731,
+   "data": "{\"type\":\"report\",\"output\":\"| :--- | :--- | :--- | :--- |\\n\"}"
+  },
+  {
+   "t": 43967,
+   "data": "{\"type\":\"report\",\"output\":\"| **Texas (ERCOT)** | 20% - 40% | ~0.3% of State GDP | High reliance on natural gas; extreme heat events coinciding with peak data center load; limited interconnection capacity. |\\n\"}"
+  },
+  {
+   "t": 44216,
+   "data": "{\"type\":\"report\",\"output\":\"| **Virginia (PJM)** | 20% - 40% | ~0.3% of State GDP | Dense clustering of hyperscale facilities; aging transmission infrastructure; high concentration of data center load relative to local generation. |\\n\"}"
+  },
+  {
+   "t": 44466,
+   "data": "{\"type\":\"report\",\"output\":\"| **Carolinas (PJM/Southeast)** | 20% - 40% | ~0.3% of State GDP | Rapid buildout outpacing transmission planning; reliance on natural gas peakers; water-energy nexus constraints. |\\n\"}"
+  },
+  {
+   "t": 44614,
+   "data": "{\"type\":\"report\",\"output\":\"| **Pacific Northwest** | Significant Spike | Moderate | Smaller buildout volume but steep supply curve due to hydroelectric constraints and seasonal variability. |\\n\"}"
+  },
+  {
+   "t": 44841,
+   "data": "{\"type\":\"report\",\"output\":\"| **National Average** | 2% - 6% (Observed) | < 0.1% of GDP | Averaging effect masks regional extremes; sufficient spare capacity in other regions buffers the national price. |\\n\\n\"}"
+  },
+  {
+   "t": 44991,
+   "data": "{\"type\":\"report\",\"output\":\"*Note: Data derived from HEC Paris working paper \\\"The Energy Cost of AI and Data Centers\\\" and Goldman Sachs analysis of regional supply curves.*\\n\\n\"}"
+  },
+  {
+   "t": 45913,
+   "data": "{\"type\":\"report\",\"output\":\"The phenomenon of \\\"missing\\\" capacity is particularly acute in the Pacific Northwest, where a comparatively small buildout results in strong price effects due to the shape of the regional supply curve ([HEC Paris](https://www.hec.edu/en/dare/sustainability-society/ai-data-centers-amplify-grid-and-energy-price-risks)). In this region, the addition of data center load reduces the ability of the grid to manage hours of greatest strain, even if the annual energy balance seems manageable. This highlights a critical distinction between energy adequacy (having enough power for the average year) and capacity adequacy (having enough power for the peak hour). Data centers, with their large, steady loads and limited ability to ramp down, consume a disproportionate share of the capacity margin, thereby increasing the cost of reliability for the entire system ([Belfer Center](https://www.belfercenter.org/research-analysis/ai-data-centers-us-electric-grid)).\\n\\n\"}"
+  },
+  {
+   "t": 46884,
+   "data": "{\"type\":\"report\",\"output\":\"Furthermore, the geographic clustering of data centers exacerbates congestion costs. When developers favor areas with available generation and transmission, they often select regions that are already heavily exposed to the buildout, creating a feedback loop of increasing prices and infrastructure strain ([HEC Paris](https://www.hec.edu/en/dare/sustainability-society/ai-data-centers-amplify-grid-and-energy-price-risks)). For example, shifting 20% of planned demand from other regions to New York and California in the HEC Paris model resulted in a 40% increase in data center electricity bills, demonstrating how location-specific constraints can drastically alter cost structures ([HEC Paris](https://www.hec.edu/en/dare/sustainability-society/ai-data-centers-amplify-grid-and-energy-price-risks)). This suggests that the \\\"cost of AI\\\" is not a uniform national fee but a highly localized tax on the electricity market, where the price of power is determined by the tightest local supply curve.\\n\\n\"}"
+  },
+  {
+   "t": 46952,
+   "data": "{\"type\":\"report\",\"output\":\"### Structural Risks and the Volatility of Fossil Fuel Dependence\\n\\n\"}"
+  },
+  {
+   "t": 47899,
+   "data": "{\"type\":\"report\",\"output\":\"Beyond immediate price spikes, the influx of AI data center demand introduces structural risks to the U.S. electric grid that extend beyond simple economics. The primary concern is the amplification of dependence on volatile fossil-fuel prices. As noted by HEC Paris, the largest economic cost lies in the way AI demand amplifies two structural risks: less room on the grid when demand surges and greater exposure to volatile fossil-fuel prices ([HEC Paris](https://www.hec.edu/en/dare/sustainability-society/ai-data-centers-amplify-grid-and-energy-price-risks)). This vulnerability was highlighted by the 2026 Strait of Hormuz crisis, which disrupted global oil and liquefied natural gas flows, producing sharp swings in energy prices just as electricity demand reached new peaks in data center-heavy regions ([HEC Paris](https://www.hec.edu/en/dare/sustainability-society/ai-data-centers-amplify-grid-and-energy-price-risks)).\\n\\n\"}"
+  },
+  {
+   "t": 48788,
+   "data": "{\"type\":\"report\",\"output\":\"In regions like Texas, where ERCOT set an all-time record of 91,089 megawatts in July 2026, the overlap between geopolitical fuel risk and rapidly rising electricity use closely resembles the pressure identified in research models ([HEC Paris](https://www.hec.edu/en/dare/sustainability-society/ai-data-centers-amplify-grid-and-energy-price-risks)). The grid's reliance on natural gas for flexible baseload power means that any disruption in fuel supply or price spikes directly translate into higher electricity costs and potential reliability issues. While strong U.S. gas production has so far provided some protection, the margin for error is shrinking as data center loads consume the reserve capacity that would otherwise buffer the system against such shocks ([HEC Paris](https://www.hec.edu/en/dare/sustainability-society/ai-data-centers-amplify-grid-and-energy-price-risks)).\\n\\n\"}"
+  },
+  {
+   "t": 49956,
+   "data": "{\"type\":\"report\",\"output\":\"Moreover, the unique load profile of AI data centers—characterized by high-frequency oscillations and rapid load changes—poses challenges for grid stability that are distinct from traditional industrial loads. These facilities behave primarily as power-electronics-interfaced loads, generating significant harmonics and inducing voltage fluctuations that can degrade power quality across the distribution network ([MDPI Energies](https://www.mdpi.com/1996-1073/19/3/722)). During large-scale model training, synchronized operation of thousands of GPUs can create an oscillatory load signature, alternating between high-intensity computation and lower-power communication phases, which can increase demand by several megawatts in less than a second ([MDPI Energies](https://www.mdpi.com/1996-1073/19/3/722)). This extreme variability stresses frequency stability and can induce voltage flicker at the point of common coupling, potentially triggering malfunctions in neighboring industrial equipment or causing cascading disconnections if not properly managed ([MDPI Energies](https://www.mdpi.com/1996-1073/19/3/722)).\\n\\n\"}"
+  },
+  {
+   "t": 51376,
+   "data": "{\"type\":\"report\",\"output\":\"The economic implications of these structural risks are significant. Goldman Sachs estimates that power outages cost the U.S. economy about $8.4 per kilowatt-hour, a figure that underscores the value of maintaining grid reliability in the face of new demand shocks ([Goldman Sachs](https://www.gspublishing.com/content/research/en/reports/2026/02/11/cefdda9f-3b7c-4a53-9950-dfcfa3c6bbc2.html)). If tight power markets increase the duration or frequency of power outages, the output losses would be significantly larger than the current estimates of 0.1% to 0.3% of GDP in affected states ([Goldman Sachs](https://www.gspublishing.com/content/research/en/reports/2026/02/11/cefdda9f-3b7c-4a53-9950-dfcfa3c6bbc2.html)). Therefore, the wholesale price increases observed in 2026 are not merely a reflection of higher energy costs but also a precursor to potential reliability failures that could have far more severe macroeconomic consequences. The interplay between high-frequency load fluctuations, reduced reserve margins, and fossil fuel volatility creates a complex risk profile that requires immediate attention from grid operators and policymakers to prevent systemic instability in the coming years.\"}"
+  },
+  {
+   "t": 51376,
+   "data": "{\"type\":\"logs\",\"content\":\"report_written\",\"output\":\"📝 Report written for 'Evaluate the impact of AI data center demand on wholesale electricity prices and regional grid stability.'\",\"metadata\":null}"
+  },
+  {
+   "t": 51407,
+   "data": "{\"type\":\"logs\",\"content\":\"fetching_relevant_written_content\",\"output\":\"🔎 Getting relevant written content based on query: Assess the disparity between national-level electricity price trends and localized residential bill increases caused by data centers....\",\"metadata\":null}"
+  },
+  {
+   "t": 51407,
+   "data": "{\"type\":\"logs\",\"content\":\"writing_report\",\"output\":\"✍️ Writing report for 'Assess the disparity between national-level electricity price trends and localized residential bill increases caused by data centers.'...\",\"metadata\":null}"
+  },
+  {
+   "t": 52169,
+   "data": "{\"type\":\"report\",\"output\":\"## Disparity Between National Averages and Localized Residential Bill Impacts\\n\\n\"}"
+  },
+  {
+   "t": 52696,
+   "data": "{\"type\":\"report\",\"output\":\"The analysis of electricity pricing in 2026 reveals a significant divergence between national-level trends and the specific economic burdens placed on residential consumers in data center-heavy regions. While national averages often obscure the severity of localized price shocks, granular utility-level data indicates that the cost of AI infrastructure is being socialized unevenly across the customer base. A critical distinction exists between the national narrative, which attributes price hikes to fuel costs and aging infrastructure, and the regional reality where data center demand acts as a primary driver of rate increases.\\n\\n\"}"
+  },
+  {
+   "t": 52696,
+   "data": "{\"type\":\"report\",\"output\":\"### The Utility-Level Mechanism of Cost Socialization\\n\\n\"}"
+  },
+  {
+   "t": 53450,
+   "data": "{\"type\":\"report\",\"output\":\"Unlike national datasets that aggregate consumption across diverse market conditions, analysis at the utility service territory level provides a clearer picture of how data center demand translates to residential bills. Research utilizing a shift-share instrumental variable approach, which compares utility territories with high pre-AI fiber infrastructure to those with low shares, demonstrates a causal link between data center construction and rising residential rates. In high-fiber territories, where data center development was concentrated, real residential electricity prices began to rise sharply after 2021, whereas in low-fiber territories, prices continued to fall. This divergence suggests that the national average masks a bifurcated market where specific utility territories are bearing the brunt of the transition costs ([Scalera et al., 2026](https://cepr.org/voxeu/columns/how-data-centres-affect-electricity-prices-and-whom)).\\n\\n\"}"
+  },
+  {
+   "t": 54465,
+   "data": "{\"type\":\"report\",\"output\":\"The mechanism driving this disparity involves the allocation of fixed grid improvement costs. Data centers require substantial upgrades to transmission and distribution networks, including new high-voltage lines and substations. These capital expenditures are often deferred through special contracts or incentive packages, with the costs eventually passed on to consumers through changing rate designs. A study by Harvard Law School's Environmental and Energy Law Program argues that utility companies are actively passing these costs to the public, noting that the confidential nature of contracts between utilities and data center operators makes it difficult to identify the exact share of grid improvement costs borne by the general public ([Harvard Law School, 2025](https://eelp.law.harvard.edu/wp-content/uploads/2025/03/Harvard-ELI-Extracting-Profits-from-the-Public.pdf)).\\n\\n\"}"
+  },
+  {
+   "t": 54465,
+   "data": "{\"type\":\"report\",\"output\":\"### Differential Impact on Residential Versus Commercial Customers\\n\\n\"}"
+  },
+  {
+   "t": 55073,
+   "data": "{\"type\":\"report\",\"output\":\"A key finding in the 2026 landscape is the disproportionate impact of data center demand on residential customers compared to industrial and commercial entities. While data centers are large-load customers often on separate tariff schedules, the spillover effects on the general rate base are most acute for households. Quantitative analysis indicates that each additional data center increases average residential prices by approximately 0.182 cents per kilowatt-hour. More significantly, a one-standard-deviation increase in the post-AI data center stock, corresponding to roughly ten facilities, raises residential prices by 13% relative to the post-AI mean ([Scalera et al., 2026](https://cepr.org/voxeu/columns/how-data-centres-affect-electricity-prices-and-whom)).\\n\\n\"}"
+  },
+  {
+   "t": 55937,
+   "data": "{\"type\":\"report\",\"output\":\"The disparity in impact is not uniform across all customer classes. Industrial and commercial prices do rise, but the increase for residential customers is 30% to 40% larger in absolute terms, on top of already higher average rates. This occurs because residential customers often lack the bargaining power or alternative energy sources available to large industrial users. Furthermore, a single average hyperscaler facility, occupying about 60 acres, has been estimated to raise local prices by roughly 4%. The burden is exacerbated because households bear a disproportionate share of the burden relative to average business customers, which can include the data centers themselves, effectively creating a cross-subsidy where residential rates support the infrastructure required for the tech giants ([Scalera et al., 2026](https://cepr.org/voxeu/columns/how-data-centres-affect-electricity-prices-and-whom)).\\n\\n\"}"
+  },
+  {
+   "t": 55992,
+   "data": "{\"type\":\"report\",\"output\":\"### The Role of Utility Ownership and Nonprofit Models\\n\\n\"}"
+  },
+  {
+   "t": 56892,
+   "data": "{\"type\":\"report\",\"output\":\"The structure of the utility provider plays a pivotal role in determining whether data center demand results in higher residential bills. Evidence from 2026 indicates that residential price increases are close to zero in territories served by nonprofit utilities. In these markets, the absence of profit-maximization incentives and the presence of different rate-setting philosophies appear to insulate residential customers from the full cost of new large-load demands. This finding challenges the assumption that data center demand universally drives up consumer costs, highlighting that regulatory and ownership structures are critical variables in the cost allocation equation ([Scalera et al., 2026](https://cepr.org/voxeu/columns/how-data-centres-affect-electricity-prices-and-whom)).\\n\\n\"}"
+  },
+  {
+   "t": 57138,
+   "data": "{\"type\":\"report\",\"output\":\"In contrast, investor-owned utilities in constrained markets face intense pressure to recover costs, leading to more pronounced price hikes. The contrast between nonprofit and investor-owned models underscores that the \\\"cost of AI\\\" is not an inherent physical law of electricity but a result of specific market designs and regulatory frameworks. This distinction is vital for policymakers, as it suggests that structural changes in utility ownership or regulation could mitigate the impact on residential bills without necessarily halting data center development.\\n\\n\"}"
+  },
+  {
+   "t": 57192,
+   "data": "{\"type\":\"report\",\"output\":\"### State-Level Policy Interventions and Rate Protection Measures\\n\\n\"}"
+  },
+  {
+   "t": 57954,
+   "data": "{\"type\":\"report\",\"output\":\"In response to the rising energy bills linked to data centers, several states have enacted legislation aimed at protecting residential consumers. Virginia, for instance, has introduced two bills in its 2026 legislative session specifically targeting the burden on households. One bill, HB155, targets large-load additions directly, requiring facilities to follow requirements linked to demand reduction and energy storage to mitigate the need for an \\\"unreasonable cross-subsidy\\\" across the utility's customer base. Another bill, HB503, explicitly bars utilities from passing specific costs associated with data centers on to residential consumers ([Brookings Institution, 2026](https://www.brookings.edu/articles/confronting-and-addressing-rising-energy-bills-linked-to-data-centers/)).\\n\\n\"}"
+  },
+  {
+   "t": 58699,
+   "data": "{\"type\":\"report\",\"output\":\"These state-level actions represent a growing trend of regulatory intervention to address the evolving challenge data centers present to the energy grid. However, the effectiveness of these measures depends on the ability of regulators to enforce cost-allocation rules before the costs are socialized. In the absence of such protections, the lag between infrastructure investment and rate recovery means that residential customers often pay for grid upgrades years after the data center has begun operation. The Virginia legislation serves as a starting effort, but broader national resonance is required to ensure that the costs of the AI boom do not permanently elevate the baseline cost of living for average households ([Brookings Institution, 2026](https://www.brookings.edu/articles/confronting-and-addressing-rising-energy-bills-linked-to-data-centers/)).\\n\\n\"}"
+  },
+  {
+   "t": 58801,
+   "data": "{\"type\":\"report\",\"output\":\"### The Lag Effect and Long-Term Rate Adjustments\\n\\n\"}"
+  },
+  {
+   "t": 59504,
+   "data": "{\"type\":\"report\",\"output\":\"A critical nuance in understanding the impact of data centers on electricity bills is the time lag between the opening of a facility and the adjustment of residential rates. While some studies suggest that bills do not necessarily change the year a data center opens, utility costs often move into residential rates slowly through rate cases and long-term infrastructure planning. Analysis of data up to 2024 showed that when looking several years after a data center opened, some positive estimates emerged four to five years later, though these results were less certain due to limited observation windows ([New Jersey State Policy Lab, 2026](https://policylab.rutgers.edu/publication/are-data-centers-raising-your-electric-bill-mostly-not-yet/)).\\n\\n\"}"
+  },
+  {
+   "t": 60337,
+   "data": "{\"type\":\"report\",\"output\":\"This lag effect complicates the attribution of price hikes to specific data centers in the short term. Residential customers may see their bills rise due to general inflation or fuel costs, only to discover years later that the rate case included significant recoveries for data center-driven grid upgrades. The \\\"not yet\\\" phenomenon observed in some ZIP-level studies is partly due to the end of data in 2024, but the structural reality is that rate adjustments are deferred. Consequently, the full impact of the 2021-2026 data center boom may not be fully reflected in residential bills until the mid-2020s, creating a delayed shock to household budgets ([New Jersey State Policy Lab, 2026](https://policylab.rutgers.edu/publication/are-data-centers-raising-your-electric-bill-mostly-not-yet/)).\\n\\n\"}"
+  },
+  {
+   "t": 60384,
+   "data": "{\"type\":\"report\",\"output\":\"### Regional Variations in Cost Recovery Mechanisms\\n\\n\"}"
+  },
+  {
+   "t": 61287,
+   "data": "{\"type\":\"report\",\"output\":\"The method by which electricity markets recover the cost of new demand significantly influences the final price paid by residential customers. In regions with surplus supply, such as North Dakota, new demand from data centers has often spread fixed grid costs across more customers, resulting in stable or even falling inflation-adjusted prices despite a 40% increase in demand. Conversely, in constrained capacity markets like PJM, prices have increased dramatically as data center demand has increased, with capacity auction prices soaring by 174% for the 2025-2026 delivery year ([KRDO, 2026](https://krdo.com/stacker-business-economy/2026/11/09/how-data-center-demand-is-reshaping-electricity-costs-across-the-us/)).\\n\\n\"}"
+  },
+  {
+   "t": 62144,
+   "data": "{\"type\":\"report\",\"output\":\"This regional variation highlights that the impact of data centers is not uniform. The Base Residual Auction mechanism in PJM, which accounts for most of the \\\"runaway\\\" energy prices in the region, forecasts future prices based on anticipated demand. However, these forecasts often overestimate future demand, particularly as many planned data centers faced construction delays due to chronic memory shortages. In contrast, markets like ERCOT in Texas have seen relatively stable prices despite significant data center development, suggesting that market design and the availability of spare capacity are the primary determinants of whether data centers raise residential bills ([CNBC, 2026](https://www.cnbc.com/2026/03/13/ai-data-centers-electricity-prices-backlash-ratepayer-protection.html)).\\n\\n\"}"
+  },
+  {
+   "t": 62149,
+   "data": "{\"type\":\"report\",\"output\":\"### The Perception Gap Between Data and Lived Experience\\n\\n\"}"
+  },
+  {
+   "t": 62655,
+   "data": "{\"type\":\"report\",\"output\":\"Despite quantitative findings that data centers may not yet produce large, detectable increases in local residential bills at the ZIP code level, the perception gap remains a significant policy challenge. When a household sees its bill jump by $30 or $40, the connection to a new data center nearby feels obvious, even if the statistical correlation is weak or non-existent at that specific granularity. This perception shapes whether people trust utilities, support new infrastructure, and expect regulators to act ([New Jersey State Policy Lab, 2026](https://policylab.rutgers.edu/publication/are-data-centers-raising-your-electric-bill-mostly-not-yet/)).\\n\\n\"}"
+  },
+  {
+   "t": 63441,
+   "data": "{\"type\":\"report\",\"output\":\"The disconnect between system-level data and lived experience underscores the need for transparent cost allocation rules. If residents believe they are being asked to subsidize the AI buildout, regulators need to be able to show clearly whether they are or are not. The evidence suggests that while the immediate impact on individual bills might be masked by other factors like fuel costs, the long-term structural changes to rate design driven by data center demand are inevitable. Policymakers must address this gap by ensuring that large-load tariffs and cost-allocation rules are robust enough to protect residential customers before the next wave of electricity demand arrives at full scale ([New Jersey State Policy Lab, 2026](https://policylab.rutgers.edu/publication/are-data-centers-raising-your-electric-bill-mostly-not-yet/)).\"}"
+  },
+  {
+   "t": 63446,
+   "data": "{\"type\":\"logs\",\"content\":\"report_written\",\"output\":\"📝 Report written for 'Assess the disparity between national-level electricity price trends and localized residential bill increases caused by data centers.'\",\"metadata\":null}"
+  },
+  {
+   "t": 63485,
+   "data": "{\"type\":\"logs\",\"content\":\"writing_conclusion\",\"output\":\"✍️ Writing conclusion for 'How are AI data centers changing US electricity demand and prices in 2026?'...\",\"metadata\":null}"
+  },
+  {
+   "t": 63788,
+   "data": "{\"type\":\"report\",\"output\":\"## Conclusion\\n\\n\"}"
+  },
+  {
+   "t": 64927,
+   "data": "{\"type\":\"report\",\"output\":\"The United States is poised to breach historical electricity demand records in 2026 and 2027, driven primarily by the exponential expansion of AI data centers rather than traditional electrification trends. The EIA projects national consumption will rise to 4,288 billion kWh in 2026, with the commercial sector acting as the primary engine for this growth due to the deployment of hyperscale facilities supporting large language models and high-performance computing ([Reuters](https://boereport.com/2026/10/06/us-power-use-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says-7/)). While the national generation mix will see a continued shift toward renewables and a decline in coal, natural gas remains the critical backbone for providing the flexible baseload power required to meet these new, steady loads ([BOE Report](https://boereport.com/2026/10/06/us-power-use-to-beat-record-highs-in-2026-and-2027-as-ai-use-surges-eia-says-7/)).\\n\\n\"}"
+  },
+  {
+   "t": 65847,
+   "data": "{\"type\":\"report\",\"output\":\"However, the most significant implications of this surge are the acute regional disparities in pricing and grid stability that national averages obscure. In data center-heavy regions such as Virginia, Texas, and the Carolinas, wholesale electricity prices could increase by 20% to 40% as the \\\"missing capacity buffer\\\" erodes, forcing the grid to rely on expensive peaker plants and exposing consumers to volatile fossil fuel markets ([HEC Paris](https://www.hec.edu/en/dare/sustainability-society/ai-data-centers-amplify-grid-and-energy-price-risks)). Furthermore, the economic burden is being socialized unevenly, with residential customers in investor-owned utility territories facing bill increases of 13% or more, while nonprofit utilities and regions with surplus capacity see minimal impact ([Scalera et al., 2026](https://cepr.org/voxeu/columns/how-data-centres-affect-electricity-prices-and-whom)).\\n\\n\"}"
+  },
+  {
+   "t": 66975,
+   "data": "{\"type\":\"report\",\"output\":\"Moving forward, policymakers and grid operators must address the structural risks posed by the unique load profiles of AI facilities, which include high-frequency oscillations that challenge frequency stability and voltage quality ([MDPI Energies](https://www.mdpi.com/1996-1073/19/3/722)). Immediate action is required to accelerate transmission planning and enforce robust cost-allocation mechanisms that prevent the socialization of grid upgrade costs onto residential ratepayers, as seen in emerging state-level interventions like Virginia's HB503 ([Brookings Institution](https://www.brookings.edu/articles/confronting-and-addressing-rising-energy-bills-linked-to-data-centers/)). Without coordinated investment in generation diversity and transmission capacity, the U.S. grid faces a heightened risk of reliability failures and macroeconomic output losses that could far exceed the direct costs of electricity consumption ([Goldman Sachs](https://www.gspublishing.com/content/research/en/reports/2026/02/11/cefdda9f-3b7c-4a53-9950-dfcfa3c6bbc2.html)).\"}"
+  },
+  {
+   "t": 66979,
+   "data": "{\"type\":\"logs\",\"content\":\"conclusion_written\",\"output\":\"📝 Conclusion written for 'How are AI data centers changing US electricity demand and prices in 2026?'\",\"metadata\":null}"
+  },
+  {
+   "t": 67374,
+   "data": "{\"type\":\"path\",\"output\":{\"pdf\":\"\",\"docx\":\"outputs/task_1794406548_228396f68f.docx\",\"md\":\"outputs/task_1794406548_228396f68f.md\",\"json\":\"outputs/task_1794406548_228396f68f.json\"}}"
+  }
+ ],
+ "chat": {
+  "about": "The chat command as the new page sends it (message, report, messages); answered over a fresh socket. Times are ms after the command.",
+  "question": "Which costs matter most when comparing the two?",
+  "frames": [
+   {
+    "t": 2638,
+    "data": "{\"type\":\"chat\",\"content\":\"Based on the provided research report, the specific monetary costs (such as upfront installation or long-term operational bills) are not detailed. However, the report highlights that **user experience and comfort** are the most significant differentiating factors that influence the overall value proposition when comparing the two technologies.\\n\\nThe report notes that the \\\"user experience differs significantly\\\" between gas furnaces and heat pumps due to their operational mechanics:\\n\\n| Feature | Gas Furnace | Heat Pump |\\n| :--- | :--- | :--- |\\n| **Operating Mechanism** | Burns fuel in a heat exchanger | Moves heat |\\n| **Air Delivery** | Blasts hot air in short cycles | Runs continuously at variable speeds |\\n| **Supply Air Temperature** | High (120°F–140°F) | Lower (90°F–110°F) |\\n\\nWhile the report mentions that \\\"raw efficiency and cost\\\" are factors, it explicitly contrasts these with the **comfort** provided by the system dynamics. The continuous, variable-speed operation of heat pumps delivering air at a more moderate temperature is presented as a key distinction from the short, high-temperature bursts of gas furnaces.\\n\\n**Conclusion:**\\nAccording to the text, while efficiency and raw cost are mentioned, the **comfort and system dynamics** (specifically air temperature and cycle duration) are the most distinct aspects highlighted in the comparison.\\n\\n> \\\"Beyond raw efficiency and cost, the user experience differs significantly between the two technologies.\\\" — *Research Report*\\n\\n*Source: Research report content provided.*\",\"role\":\"assistant\",\"metadata\":null}"
+   }
+  ]
+ },
+ "api_reports": {
+  "status": 200,
+  "body": "{\"reports\":[]}"
+ },
+ "downloads": {
+  "docx": {
+   "path": "outputs/task_1794406548_228396f68f.docx",
+   "file": "files/task_1794406548_228396f68f.docx"
+  },
+  "md": {
+   "path": "outputs/task_1794406548_228396f68f.md",
+   "file": "files/task_1794406548_228396f68f.md"
+  },
+  "json": {
+   "path": "outputs/task_1794406548_228396f68f.json",
+   "file": "files/task_1794406548_228396f68f.json"
+  }
+ }
+}

@@ -29,9 +29,7 @@ Upstream files changed (every line, with its reason):
 
 | File | Lines | Change | Why |
 |---|---|---|---|
-| `frontend/index.html` | 9, 10, 11 | `/site/vendor/css/bootstrap.min.css`, `/site/vendor/css/fontawesome.min.css`, `/site/styles.css` -> without the leading `/` | B3OS serves the page under `/sbx/<host>/<port>/<token>/`. An absolute path drops that prefix and 404s; a relative one resolves under it, and the same way at `/` for a local run |
-| `frontend/index.html` | 150 | `/static/gptr-logo.png` -> `static/gptr-logo.png` | same |
-| `frontend/index.html` | 408, 409, 410 | `/site/vendor/js/showdown.min.js`, `/site/vendor/js/purify.min.js`, `/site/scripts.js` -> relative | same |
+| `frontend/index.html`, `frontend/styles.css`, `frontend/scripts.js` | all | rewritten: the B3OS Researcher page (see [The page](#the-page)) | the owner asked for the page to look and work like a B3OS product. The server protocol is unchanged; every path stays relative, because B3OS serves the page under `/sbx/<host>/<port>/<token>/`, where an absolute path drops that prefix and 404s |
 | `backend/server/server_utils.py` | 28 | import `public_base`, `publish_report` | the publish hook |
 | `backend/server/server_utils.py` | 188 | after the WebSocket path sends the report's file paths, `await publish_report(...)` with the report, its `.md` path and the URL the page was opened at | start the publish routine after each report from the page |
 | `backend/server/app.py` | 38 | import `public_base`, `publish_report` | the publish hook |
@@ -42,14 +40,11 @@ Upstream files changed (every line, with its reason):
 | `backend/server/app.py` | 124-131 | behind the preview (`X-Forwarded-Prefix` set), a response without `Cache-Control` gets `private, no-cache` | on 2026-11-10 a static file the preview had served once answered every later request with `503 node_unavailable` (a shared cache in front of the node); private responses are not cached there. Browsers still cache and revalidate |
 | `gpt_researcher/scraper/firecrawl/firecrawl.py` | 3, 23-41, 50 | when `FIRECRAWL_SERVER_URL` has a path, endpoints are appended to the whole base | firecrawl-py 4.x builds `urljoin(api_url + "/", "/v2/scrape")`, which drops `/compat/firecrawl`: every scrape went to `127.0.0.1:7700/v2/scrape` and answered 404 |
 | `gpt_researcher/scraper/firecrawl/firecrawl.py` | 92-94 | `scrape(url)` without `formats=["markdown"]` (Markdown is the default) | with any option firecrawl-py 4.55.0 adds its defaults, `fastMode: false` among them, and B3OS's compat layer answers `400 unrecognized_keys: fastMode` |
-| `frontend/scripts.js` | 788-790 | `startResearch` clears `lastRequestData` | upstream bug, not B3OS's: the socket's `onopen` treats `isResearchActive && lastRequestData` as a reconnect and does not send `start`, so a second research in the same page load hung with no message (seen on B3OS 2026-11-11) |
 | `gpt_researcher/skills/deep_research.py` | 4, 17-19 | `MAX_CONTEXT_WORDS` reads `DEEP_RESEARCH_MAX_CONTEXT_WORDS` (default 25000, upstream's) | 25,000 words of web text is about 33k tokens; with 4,096 output tokens the final Deep Research write asked `b3os/default` (32,768 tokens) for more than its window and failed with `400 context_length_exceeded` (`Error: Failed to get response from openai API` on the page). `b3os.yaml` sets 15000 |
 | `.env.example` | renamed `env.example` | content unchanged | B3OS refuses to deploy a service root that tracks a file whose name starts with `.env`, and the GitHub App path has no `--allow-secret-files`. Copy `env.example` to `.env` for a local run, as upstream's README says for `.env.example` |
 
 Checked and left alone: the download links the report message carries (`outputs/<name>.pdf`, `.docx`, `.md`,
-`.json`) are already relative, so they resolve under the prefix; the WebSocket URL is built from
-`location.pathname` plus `ws`, which already carries the prefix; `frontend/styles.css` loads its logo with
-`./static/...` relative to the stylesheet; the favicon link is relative.
+`.json`) are already relative, so they resolve under the prefix.
 
 New files:
 
@@ -64,6 +59,60 @@ New files:
 
 Why some files moved: `b3os/env.b3os` is not named `.env.b3os`, and `.env.example` became `env.example`, for the
 `.env*` rule above.
+
+## The page
+
+`frontend/` is the page the server serves at `/` (`index.html`) and under `/site/` (everything in `frontend/`) and
+`/static/` (`frontend/static/`). Three files make it, with no framework, no CDN and no build step:
+
+| File | What it holds |
+|---|---|
+| `frontend/index.html` | The markup of every state: ask, running, report, the history drawer; the inline SVG icons, the B3OS wordmark and mark |
+| `frontend/styles.css` | The tokens (light, and dark under `prefers-color-scheme`), the dot grid, every component, the print styles (Download, PDF prints the report only) |
+| `frontend/scripts.js` | The WebSocket client and everything that draws: the steps, the report, downloads, follow-ups, history |
+| `frontend/static/fonts/` | Geist and Geist Mono, latin, variable (SIL Open Font License 1.1, `OFL.txt` beside them) |
+| `frontend/static/brand/` | The B3OS wordmark, mark and favicon, as in b3os-beta |
+| `frontend/vendor/js/` | Showdown and DOMPurify (upstream's copies), loaded when a report is first drawn, not on the first screen |
+
+Where the look comes from: b3os-beta `apps/web/src/styles/tokens.css` (colours, radii, light and dark),
+`recipes.css` and `app.css` (buttons, the segmented control, inputs, the deploy timeline, rendered Markdown), and
+`apps/web/public/brand/`. Take values from there; `styles.css` copies them under short names (`--ink`, `--line`,
+`--accent`...) at the top of the file. The design and its rules are in the orchestrator's `gptr-ui/DESIGN.md`.
+
+What the page relies on from the server, unchanged from upstream: `start {json}`, `chat {json}` (it sends
+`message`, `report` and `messages`, so answers are about the report) and `ping` on the WebSocket at `<page>ws`; the
+`logs`, `report`, `path`, `chat` and `error` messages; the `outputs/` links of the `path` message. The four steps
+are mapped from the `logs` messages' `content` in `STEP_OF` at the top of `scripts.js`; a `content` that is not
+there goes to the log only. Stop closes the socket, and the server cancels a research whose socket closes
+(`handle_websocket_communication`). History is upstream's cookie `conversationHistory` (path `/`), with the report
+length and its numbers added; a row reopens its report from `outputs/`, which a redeploy empties. The server sends
+no PDF link on B3OS (no Pango and Cairo), so Download, PDF prints; Download, JSON is built in the page and holds the
+report, its sources and the server's event log.
+
+### Working on it without a model or a network
+
+`frontend-dev/stub.mjs` (Node 18+, no dependencies) serves `frontend/` the way `backend/server/app.py` does, under a
+preview-like prefix, and answers the WebSocket by replaying a recorded run from `frontend-dev/recording/`
+(`session.json`: a Summary; `session-detailed.json`: a Detailed; both recorded on B3OS from real runs, test data):
+
+```bash
+node frontend-dev/stub.mjs --port 8765          # then open http://127.0.0.1:8765/preview/app/8000/
+curl '127.0.0.1:8765/__stub/config?speed=10'     # 10x; 1 is real time
+curl '127.0.0.1:8765/__stub/config?hold=40'      # stop before frame 40 (hold=report, hold=path); /__stub/release goes on
+curl '127.0.0.1:8765/__stub/config?drop=30&dropMode=forever'   # cut the connection (recover is the default)
+curl '127.0.0.1:8765/__stub/config?error=50'     # the server's error message mid-run
+curl '127.0.0.1:8765/__stub/config?session=detailed'           # or scenario=tablecode, scenario=sources40
+curl '127.0.0.1:8765/__stub/frames'              # the frames, to pick a hold
+```
+
+Look at a change at 1440 and 390 px, light and dark, before it ships: nothing may scroll sideways at 390 (tables and
+code wrap), touch targets are 44 px and form fields 16 px there.
+
+### Shipping a change
+
+Commit, push to the branch B3OS deploys (`git push https://github.com/b3-fun/gpt-researcher.git <branch>:b3os`), and
+`b3os apply --yes` from a checkout of that commit ([Deploy it](#deploy-it)). The build snapshot is reused (only
+`frontend/` changed), so a page change is live in about 15 s, at a new preview URL.
 
 ## The publish hook
 
@@ -142,8 +191,8 @@ Anthropic) needs a vault connection as a secret and `api.anthropic.com` in egres
 ## Known not to work
 
 - **PDF export.** WeasyPrint (through md2pdf) needs Pango and Cairo, which the `base` template does not have and
-  `b3os.yaml` cannot install (no apt step, no Dockerfile). The PDF link is missing from each report; Markdown, Word
-  and JSON work. The multi-agent report's PDF step fails the same way.
+  `b3os.yaml` cannot install (no apt step, no Dockerfile). The server sends no PDF link; the page's Download, PDF
+  prints the report instead (the browser's Save as PDF). The multi-agent report's PDF step fails the same way.
 - **Synchronous `POST /report/` over 65 seconds.** With `generate_in_background: false` the request answers only
   when the research ends, and the preview drops any response that has not started within 65 s. Use the page (its
   WebSocket may stay open for an hour), or `generate_in_background: true` (the default). Upstream's background
