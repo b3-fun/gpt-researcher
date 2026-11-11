@@ -281,7 +281,8 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
   flex-direction: column;
   min-height: calc(100svh - var(--header-h) - 64px);
 }
-.ask__center { flex: 1 0 auto; display: flex; flex-direction: column; justify-content: center; padding: 24px 0 32px; }
+/* From the top, not centred: Options opens downward and nothing above it moves. */
+.ask__center { flex: 1 0 auto; display: flex; flex-direction: column; justify-content: flex-start; padding: clamp(32px, 16vh, 160px) 0 32px; }
 .ask__title {
   margin: 0 0 16px;
   color: var(--ink-display);
