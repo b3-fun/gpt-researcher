@@ -319,7 +319,8 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
 }
 .prompt textarea::placeholder { color: var(--ink-4); }
 .prompt textarea:focus-visible { outline: none; }
-.prompt:has(textarea:focus-visible) { outline: 2px solid var(--focus); outline-offset: -1px; }
+/* Focus in a writing field darkens its border: blue stays for the one primary action and for links. */
+.prompt:has(textarea:focus-visible), .chat:has(textarea:focus-visible) { outline: none; border-color: var(--ink-4); }
 .prompt__bar { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 0 8px 8px 16px; }
 .prompt__hint { margin-right: auto; color: var(--ink-3); font: 400 12px/1 var(--font-sans); }
 .prompt__time { color: var(--ink-3); font: 400 13px/1 var(--font-sans); white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -665,7 +666,6 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
   border-radius: 12px;
   background: var(--surface);
 }
-.chat:has(textarea:focus-visible) { outline: 2px solid var(--focus); outline-offset: -1px; }
 .chat textarea {
   flex: 1;
   min-width: 0;
