@@ -745,7 +745,12 @@
   }
 
   // ---------- the report state ----------
+  // The timeline folds and the action row appears above the report: the text being read stays where it was (the
+  // page scrolls by what moved), with or without the browser's scroll anchoring (Safari on an iPhone has none).
   function showReportState() {
+    const rep = $('report');
+    const y0 = rep.getBoundingClientRect().top;
+    document.documentElement.style.overflowAnchor = 'none';
     $('runMeta').hidden = true;
     $('stop').hidden = true;
     $('steps').hidden = true;
@@ -757,6 +762,9 @@
     buildDownloads();
     $('actions').hidden = false;
     $('followup').hidden = false;
+    const dy = rep.getBoundingClientRect().top - y0;
+    if (window.scrollY > 0 && dy) window.scrollBy(0, dy);
+    document.documentElement.style.overflowAnchor = '';
   }
   // A source is a page the report cites (a row of the first Sources list): the done line, History and the JSON
   // download count the same rows. The rows behind "Show N not cited" are not counted.
