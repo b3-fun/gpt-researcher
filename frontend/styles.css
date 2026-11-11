@@ -320,6 +320,7 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
 .prompt:has(textarea:focus-visible) { outline: 2px solid var(--focus); outline-offset: -1px; }
 .prompt__bar { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 0 8px 8px 16px; }
 .prompt__hint { margin-right: auto; color: var(--ink-3); font: 400 12px/1 var(--font-sans); }
+.prompt__time { color: var(--ink-3); font: 400 13px/1 var(--font-sans); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .kbd {
   display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px;
   border: 1px solid var(--line-soft); border-radius: 6px; background: var(--muted);
@@ -337,7 +338,7 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
   border-radius: 12px;
   background: var(--sunken);
   box-shadow: var(--shadow-groove);
-  min-width: 0;
+  flex: none;
 }
 .seg__opt { position: relative; display: inline-flex; }
 .seg__opt input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
@@ -355,17 +356,18 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
   cursor: pointer;
   transition: color var(--dur-fast) var(--ease-ui), background-color var(--dur-fast) var(--ease-ui), box-shadow var(--dur-fast) var(--ease-ui);
 }
-.seg__opt span small { font: 400 13px/1 var(--font-sans); color: var(--ink-3); display: none; }
 .seg__opt input:checked + span { background: var(--surface-raised); border-color: var(--line); color: var(--ink); box-shadow: var(--shadow-pressed); }
-.seg__opt input:checked + span small { display: inline; }
 .seg__opt input:focus-visible + span { outline: 2px solid var(--focus); outline-offset: 1px; }
 @media (hover: hover) { .seg__opt span:hover { color: var(--ink); } }
-.options-btn { margin-left: auto; }
+.options-btn { flex: none; margin-left: auto; }
 .options-btn .options-btn__icon { display: none; }
 @media (max-width: 767px) {
   .seg__opt span { height: 44px; padding: 0 10px; }
 }
-@media (max-width: 420px) {
+@media (max-width: 340px) {
+  .seg__opt span { padding: 0 8px; }
+}
+@media (max-width: 379px) {
   .options-btn { width: 44px; padding: 0; }
   .options-btn .options-btn__label, .options-btn .chev { display: none; }
   .options-btn .options-btn__icon { display: block; }

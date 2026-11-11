@@ -17,6 +17,8 @@
   const $ = (id) => document.getElementById(id);
   const debug = (...a) => console.debug('[researcher]', ...a);
   const LENGTHS = { research_report: 'Summary', detailed_report: 'Detailed', deep: 'Deep' };
+  // How long each length takes on this deployment (timed on B3OS, 2026-11-11), in seconds and in words.
+  const ESTIMATE = { research_report: [30, 'about 30 s'], detailed_report: [60, 'about 1 min'], deep: [90, 'about 1.5 min'] };
   const STEPS = ['plan', 'search', 'read', 'write'];
   // Server log `content` -> the step it belongs to. Anything not here goes to the log only.
   const STEP_OF = {
@@ -978,6 +980,9 @@
       if (!req.task) { $('taskError').textContent = 'Type a question first.'; $('taskError').hidden = false; task.focus(); return; }
       startResearch(req);
     });
+    const showLengthTime = () => { $('lengthTime').textContent = ESTIMATE[readRequest().report_type][1]; };
+    for (const r of document.querySelectorAll('input[name="report_type"]')) r.addEventListener('change', showLengthTime);
+    showLengthTime();
     $('optionsToggle').addEventListener('click', () => {
       const open = $('options').hidden;
       $('options').hidden = !open;

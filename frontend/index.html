@@ -51,15 +51,16 @@
           <textarea id="task" name="task" rows="3" autofocus autocomplete="off" spellcheck="true" placeholder="A question, a topic or an idea" aria-describedby="taskError"></textarea>
           <div class="prompt__bar">
             <span class="prompt__hint" id="hint" aria-hidden="true"><span class="kbd" id="hintMod">Ctrl</span> <span class="kbd">Enter</span></span>
+            <span class="prompt__time" id="lengthTime" aria-live="polite">about 30 s</span>
             <button type="submit" class="btn btn--brand" id="go">Research</button>
           </div>
         </div>
         <p class="prompt__error" id="taskError" role="alert" hidden></p>
         <div class="controls">
           <div class="seg" role="radiogroup" aria-label="Report length">
-            <label class="seg__opt"><input type="radio" name="report_type" value="research_report" checked><span>Summary <small>about 30 s</small></span></label>
-            <label class="seg__opt"><input type="radio" name="report_type" value="detailed_report"><span>Detailed <small>about 1 min</small></span></label>
-            <label class="seg__opt"><input type="radio" name="report_type" value="deep"><span>Deep <small>about 1.5 min</small></span></label>
+            <label class="seg__opt"><input type="radio" name="report_type" value="research_report" checked><span>Summary</span></label>
+            <label class="seg__opt"><input type="radio" name="report_type" value="detailed_report"><span>Detailed</span></label>
+            <label class="seg__opt"><input type="radio" name="report_type" value="deep"><span>Deep</span></label>
           </div>
           <button type="button" class="btn btn--ghost options-btn" id="optionsToggle" aria-expanded="false" aria-controls="options" aria-label="Options" title="Options">
             <span class="options-btn__label">Options</span><svg class="icon chev" aria-hidden="true"><use href="#i-chevron"/></svg>
