@@ -717,6 +717,7 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
 .hist button:focus-visible { outline-offset: -2px; }
 .hist button[aria-disabled="true"] { cursor: default; }
 .hist button[aria-disabled="true"]:hover { background: none; }
+.hist button[aria-disabled="true"] .hist__q { color: var(--ink-3); }
 .hist__q { width: 100%; overflow: hidden; color: var(--ink); font: 500 14px/1.4 var(--font-sans); white-space: nowrap; text-overflow: ellipsis; }
 .hist__meta { color: var(--ink-3); font-size: 12px; line-height: 1.4; }
 .hist__empty { margin: 0; padding: 20px; color: var(--ink-3); font-size: 14px; }
