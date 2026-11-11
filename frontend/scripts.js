@@ -732,7 +732,7 @@
       t.remove();
     }
     const label = $('copyLabel');
-    label.textContent = ok ? 'Copied' : 'Copy failed';
+    label.textContent = ok ? 'Copied' : 'Failed';
     setTimeout(() => { label.textContent = 'Copy'; }, 2000);
   }
 

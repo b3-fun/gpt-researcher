@@ -528,6 +528,14 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
   border-bottom: 1px solid var(--line);
 }
 .actions__spacer { flex: 1; }
+#copyLabel { display: inline-block; min-width: 3.3em; text-align: left; }   /* Copy, Copied, Failed: one width */
+@media (max-width: 420px) {
+  .actions { gap: 4px; }
+  .actions .btn--ghost { padding: 0 8px; }
+}
+@media (max-width: 379px) {
+  .actions #copy > .icon, .actions #dlBtn > .icon:first-child { display: none; }
+}
 .menu { position: relative; }
 .menu__list {
   position: absolute;
