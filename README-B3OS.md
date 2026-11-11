@@ -86,8 +86,11 @@ are mapped from the `logs` messages' `content` in `STEP_OF` at the top of `scrip
 there goes to the log only. Stop closes the socket, and the server cancels a research whose socket closes
 (`handle_websocket_communication`). History is upstream's cookie `conversationHistory` (path `/`), with the report
 length and its numbers added; a row reopens its report from `outputs/`, which a redeploy empties. The server sends
-no PDF link on B3OS (no Pango and Cairo), so Download, PDF prints; Download, JSON is built in the page and holds the
-report, its sources and the server's event log.
+no PDF link on B3OS (no Pango and Cairo), so the Download menu offers Print to PDF; Download, JSON is built in the
+page and holds the report, its sources and the server's event log. A source is a row of the report's Sources list:
+the done line, History and the JSON count those rows. While a run streams, the facts line gives the time against the
+length's estimate (`ESTIMATE` at the top of `scripts.js`, timed on B3OS: retime it when the model or the box
+changes; the same words show beside Research).
 
 ### Working on it without a model or a network
 
