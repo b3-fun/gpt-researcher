@@ -216,7 +216,7 @@
     };
   }
   function resetProgress() {
-    Object.assign(run, { startedAt: Date.now(), received: 0, step: 0, questions: 0, searches: 0, urls: new Set(), pending: [], queued: 0, read: 0, domains: [], starts: 0, sectionsPlanned: 0, sectionsWritten: 0, md: '' });
+    Object.assign(run, { startedAt: Date.now(), received: 0, step: 0, reached: 0, questions: 0, searches: 0, urls: new Set(), pending: [], queued: 0, read: 0, domains: [], starts: 0, sectionsPlanned: 0, sectionsWritten: 0, md: '' });
     $('report').replaceChildren();
     renderSteps();
   }
@@ -343,7 +343,11 @@
     const out = String(m.output ?? '');
     addLog(out);
     if (c === 'error') return fail(out);
-    if (STEP_OF[c] !== undefined && STEP_OF[c] > run.step) run.step = STEP_OF[c];
+    // Detailed and Deep search and read again while writing (one sub-research per section): the dot goes back to
+    // Read, and a writing message or report text takes it to Write again.
+    const s = STEP_OF[c];
+    if (s !== undefined && s > run.step) run.step = s;
+    else if (run.step === 3 && (s === 1 || s === 2)) run.step = 2;
     const n = parseInt((out.match(/(\d+)/) || [])[1], 10) || 0;
     switch (c) {
       case 'planning_research':
@@ -429,6 +433,7 @@
   function renderSteps() {
     if (!run) return;
     const items = $('timeline').children;
+    run.reached = Math.max(run.reached || 0, run.step);
     for (let i = 0; i < STEPS.length; i++) {
       let state;
       if (i < run.step) state = 'done';
@@ -436,7 +441,8 @@
       else state = 'todo';
       const li = items[i];
       if (li.dataset.state !== state) li.dataset.state = state;
-      let fact = state === 'todo' ? '' : stepFact(i);
+      // A step after the current one that was reached before keeps its fact, with the open dot.
+      let fact = state === 'todo' && i > run.reached ? '' : stepFact(i);
       if (!fact && state === 'current') fact = LIVE_DEFAULT[i];
       if (state === 'stopped' && !fact) fact = 'stopped';
       const f = li.querySelector('.step__fact');
