@@ -541,8 +541,10 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
   margin: 24px calc(-1 * var(--gutter)) 0;
   padding: 8px var(--gutter);
   background: var(--bg);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 0;
 }
+/* Its rule runs the column's width, like the tables', Sources' and Options' rules. */
+.actions::after { content: ""; position: absolute; left: var(--gutter); right: var(--gutter); bottom: 0; height: 1px; background: var(--line); }
 .actions__spacer { flex: 1; }
 #copyLabel { display: inline-block; min-width: 3.3em; text-align: left; }   /* Copy, Copied, Failed: one width */
 .actions > .btn--ghost:first-child { margin-left: -12px; }   /* its glyph starts on the column's edge */
