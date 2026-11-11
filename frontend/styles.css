@@ -630,7 +630,7 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
 .prose .cites { white-space: nowrap; }
 .prose .sources a {
   display: grid;
-  grid-template-columns: 2.2em minmax(0, 1fr) auto;
+  grid-template-columns: 2.2em minmax(0, 1fr) fit-content(45%);   /* the domain may take up to 45% of the row */
   align-items: baseline;
   gap: 2px 12px;
   padding: 10px 0;
@@ -641,11 +641,11 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
 }
 .sources__n { color: var(--ink-3); font-size: 13px; font-variant-numeric: tabular-nums; }
 .sources__title { min-width: 0; }
-.sources__domain { color: var(--ink-3); font: 400 12px/1.4 var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 22ch; }
+.sources__domain { color: var(--ink-3); font: 400 12px/1.4 var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (hover: hover) { .prose .sources a:hover .sources__title { color: var(--accent-text); } }
 @media (max-width: 767px) {
   .prose .sources a { grid-template-columns: 2.2em minmax(0, 1fr); }
-  .sources__domain { grid-column: 2; max-width: none; }
+  .sources__domain { grid-column: 2; }
 }
 .report__missing { color: var(--ink-3); }
 
