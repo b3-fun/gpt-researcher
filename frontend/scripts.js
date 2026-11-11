@@ -1025,6 +1025,21 @@
     let resizeT = null;
     window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => { domainsShown = ''; if (run) renderDomains(); }, 150); });
     window.addEventListener('pagehide', () => closeSocket());
+    // A browser prints the page's address in its header or footer by default. Under the B3OS preview that address
+    // holds the share token, so the page steps off it while printing (Download, PDF or the browser's own Print).
+    let printSaved = null;
+    window.addEventListener('beforeprint', () => {
+      if (printSaved) return;
+      printSaved = { href: location.href, title: document.title };
+      try { window.history.replaceState(window.history.state, '', '/'); } catch {}
+      if (run && run.task) document.title = run.task;
+    });
+    window.addEventListener('afterprint', () => {
+      if (!printSaved) return;
+      try { window.history.replaceState(window.history.state, '', printSaved.href); } catch {}
+      document.title = printSaved.title;
+      printSaved = null;
+    });
     task.focus();
   }
 
