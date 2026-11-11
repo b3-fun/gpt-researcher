@@ -587,7 +587,34 @@
     const box = document.createElement('div');
     box.innerHTML = mdToHtml(md);
     enhanceReport(box, final);
+    linkContents(box);
     patchBlocks($('report'), [...box.childNodes]);
+  }
+  // A "Table of Contents" list: each item whose own text names a later heading links to it (#h-N, N the item's
+  // place in the list, so a heading keeps its id while the report streams in).
+  function linkContents(root) {
+    const hs = [...root.querySelectorAll('h1, h2, h3, h4, h5, h6')];
+    const tocH = hs.find((h) => /^(table of contents|contents)\s*:?$/i.test(h.textContent.trim()));
+    const list = tocH && tocH.nextElementSibling;
+    if (!list || !list.matches('ul, ol')) return;
+    list.classList.add('toc');
+    const norm = (t) => { const x = t.replace(/\s+/g, ' ').trim().toLowerCase(); return /^(references|sources|bibliography|works cited|citations)$/.test(x) ? 'sources' : x; };
+    const later = hs.filter((h) => tocH.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_FOLLOWING);
+    const used = new Set();
+    [...list.querySelectorAll('li')].forEach((li, i) => {
+      let own = [...li.childNodes].filter((x) => !(x.nodeType === 1 && x.matches('ul, ol')));
+      if (own.length === 1 && own[0].nodeType === 1 && own[0].tagName === 'P') own = [...own[0].childNodes];
+      const text = norm(own.map((x) => x.textContent).join(''));
+      const h = text && later.find((x) => !used.has(x) && norm(x.textContent) === text);
+      if (!h) return;
+      used.add(h);
+      h.id = `h-${i + 1}`;
+      const inner = own.filter((x) => x.nodeType === 1 && x.querySelector && (x.tagName === 'A' || x.querySelector('a')));
+      if (inner.length) { const a = inner[0].tagName === 'A' ? inner[0] : null; if (a && own.filter((x) => x.nodeType === 1 || x.textContent.trim()).length === 1) { a.href = `#${h.id}`; a.removeAttribute('target'); a.removeAttribute('rel'); } return; }
+      const a = el('a', { href: `#${h.id}` });
+      own[0].before(a);
+      a.append(...own);
+    });
   }
   // Walks the new top-level blocks against the shown ones from the top: an equal block stays in place, and from the
   // first difference to the end the new ones replace the old. A selection or a click in what is already written
@@ -604,8 +631,14 @@
       a.querySelectorAll('.cite').forEach((x, j) => { x.title = to[j].title; x.setAttribute('aria-label', to[j].getAttribute('aria-label')); });
       return true;
     };
+    // The contents list changes as its headings arrive (an item becomes a link): it alone is swapped.
+    const relink = (a, b) => {
+      if (a.nodeType !== 1 || b.nodeType !== 1 || !a.classList.contains('toc') || !b.classList.contains('toc') || a.textContent !== b.textContent) return false;
+      a.replaceWith(b);
+      return true;
+    };
     let i = 0;
-    while (i < old.length && i < next.length && (same(old[i], next[i]) || relabel(old[i], next[i]))) i++;
+    while (i < old.length && i < next.length && (same(old[i], next[i]) || relabel(old[i], next[i]) || relink(old[i], next[i]))) i++;
     for (let k = old.length - 1; k >= i; k--) old[k].remove();
     parent.append(...next.slice(i));
   }
