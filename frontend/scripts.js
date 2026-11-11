@@ -200,6 +200,13 @@
       max_search_results: n,
     };
   }
+  // The empty-question error takes the hint's and the time's place in the prompt bar.
+  function setTaskError(text) {
+    $('taskError').textContent = text;
+    $('taskError').hidden = !text;
+    $('hint').hidden = !!text;
+    $('lengthTime').hidden = !!text;
+  }
   function growField(t, max) {
     t.style.height = 'auto';
     t.style.height = `${Math.min(t.scrollHeight, max)}px`;   // neither field has a border of its own
@@ -217,6 +224,7 @@
     document.body.classList.remove('is-run');
     const t = $('task');
     t.value = text;
+    setTaskError('');
     growField(t, window.innerHeight * 0.4);
     window.scrollTo(0, 0);
     t.focus();
@@ -1122,14 +1130,14 @@
     loadHistory();
     $('hintMod').textContent = isMac ? '⌘' : 'Ctrl';
     const task = $('task');
-    task.addEventListener('input', () => { growField(task, window.innerHeight * 0.4); $('taskError').hidden = true; });
+    task.addEventListener('input', () => { growField(task, window.innerHeight * 0.4); setTaskError(''); });
     task.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); $('askForm').requestSubmit(); }
     });
     $('askForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const req = readRequest();
-      if (!req.task) { $('taskError').textContent = 'Type a question first.'; $('taskError').hidden = false; task.focus(); return; }
+      if (!req.task) { setTaskError('Type a question first.'); task.focus(); return; }
       startResearch(req);
     });
     const showLengthTime = () => { $('lengthTime').textContent = ESTIMATE[readRequest().report_type][1]; };
@@ -1148,7 +1156,7 @@
       });
     }
     for (const b of $('examples').querySelectorAll('button')) {
-      b.addEventListener('click', () => { task.value = b.textContent.trim(); growField(task, window.innerHeight * 0.4); $('taskError').hidden = true; task.focus(); });
+      b.addEventListener('click', () => { task.value = b.textContent.trim(); growField(task, window.innerHeight * 0.4); setTaskError(''); task.focus(); });
     }
     $('stop').addEventListener('click', stopResearch);
     $('logToggle').addEventListener('click', toggleLog);

@@ -50,12 +50,12 @@
           <label for="task" class="sr-only">Question</label>
           <textarea id="task" name="task" rows="3" autofocus autocomplete="off" spellcheck="true" placeholder="A question, a topic or an idea" aria-describedby="taskError"></textarea>
           <div class="prompt__bar">
+            <span class="prompt__error" id="taskError" role="alert" hidden></span>
             <span class="prompt__hint" id="hint" aria-hidden="true"><span class="kbd" id="hintMod">Ctrl</span> <span class="kbd">Enter</span></span>
             <span class="prompt__time" id="lengthTime" aria-live="polite">about 30 s</span>
             <button type="submit" class="btn btn--brand" id="go">Research</button>
           </div>
         </div>
-        <p class="prompt__error" id="taskError" role="alert" hidden></p>
         <div class="controls">
           <div class="seg" role="radiogroup" aria-label="Report length">
             <label class="seg__opt"><input type="radio" name="report_type" value="research_report" checked><span>Summary</span></label>
