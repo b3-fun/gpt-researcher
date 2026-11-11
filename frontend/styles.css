@@ -365,7 +365,7 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
 @media (hover: hover) { .seg__opt span:hover { color: var(--ink); } }
 .options-btn { flex: none; margin-left: auto; margin-right: -12px; }   /* its word ends on the column's edge */
 /* Open, it says so by its chevron and ink: a fill would hang past the field's edge. */
-.options-btn[aria-expanded="true"]:not(:hover)::before { background: none; }
+.options-btn[aria-expanded="true"]::before { background: none; }
 .options-btn .options-btn__icon { display: none; }
 @media (max-width: 767px) {
   .seg__opt span { height: 44px; padding: 0 10px; }
