@@ -264,6 +264,7 @@ svg { flex: none; }
   background: var(--ink-4);
   transition: background-color var(--dur-base) var(--ease-ui);
 }
+.conn[data-state="idle"] { visibility: hidden; }   /* shown only while a run streams, retries or is lost */
 .conn[data-state="live"] .conn__dot { background: var(--series-1); }
 .conn[data-state="retrying"] .conn__dot { background: var(--warning-dot); }
 .conn[data-state="lost"] .conn__dot { background: var(--danger-dot); }
