@@ -430,18 +430,23 @@
   }
 
   // ---------- steps ----------
-  function stepFact(i) {
+  // A step in progress says how far it is ("9 of 14 pages"); a done step says what happened ("9 pages, 5 unreadable").
+  function stepFact(i, state) {
     const r = run;
+    const done = state === 'done';
     switch (STEPS[i]) {
       case 'plan': return r.questions ? plural(r.questions, 'question', 'questions') : '';
       case 'search': return r.searches || r.urls.size ? `${plural(r.searches, 'search', 'searches')}, ${plural(r.urls.size, 'result', 'results')}` : '';
-      case 'read': return r.queued ? `${nf.format(r.read)} of ${plural(r.queued, 'page', 'pages')}` : '';
+      case 'read':
+        if (!r.queued) return '';
+        if (done) return plural(r.read, 'page', 'pages') + (r.queued > r.read ? `, ${nf.format(r.queued - r.read)} unreadable` : '');
+        return `${nf.format(r.read)} of ${plural(r.queued, 'page', 'pages')}`;
       case 'write': {
         const words = countWords(r.md);
         const parts = [];
         const planned = Math.max(r.sectionsPlanned, r.starts - 1);
         if (words) parts.push(plural(words, 'word', 'words'));
-        if (r.type === 'detailed_report' && planned > 0) parts.push(`${r.sectionsWritten} of ${plural(planned, 'section', 'sections')}`);
+        if (r.type === 'detailed_report' && planned > 0) parts.push(done ? plural(r.sectionsWritten || planned, 'section', 'sections') : `${r.sectionsWritten} of ${plural(planned, 'section', 'sections')}`);
         return parts.join(', ');
       }
       default: return '';
@@ -460,7 +465,7 @@
       const li = items[i];
       if (li.dataset.state !== state) li.dataset.state = state;
       // A step after the current one that was reached before keeps its fact, with the open dot.
-      let fact = state === 'todo' && i > run.reached ? '' : stepFact(i);
+      let fact = state === 'todo' && i > run.reached ? '' : stepFact(i, state);
       if (!fact && state === 'current') fact = LIVE_DEFAULT[i];
       if (state === 'stopped' && !fact) fact = 'stopped';
       const f = li.querySelector('.step__fact');
