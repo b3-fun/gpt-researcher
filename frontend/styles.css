@@ -690,7 +690,7 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
   border: 0;
   background: transparent;
   color: var(--ink);
-  font: 400 16px/1.4 var(--font-sans);
+  font: 400 16px/22px var(--font-sans);   /* 22 px lines + 18 px padding = the 40 px field */
   resize: none;
 }
 .chat textarea:focus-visible { outline: none; }

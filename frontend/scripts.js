@@ -202,7 +202,7 @@
   }
   function growField(t, max) {
     t.style.height = 'auto';
-    t.style.height = `${Math.min(t.scrollHeight + 2, max)}px`;
+    t.style.height = `${Math.min(t.scrollHeight, max)}px`;   // neither field has a border of its own
   }
   function showAsk(text = '') {
     if (phase === 'running') return;
