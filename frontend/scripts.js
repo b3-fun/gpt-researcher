@@ -573,16 +573,20 @@
         const em = item.querySelector('em, i');
         let title = em ? em.textContent : (/^https?:/.test(a.textContent.trim()) ? '' : a.textContent);
         if (!title) title = item.textContent.replace(/https?:\/\/\S+/g, '').replace(/\(\d{4}[^)]*\)|\(n\.d\.\)/g, '').trim();
-        title = title.replace(/\s+/g, ' ').replace(/[.\s]+$/, '').trim() || domainOf(url);
-        refs.set(normUrl(url), { url, title, domain: domainOf(url) });
+        title = title.replace(/\s+/g, ' ').replace(/[.\s]+$/, '').trim();
+        const domain = domainOf(url);
+        refs.set(normUrl(url), { url, title, own: !!title && title.toLowerCase() !== domain, domain });
       }
     }
     // Citations in the text, numbered in order of first use.
     const order = [];            // normalized urls
     const numOf = new Map();
+    const citedAs = new Map();   // normalized url -> the link text of its first citation
+    const citeEls = [];          // [citation link, normalized url]: titled once every title is known
     const numFor = (url, name) => {
       const k = normUrl(url);
-      if (!numOf.has(k)) { numOf.set(k, order.length + 1); order.push(k); if (!refs.has(k)) refs.set(k, { url, title: name || domainOf(url), domain: domainOf(url) }); }
+      if (!citedAs.has(k) && name) citedAs.set(k, name);
+      if (!numOf.has(k)) { numOf.set(k, order.length + 1); order.push(k); if (!refs.has(k)) refs.set(k, { url, title: '', own: false, domain: domainOf(url) }); }
       return numOf.get(k);
     };
     const isLink = (node) => node && node.nodeType === 1 && node.tagName === 'A' && /^https?:/i.test(node.getAttribute('href') || '') && !node.classList.contains('cite');
@@ -602,10 +606,18 @@
       for (const g of group) {
         const url = g.getAttribute('href');
         const num = numFor(url, g.textContent.trim());
-        const r = refs.get(normUrl(url));
-        cites.append(el('a', { class: 'cite', href: url, target: '_blank', rel: 'noopener noreferrer', title: `${r.title} (${r.domain})`, 'aria-label': `Source ${num}: ${r.title}` }, `[${num}]`));
+        const c = el('a', { class: 'cite', href: url, target: '_blank', rel: 'noopener noreferrer' }, `[${num}]`);
+        citeEls.push([c, normUrl(url), num]);
+        cites.append(c);
         g.remove();
       }
+    }
+    // A source with no title of its own (a bare URL) gets one built; failing that, its domain, said once.
+    for (const [k, r] of refs) if (!r.own) r.title = builtTitle(r.url, citedAs.get(k), r.domain) || r.domain;
+    for (const [c, k, num] of citeEls) {
+      const r = refs.get(k);
+      c.title = r.domain && r.title !== r.domain ? `${r.title} (${r.domain})` : r.title;
+      c.setAttribute('aria-label', `Source ${num}: ${r.title}`);
     }
     if (!refHeading && !order.length) return;
     // Cited sources first (in citation order), then listed ones nobody cited.
@@ -617,7 +629,7 @@
       list.append(el('li', {}, el('a', { href: r.url, target: '_blank', rel: 'noopener noreferrer' },
         el('span', { class: 'sources__n', text: String(numOf.get(k)) }),
         el('span', { class: 'sources__title', text: r.title }),
-        el('span', { class: 'sources__domain', text: r.domain }))));
+        r.domain && r.title !== r.domain ? el('span', { class: 'sources__domain', text: r.domain }) : null)));
     }
     const heading = el('h2', { text: 'Sources' });
     if (refHeading) {
@@ -627,6 +639,26 @@
     } else if (final) {
       root.append(heading, list);
     }
+  }
+
+  // The title of a source that has none: the name the text cites it by and, after a colon, the URL's last path
+  // segment as words ("TFTC: Eia record us power demand 2026 2027 ai data centers"). Empty when neither exists.
+  function builtTitle(url, name, domain) {
+    let words = '';
+    try {
+      const segs = new URL(url).pathname.split('/').filter(Boolean).map((x) => { try { return decodeURIComponent(x); } catch { return x; } });
+      const isId = (x) => /^\d+$/.test(x) || /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(x) || (x.length >= 16 && /\d/.test(x) && /^[a-z0-9]+$/i.test(x));
+      while (segs.length && isId(segs[segs.length - 1].replace(/\.html?$/i, ''))) segs.pop();   // trailing id segments
+      const w = (segs.pop() || '').replace(/\.(html?|php|aspx?|cfm|jsp|pdf)$/i, '').split(/[-_+\s]+/).filter(Boolean);
+      if (w.length > 1 && /^\d+$/.test(w[w.length - 1]) && !/^(19|20)\d\d$/.test(w[w.length - 1])) w.pop();   // "...-says-7"
+      words = w.join(' ');
+      if (/^[\d\s]*$/.test(words)) words = '';                                        // digits only: an id
+      if (words.length > 80) words = words.slice(0, 80).replace(/\s+\S*$/, '') + '…';
+      words = words.charAt(0).toUpperCase() + words.slice(1);
+    } catch {}
+    const n = (name || '').replace(/\s+/g, ' ').trim();
+    const named = n && !/^https?:/i.test(n) && n.toLowerCase().replace(/^www\./, '') !== domain;
+    return [named ? n : '', words].filter(Boolean).join(': ');
   }
 
   // ---------- the report state ----------
