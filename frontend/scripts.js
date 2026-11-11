@@ -563,7 +563,27 @@
     const box = document.createElement('div');
     box.innerHTML = mdToHtml(md);
     enhanceReport(box, final);
-    $('report').replaceChildren(...box.childNodes);
+    patchBlocks($('report'), [...box.childNodes]);
+  }
+  // Walks the new top-level blocks against the shown ones from the top: an equal block stays in place, and from the
+  // first difference to the end the new ones replace the old. A selection or a click in what is already written
+  // survives the stream (it renders up to eight times a second).
+  // A block whose only change is its citations' labels (the References section arrived and named them) keeps its
+  // place and takes the new labels.
+  function patchBlocks(parent, next) {
+    const old = [...parent.childNodes];
+    const same = (a, b) => a.nodeType === b.nodeType && (a.nodeType === 1 ? a.outerHTML === b.outerHTML : a.nodeValue === b.nodeValue);
+    const bare = (n) => { const c = n.cloneNode(true); for (const x of c.querySelectorAll('.cite')) { x.removeAttribute('title'); x.removeAttribute('aria-label'); } return c.outerHTML; };
+    const relabel = (a, b) => {
+      if (a.nodeType !== 1 || b.nodeType !== 1 || !a.querySelector('.cite') || bare(a) !== bare(b)) return false;
+      const to = b.querySelectorAll('.cite');
+      a.querySelectorAll('.cite').forEach((x, j) => { x.title = to[j].title; x.setAttribute('aria-label', to[j].getAttribute('aria-label')); });
+      return true;
+    };
+    let i = 0;
+    while (i < old.length && i < next.length && (same(old[i], next[i]) || relabel(old[i], next[i]))) i++;
+    for (let k = old.length - 1; k >= i; k--) old[k].remove();
+    parent.append(...next.slice(i));
   }
 
   // Links open in a new tab; tables scroll inside themselves; "([Name](url))" citations become numbers; the
