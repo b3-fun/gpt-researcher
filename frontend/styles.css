@@ -648,6 +648,11 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
   .sources__domain { grid-column: 2; }
 }
 .report__missing { color: var(--ink-3); }
+/* From 768 px: 17 px text, running text at about 78 characters; headings, tables, code and Sources keep 720 px. */
+@media (min-width: 768px) {
+  .prose { font-size: 17px; }
+  .prose > :is(p, ul, ol, blockquote):not(.sources) { max-width: 640px; }
+}
 
 /* ---------- Follow-up ---------- */
 .followup { max-width: 72ch; margin-top: 32px; padding-top: 0; border-top: 0; }   /* the Sources list's last rule divides */
@@ -773,6 +778,7 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
   .run { padding: 0; }
   .col { max-width: none; padding: 0; }
   .prose { max-width: none; color: #000; font-size: 11pt; }
+  .prose > :is(p, ul, ol, blockquote) { max-width: none; }
   .prose a { color: #000; }
   .prose pre, .prose code { background: #f4f4f5; }
 }
