@@ -727,13 +727,13 @@
     const name = slug(run.task);
     const items = [
       { label: 'Markdown', hint: '.md', href: links.md, file: `${name}.md` },
-      links.pdf ? { label: 'PDF', hint: '.pdf', href: links.pdf, file: `${name}.pdf` } : { label: 'PDF', hint: 'print', print: true },
+      links.pdf ? { label: 'PDF', hint: '.pdf', href: links.pdf, file: `${name}.pdf` } : { label: 'Print to PDF', print: true },
       { label: 'Word', hint: '.docx', href: links.docx, file: `${name}.docx` },
       { label: 'JSON', hint: '.json', json: true },
     ].filter((i) => i.href || i.print || i.json);
     $('dlList').replaceChildren(...items.map((i) => el('li', { role: 'none' }, i.print || i.json
-      ? el('button', { type: 'button', role: 'menuitem', class: 'menu__item', tabindex: '-1', onclick: () => { closeMenu(); if (i.print) window.print(); else downloadJson(`${name}.json`); } }, i.label, el('small', { text: i.hint }))
-      : el('a', { role: 'menuitem', class: 'menu__item', tabindex: '-1', href: i.href, download: i.file, onclick: () => closeMenu() }, i.label, el('small', { text: i.hint })))));
+      ? el('button', { type: 'button', role: 'menuitem', class: 'menu__item', tabindex: '-1', onclick: () => { closeMenu(); if (i.print) window.print(); else downloadJson(`${name}.json`); } }, i.label, i.hint ? el('small', { text: i.hint }) : null)
+      : el('a', { role: 'menuitem', class: 'menu__item', tabindex: '-1', href: i.href, download: i.file, onclick: () => closeMenu() }, i.label, i.hint ? el('small', { text: i.hint }) : null))));
   }
   // The server's JSON file is the run's event log; it does not hold the report. This one holds both.
   async function downloadJson(file) {
