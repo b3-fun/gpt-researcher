@@ -37,7 +37,8 @@ const session = JSON.parse(fs.readFileSync(path.join(REC, 'session.json'), 'utf8
 const DEFAULTS = { speed: +(args.speed || 1), hold: null, drop: null, dropMode: 'recover', error: null, scenario: args.scenario || 'default', refuse: false, chatError: false };
 let config = { ...DEFAULTS };
 let state = { frame: -1, held: false, running: false, connections: 0, runs: 0, chats: 0 };
-let releaseHold = null;
+const holders = new Set();   // resolvers of replays waiting at a hold
+function releaseAll() { for (const r of [...holders]) r(); }
 
 // ---------- scenarios: the recorded run, with its report swapped for a test report ----------
 const SCENARIOS = {
@@ -114,13 +115,13 @@ const server = http.createServer((req, res) => {
 
 function control(url, res) {
   const q = Object.fromEntries(url.searchParams);
-  if (url.pathname === '/__stub/release') { if (releaseHold) releaseHold(); config.hold = null; return json(res, { released: true }); }
+  if (url.pathname === '/__stub/release') { config.hold = null; releaseAll(); return json(res, { released: true }); }
   if (url.pathname === '/__stub/state') return json(res, { ...state, config });
   if (url.pathname === '/__stub/frames') {
     return json(res, framesFor(session.start.task).map((f, i) => { const j = JSON.parse(f.data); return { i, t: f.t, type: j.type ?? null, content: j.content ?? null }; }));
   }
   if (url.pathname !== '/__stub/config') return notFound(res);
-  if (q.reset) config = { ...DEFAULTS };
+  if (q.reset) { config = { ...DEFAULTS }; releaseAll(); }
   if (q.speed) config.speed = Math.max(0.01, +q.speed);
   if (q.hold) config.hold = q.hold === 'none' ? null : q.hold;
   if (q.drop) config.drop = q.drop === 'none' ? null : +q.drop;
@@ -129,7 +130,7 @@ function control(url, res) {
   if (q.scenario) config.scenario = q.scenario;
   if (q.refuse) config.refuse = q.refuse === '1';
   if (q.chatError) config.chatError = q.chatError === '1';
-  if (config.hold === null && releaseHold) releaseHold();
+  if (config.hold === null) releaseAll();
   return json(res, config);
 }
 
@@ -178,7 +179,8 @@ server.on('upgrade', (req, socket) => {
   let open = true;
   const send = (text) => { if (open) socket.write(encode(text)); };
   const close = () => { if (!open) return; open = false; state.connections--; state.running = false; try { socket.end(encode('', 8)); } catch {} };
-  socket.on('close', () => { if (open) { open = false; state.connections--; state.running = false; } });
+  let myHold = null;
+  socket.on('close', () => { if (open) { open = false; state.connections--; state.running = false; } if (myHold) myHold(); });
   socket.on('error', () => {});
   let busy = false;
 
@@ -217,9 +219,9 @@ server.on('upgrade', (req, socket) => {
       prev = frames[i].t;
       if (!open) return;
       if (i === holdAt || (config.hold !== null && +config.hold === i)) {
-        state.held = true; state.frame = i;
-        await new Promise((r) => { releaseHold = r; });
-        releaseHold = null; state.held = false;
+        state.frame = i;
+        await new Promise((r) => { myHold = r; holders.add(r); state.held = true; });
+        holders.delete(myHold); myHold = null; state.held = holders.size > 0;
         if (!open) return;
       }
       if (config.drop !== null && i >= config.drop) {

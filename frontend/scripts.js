@@ -1,2491 +1,1008 @@
-const GPTResearcher = (() => {
-  let isResearchActive = false;
-  let connectionTimeout = null;
-  let conversationHistory = [];
-  let isInitialLoad = true; // Flag to track initial page load
-  let cookiesEnabled = true; // Flag to track if cookies are enabled
-  let allReports = ''; // Store all reports cumulatively
-  let currentReport = ''; // Store the current report (will be overwritten)
-  let isFirstReport = true; // Flag to track if this is the first report
-  let chatContainer = null; // Global reference to chat container
-  let lastRequestData = null; // Store the last request data for reconnection
+/* B3OS Researcher: the page's one script (no framework, no build step).
+ *
+ * It speaks to GPT Researcher's server exactly as upstream's page did:
+ *   WebSocket at <this page's address>ws. The page sends "start {json}" (task, report_type, report_source, source_urls,
+ *   tone, agent, query_domains, max_search_results), "chat {json}" (message, report, messages) and "ping". The server
+ *   sends {type: "logs", content, output, metadata}, {type: "report", output} (Markdown, in pieces), {type: "path",
+ *   output: {pdf, docx, md, json}} (relative links under outputs/), {type: "chat", content}, {type: "images"} and
+ *   {type: "error"}; "pong" for a ping. Closing the socket makes the server cancel a running research: that is Stop.
+ *   History lives in the browser: the cookie "conversationHistory" (localStorage when cookies are off), entries
+ *   {prompt, links, timestamp}, with the report length and its numbers added.
+ * Markdown is drawn with the vendored Showdown and DOMPurify, loaded when a report is first needed.
+ * What the old page's status panel showed (socket state, attempts, messages) goes to the console at debug level.
+ */
+(() => {
+  'use strict';
 
-  // Add WebSocket monitoring variables
-  let socket = null;
-  let connectionStartTime = null;
-  let lastActivityTime = null;
-  let connectionAttempts = 0;
-  let messagesReceived = 0;
-  let websocketMonitorInterval = null;
-  let dispose_socket = null; // Re-add dispose_socket
-  let reconnectAttempts = 0;
-  let maxReconnectAttempts = 5;
-  let reconnectInterval = 2000; // Start with 2 seconds
+  const $ = (id) => document.getElementById(id);
+  const debug = (...a) => console.debug('[researcher]', ...a);
+  const LENGTHS = { research_report: 'Summary', detailed_report: 'Detailed', deep: 'Deep' };
+  const STEPS = ['plan', 'search', 'read', 'write'];
+  // Server log `content` -> the step it belongs to. Anything not here goes to the log only.
+  const STEP_OF = {
+    starting_research: 0, agent_generated: 0, planning_research: 0, subqueries: 0, research_plan: 0,
+    running_subquery_research: 1, running_subquery_with_vectorstore_research: 1, added_source_url: 1, researching: 1,
+    subquery_context_not_found: 1, mcp_retrieval: 1, mcp_results: 1, mcp_research_complete: 1,
+    scraping_urls: 2, scraping_content: 2, scraping_images: 2, scraping_complete: 2, fetching_query_content: 2,
+    fetching_query_format: 2, context_combined: 2, research_step_finalized: 2, answering_from_memory: 2,
+    generating_subtopics: 3, subtopics_generated: 3, writing_report: 3, writing_introduction: 3, introduction_written: 3,
+    generating_draft_sections: 3, draft_sections_generated: 3, writing_conclusion: 3, conclusion_written: 3,
+    report_written: 3, fetching_relevant_written_content: 3,
+  };
+  const BACKOFF = [1000, 2000, 4000, 8000, 8000];
+  const CONN_LABEL = { idle: 'Connection idle', live: 'Connection live', retrying: 'Connection retrying', lost: 'Connection lost' };
+  const nf = new Intl.NumberFormat('en-US');
 
-  const init = () => {
-    // Check if cookies are enabled
-    checkCookiesEnabled();
+  // ---------- state ----------
+  let phase = 'ask';        // ask | running | done | stopped | failed | lost | opened
+  let run = null;           // the research on screen
+  let lastRequest = null;   // what "Run again" sends
+  let ws = null;
+  let wsStats = { attempts: 0, received: 0 };
+  let tick = null, heartbeat = null, retryTimer = null, noticeTimer = null;
+  let chat = { thread: [], pending: null };
+  let history = [];
+  let cookiesEnabled = true;
 
-    // Load history immediately on page load
-    loadConversationHistory();
-
-    // After a short delay, mark initial load as complete
-    setTimeout(() => {
-      isInitialLoad = false;
-    }, 1000);
-
-    // Setup form submission
-    document.getElementById('researchForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      startResearch();
-      return false;
-    });
-
-    document
-      .getElementById('copyToClipboard')
-      .addEventListener('click', copyToClipboard)
-
-    // Add event listener for the top copy button
-    const topCopyButton = document.getElementById('copyToClipboardTop');
-    if (topCopyButton) {
-      topCopyButton.addEventListener('click', copyToClipboard);
+  // ---------- small helpers ----------
+  const plural = (n, one, many) => `${nf.format(n)} ${n === 1 ? one : many}`;
+  const fmtDur = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return s < 60 ? `${s} s` : `${Math.floor(s / 60)} min ${s % 60} s`; };
+  const domainOf = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };
+  const normUrl = (u) => { try { const x = new URL(u); x.hash = ''; return x.href.replace(/\/$/, ''); } catch { return u; } };
+  const stripEmoji = (s) => s.replace(/[\p{Extended_Pictographic}\u{FE0F}\u{200D}]/gu, '').replace(/^[\s\n]+/, '');
+  const countWords = (md) => md.replace(/\]\([^)]*\)/g, ']').replace(/https?:\/\/\S+/g, '').split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
+  const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60).replace(/-+$/, '') || 'report';
+  const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+  const el = (tag, attrs = {}, ...kids) => {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === 'class') e.className = v; else if (k === 'text') e.textContent = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v === true ? '' : v);
     }
+    for (const kid of kids) if (kid !== null && kid !== undefined) e.append(kid);
+    return e;
+  };
+  const icon = (name) => { const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); s.setAttribute('class', 'icon'); s.setAttribute('aria-hidden', 'true'); const u = document.createElementNS('http://www.w3.org/2000/svg', 'use'); u.setAttribute('href', `#i-${name}`); s.append(u); return s; };
+  const fmtWhen = (iso) => {
+    const d = new Date(iso);
+    if (Number.isNaN(+d)) return '';
+    const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const today = new Date();
+    if (d.toDateString() === today.toDateString()) return `Today, ${time}`;
+    return `${d.toLocaleDateString([], { day: 'numeric', month: 'short', year: d.getFullYear() === today.getFullYear() ? undefined : 'numeric' })}, ${time}`;
+  };
 
-    // Initialize expand buttons
-    initExpandButtons();
-
-    // Initialize history panel functionality
-    initHistoryPanel();
-
-    // Initialize WebSocket monitoring panel
-    initWebSocketPanel();
-
-    // Initialize MCP functionality
-    initMCPSection();
-
-    // The download bar is now fixed in place with CSS
-    // No need to set display property here
-
-    updateState('initial');
-
-    // Initialize research icon to not spinning
-    updateResearchIcon(false);
-
-    // Hide loading overlay if it exists
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    if (loadingOverlay) {
-      loadingOverlay.classList.add('loading-hidden');
-    }
+  // ---------- connection ----------
+  function setConn(state) {
+    const c = $('conn');
+    c.dataset.state = state;
+    c.setAttribute('aria-label', CONN_LABEL[state]);
+    c.title = CONN_LABEL[state];
+    debug('connection', state, { readyState: ws ? ws.readyState : 'none', ...wsStats });
   }
-
-  // Check if cookies are enabled
-  const checkCookiesEnabled = () => {
-    try {
-      // Try to set a test cookie
-      document.cookie = "testcookie=1; path=/";
-      const cookieEnabled = document.cookie.indexOf("testcookie") !== -1;
-
-      if (!cookieEnabled) {
-        console.warn("Cookies are disabled in this browser");
-        cookiesEnabled = false;
-        showToast("Cookies are disabled. History will use localStorage instead.", 5000);
-      } else {
-        // Clean up test cookie
-        document.cookie = "testcookie=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        cookiesEnabled = true;
-      }
-
-      return cookieEnabled;
-    } catch (e) {
-      console.error("Error checking cookies:", e);
-      cookiesEnabled = false;
-      return false;
-    }
+  function wsUrl() {
+    const u = new URL('ws', location.href);
+    u.protocol = u.protocol === 'https:' ? 'wss:' : 'ws:';
+    u.search = ''; u.hash = '';
+    return u.href;
   }
-
-  // Initialize conversation history panel functionality
-  const initHistoryPanel = () => {
-    // Load history from cookie
-    loadConversationHistory();
-
-    // Setup history panel toggle button
-    const historyPanelOpenBtn = document.getElementById('historyPanelOpenBtn');
-    const historyPanel = document.getElementById('historyPanel');
-    const historyPanelToggle = document.getElementById('historyPanelToggle');
-
-    if (historyPanelOpenBtn) {
-      historyPanelOpenBtn.addEventListener('click', () => {
-        loadConversationHistory(); // Reload history when opening panel
-        historyPanel.classList.add('open');
-      });
-    }
-
-    if (historyPanelToggle) {
-      historyPanelToggle.addEventListener('click', () => {
-        historyPanel.classList.remove('open');
-      });
-    }
-
-    // Close panel when clicking outside
-    document.addEventListener('click', (e) => {
-      // If the panel is open and the click is outside the panel and not on the toggle button
-      if (historyPanel.classList.contains('open') &&
-        !historyPanel.contains(e.target) &&
-        e.target !== historyPanelOpenBtn &&
-        !historyPanelOpenBtn.contains(e.target)) {
-        historyPanel.classList.remove('open');
-      }
-    });
-
-    // Setup search functionality
-    const historySearch = document.getElementById('historySearch');
-    const historySearchBtn = document.getElementById('historySearchBtn');
-
-    if (historySearch && historySearchBtn) {
-      historySearch.addEventListener('input', filterHistoryEntries);
-      historySearchBtn.addEventListener('click', () => filterHistoryEntries());
-    }
-
-    // Setup sort functionality
-    const historySortOrder = document.getElementById('historySortOrder');
-    if (historySortOrder) {
-      historySortOrder.addEventListener('change', () => {
-        sortHistoryEntries(historySortOrder.value);
-        renderHistoryEntries();
-      });
-    }
-
-    // Setup clear history button
-    const historyClearBtn = document.getElementById('historyClearBtn');
-    if (historyClearBtn) {
-      historyClearBtn.addEventListener('click', clearConversationHistory);
-    }
-
-    // Add action buttons to history panel
-    const historyFilters = document.querySelector('.history-panel-filters');
-    if (historyFilters) {
-      // Create a container for the buttons
-      const actionsContainer = document.createElement('div');
-      actionsContainer.className = 'history-actions-container';
-
-      // Add export history button with enhanced styling and tooltip
-      const exportBtn = document.createElement('button');
-      exportBtn.className = 'history-action-btn';
-      exportBtn.title = 'Export research history to file';
-      exportBtn.innerHTML = '<i class="fas fa-file-export"></i>';
-      exportBtn.addEventListener('click', exportHistory);
-
-      // Add import history button with enhanced styling and tooltip
-      const importBtn = document.createElement('button');
-      importBtn.className = 'history-action-btn';
-      importBtn.title = 'Import research history from file';
-      importBtn.innerHTML = '<i class="fas fa-file-import"></i>';
-      importBtn.addEventListener('click', triggerImportHistory);
-
-      // Add cookie debug button with enhanced styling and tooltip
-      const debugBtn = document.createElement('button');
-      debugBtn.className = 'history-action-btn';
-      debugBtn.title = 'Check storage status';
-      debugBtn.innerHTML = '<i class="fas fa-database"></i>';
-      debugBtn.addEventListener('click', checkCookieStatus);
-
-      // Add buttons to container in a logical order
-      actionsContainer.appendChild(importBtn);
-      actionsContainer.appendChild(exportBtn);
-      actionsContainer.appendChild(debugBtn);
-
-      // Create a hidden file input for importing
-      const fileInput = document.createElement('input');
-      fileInput.type = 'file';
-      fileInput.id = 'historyFileInput';
-      fileInput.accept = '.json';
-      fileInput.style.display = 'none';
-      fileInput.addEventListener('change', handleFileImport);
-
-      // Add container and file input to filters
-      historyFilters.appendChild(actionsContainer);
-      historyFilters.appendChild(fileInput);
-    }
-
-    // Initial render of history entries
-    renderHistoryEntries();
-  }
-
-  // Initialize WebSocket monitoring panel
-  const initWebSocketPanel = () => {
-    const websocketPanel = document.getElementById('websocketPanel');
-    const websocketPanelOpenBtn = document.getElementById('websocketPanelOpenBtn');
-    const websocketPanelToggle = document.getElementById('websocketPanelToggle');
-
-    if (!websocketPanel || !websocketPanelOpenBtn || !websocketPanelToggle) {
-      console.error("WebSocket panel elements not found");
-      return;
-    }
-
-    console.log("Initializing WebSocket panel");
-
-    // Ensure it starts hidden
-    websocketPanel.classList.remove('open');
-
-    websocketPanelOpenBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      console.log("Opening WebSocket panel");
-      websocketPanel.classList.add('open');
-    });
-
-    websocketPanelToggle.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      console.log("Closing WebSocket panel");
-      websocketPanel.classList.remove('open');
-    });
-
-    // Close panel when clicking outside
-    document.addEventListener('click', (e) => {
-      // If the panel is open and the click is outside the panel and not on the toggle button
-      if (websocketPanel.classList.contains('open') &&
-        !websocketPanel.contains(e.target) &&
-        e.target !== websocketPanelOpenBtn &&
-        !websocketPanelOpenBtn.contains(e.target)) {
-        websocketPanel.classList.remove('open');
-      }
-    });
-
-    // Start periodic WebSocket status updates
-    startWebSocketMonitoring();
-  }
-
-  // Start WebSocket monitoring
-  const startWebSocketMonitoring = () => {
-    console.log("Starting WebSocket monitoring");
-
-    // Update status immediately
-    updateWebSocketStatus();
-
-    // Clear any existing interval
-    if (websocketMonitorInterval) {
-      clearInterval(websocketMonitorInterval);
-    }
-
-    // Update status every 2 seconds
-    websocketMonitorInterval = setInterval(updateWebSocketStatus, 2000);
-  }
-
-  // Update WebSocket status in the panel
-  const updateWebSocketStatus = () => {
-    // Only proceed if the necessary elements exist
-    const connectionStatusEl = document.getElementById('connectionStatus');
-    const connectionIndicatorEl = document.getElementById('connectionIndicator');
-    const researchStatusEl = document.getElementById('researchStatus');
-    const connectionDurationEl = document.getElementById('connectionDuration');
-    const lastActivityEl = document.getElementById('lastActivity');
-    const readyStateEl = document.getElementById('readyState');
-    const connectionAttemptsEl = document.getElementById('connectionAttempts');
-    const messagesReceivedEl = document.getElementById('messagesReceived');
-    const currentTaskEl = document.getElementById('currentTask');
-
-    if (!connectionStatusEl || !connectionIndicatorEl) return;
-
-    // Update connection status
-    const socketStatus = getSocketStatus();
-    connectionStatusEl.textContent = socketStatus.statusText;
-
-    // Update indicator class
-    connectionIndicatorEl.className = 'status-indicator';
-    connectionIndicatorEl.classList.add(socketStatus.indicatorClass);
-
-    // Update research status
-    if (researchStatusEl) {
-      researchStatusEl.textContent = isResearchActive ? 'Active' : 'Inactive';
-    }
-
-    // Update connection duration
-    if (connectionDurationEl && connectionStartTime) {
-      const duration = Math.floor((Date.now() - connectionStartTime) / 1000);
-      connectionDurationEl.textContent = formatDuration(duration);
-    } else if (connectionDurationEl) {
-      connectionDurationEl.textContent = '-';
-    }
-
-    // Update last activity
-    if (lastActivityEl && lastActivityTime) {
-      const elapsed = Math.floor((Date.now() - lastActivityTime) / 1000);
-      lastActivityEl.textContent = elapsed < 60 ? `${elapsed} sec ago` : formatDuration(elapsed) + ' ago';
-    } else if (lastActivityEl) {
-      lastActivityEl.textContent = '-';
-    }
-
-    // Update ReadyState
-    if (readyStateEl && socket) {
-      readyStateEl.textContent = getReadyStateText(socket.readyState);
-    } else if (readyStateEl) {
-      readyStateEl.textContent = '-';
-    }
-
-    // Update connection attempts
-    if (connectionAttemptsEl) {
-      connectionAttemptsEl.textContent = connectionAttempts.toString();
-    }
-
-    // Update messages received
-    if (messagesReceivedEl) {
-      messagesReceivedEl.textContent = messagesReceived.toString();
-    }
-
-    // Update current task
-    if (currentTaskEl) {
-      const taskInput = document.getElementById('task');
-      currentTaskEl.textContent = isResearchActive && taskInput && taskInput.value ?
-        (taskInput.value.length > 30 ? taskInput.value.substring(0, 27) + '...' : taskInput.value) :
-        '-';
-    }
-  }
-
-  // Get socket status object
-  const getSocketStatus = () => {
-    if (!socket) {
-      return {
-        statusText: 'Disconnected',
-        indicatorClass: 'disconnected'
+  // Opens a socket and resolves when it is open. Only a socket that opened reports its close to onSocketClosed.
+  function openSocket() {
+    wsStats.attempts++;
+    return new Promise((resolve, reject) => {
+      let s;
+      try { s = new WebSocket(wsUrl()); } catch (e) { reject(e); return; }
+      let opened = false;
+      ws = s;
+      s.onopen = () => { opened = true; debug('socket open', wsStats); resolve(s); };
+      s.onmessage = (e) => { if (s === ws) { wsStats.received++; onMessage(e.data); } };
+      s.onerror = () => debug('socket error');
+      s.onclose = (e) => {
+        debug('socket closed', e.code, e.reason || '', wsStats);
+        if (s === ws) ws = null;
+        if (!opened) reject(e); else onSocketClosed(s, e);
       };
-    }
+    });
+  }
+  function closeSocket() {
+    if (!ws) return;
+    const s = ws;
+    ws = null;
+    s.onclose = null; s.onmessage = null;
+    try { s.close(1000); } catch {}
+  }
+  const socketOpen = () => ws && ws.readyState === WebSocket.OPEN;
+  function send(text) { if (socketOpen()) { ws.send(text); return true; } return false; }
+  function startHeartbeat() { stopHeartbeat(); heartbeat = setInterval(() => send('ping'), 20000); }
+  function stopHeartbeat() { clearInterval(heartbeat); heartbeat = null; }
 
-    switch (socket.readyState) {
-      case WebSocket.CONNECTING:
-        return {
-          statusText: 'Connecting',
-          indicatorClass: 'connecting'
-        };
-      case WebSocket.OPEN:
-        return {
-          statusText: 'Connected',
-          indicatorClass: 'connected'
-        };
-      case WebSocket.CLOSING:
-        return {
-          statusText: 'Closing',
-          indicatorClass: 'connecting'
-        };
-      case WebSocket.CLOSED:
-      default:
-        return {
-          statusText: 'Disconnected',
-          indicatorClass: 'disconnected'
-        };
-    }
+  function onSocketClosed() {
+    stopHeartbeat();
+    if (phase === 'running') return reconnect(0);
+    if (chat.pending) return chatFailed('The connection closed before the answer came. Ask again.');
+    setConn('idle');
   }
 
-  // Get readable text for WebSocket readyState
-  const getReadyStateText = (readyState) => {
-    switch (readyState) {
-      case WebSocket.CONNECTING:
-        return '0 (Connecting)';
-      case WebSocket.OPEN:
-        return '1 (Open)';
-      case WebSocket.CLOSING:
-        return '2 (Closing)';
-      case WebSocket.CLOSED:
-        return '3 (Closed)';
-      default:
-        return `${readyState} (Unknown)`;
-    }
+  // The server ends a research when its connection drops, so a reconnect starts the research over (once).
+  function reconnect(i) {
+    setConn('retrying');
+    showNotice('warn', 'Connection lost. Reconnecting…');
+    clearTimeout(retryTimer);
+    if (i >= BACKOFF.length) return lostForGood();
+    retryTimer = setTimeout(async () => {
+      if (phase !== 'running') return;
+      try { await openSocket(); } catch { return reconnect(i + 1); }
+      if (run.restarts >= 1) { closeSocket(); return lostForGood(); }
+      const hadProgress = run.received > 0;
+      run.restarts++;
+      resetProgress();
+      send(`start ${JSON.stringify(run.request)}`);
+      startHeartbeat();
+      setConn('live');
+      if (hadProgress) { addLog('Reconnected. The server had stopped the run, so it started over.'); showNotice('info', 'Reconnected. The research started over.', [], 8000); }
+      else hideNotice();
+    }, BACKOFF[i]);
+  }
+  function lostForGood() {
+    phase = 'lost';
+    stopRunClock();
+    setConn('lost');
+    $('stop').hidden = true;
+    renderSteps();
+    showNotice('danger', 'The connection to the server was lost, so this research stopped.', [runAgainBtn(), editBtn()]);
   }
 
-  // Format duration in seconds to human-readable string
-  const formatDuration = (seconds) => {
-    if (seconds < 60) {
-      return `${seconds} sec`;
-    } else if (seconds < 3600) {
-      return `${Math.floor(seconds / 60)} min ${seconds % 60} sec`;
-    } else {
-      const hours = Math.floor(seconds / 3600);
-      const minutes = Math.floor((seconds % 3600) / 60);
-      return `${hours} hr ${minutes} min`;
-    }
+  // ---------- notices ----------
+  function showNotice(tone, text, actions = [], hideAfter = 0) {
+    clearTimeout(noticeTimer);
+    const n = $('notice');
+    n.dataset.tone = tone === 'warn' ? '' : tone;
+    $('noticeText').textContent = text;
+    $('noticeActions').replaceChildren(...actions);
+    n.hidden = false;
+    if (hideAfter) noticeTimer = setTimeout(hideNotice, hideAfter);
+  }
+  function hideNotice() { clearTimeout(noticeTimer); $('notice').hidden = true; }
+  const runAgainBtn = () => el('button', { type: 'button', class: 'btn btn--neutral btn--sm', onclick: () => startResearch(lastRequest) }, 'Run again');
+  const editBtn = () => el('button', { type: 'button', class: 'btn btn--ghost btn--sm', onclick: () => showAsk(run ? run.task : '') }, 'Edit question');
+
+  // ---------- the ask form ----------
+  function readRequest() {
+    const task = $('task').value.trim();
+    const domains = $('queryDomains').value.split(',').map((d) => d.trim()).filter(Boolean);
+    const n = Math.min(20, Math.max(1, parseInt($('maxSearchResults').value, 10) || 5));
+    return {
+      task,
+      report_type: document.querySelector('input[name="report_type"]:checked').value,
+      report_source: 'web',
+      source_urls: [],
+      tone: $('tone').value,
+      agent: 'Auto Agent',
+      query_domains: domains,
+      max_search_results: n,
+    };
+  }
+  function growField(t, max) {
+    t.style.height = 'auto';
+    t.style.height = `${Math.min(t.scrollHeight + 2, max)}px`;
+  }
+  function showAsk(text = '') {
+    if (phase === 'running') return;
+    closeSocket();
+    stopRunClock();
+    hideNotice();
+    phase = 'ask';
+    run = null;
+    setConn('idle');
+    $('run').hidden = true;
+    $('ask').hidden = false;
+    const t = $('task');
+    t.value = text;
+    growField(t, window.innerHeight * 0.4);
+    window.scrollTo(0, 0);
+    t.focus();
   }
 
-  // Load conversation history from cookie
-  const loadConversationHistory = () => {
+  // ---------- a research ----------
+  function newRun(req) {
+    return {
+      request: req, task: req.task, type: req.report_type,
+      startedAt: Date.now(), endedAt: null, restarts: 0, received: 0,
+      step: 0, questions: 0, searches: 0, urls: new Set(), pending: [], batches: [], queued: 0, read: 0, domains: [],
+      sectionsPlanned: 0, sectionsWritten: 0, md: '', links: null, log: [],
+    };
+  }
+  function resetProgress() {
+    Object.assign(run, { startedAt: Date.now(), received: 0, step: 0, questions: 0, searches: 0, urls: new Set(), pending: [], batches: [], queued: 0, read: 0, domains: [], sectionsPlanned: 0, sectionsWritten: 0, md: '' });
+    $('report').replaceChildren();
+    renderSteps();
+  }
+
+  async function startResearch(req) {
+    if (!req || !req.task) return;
+    lastRequest = req;
+    closeSocket();
+    clearTimeout(retryTimer);
+    hideNotice();
+    chat = { thread: [], pending: null };
+    run = newRun(req);
+    phase = 'running';
+    loadMarkdown();
+    showRunView();
+    startRunClock();
+    setConn('live');
     try {
-      const storedHistory = getCookie('conversationHistory');
-      if (storedHistory && storedHistory.trim() !== '') {
-        try {
-          const parsedHistory = JSON.parse(storedHistory);
-          if (Array.isArray(parsedHistory)) {
-            conversationHistory = parsedHistory;
-            console.debug('Loaded research history from storage:', conversationHistory);
-            console.log('Loaded research history:', conversationHistory.length, 'items');
-          } else {
-            console.warn('History storage does not contain an array');
-            conversationHistory = [];
-            deleteCookie('conversationHistory');
-          }
-        } catch (jsonError) {
-          console.error('Invalid JSON in history storage:', jsonError);
-          conversationHistory = [];
-          deleteCookie('conversationHistory');
-        }
-      } else {
-        console.log('No research history found in storage');
-        conversationHistory = [];
-      }
-    } catch (error) {
-      console.error('Error loading research history from storage:', error);
-      conversationHistory = [];
-      // If JSON parsing fails, delete the corrupt cookie
-      deleteCookie('conversationHistory');
+      await openSocket();
+    } catch {
+      return reconnect(0);
     }
-
-    // Force render after loading
-    renderHistoryEntries();
+    if (phase !== 'running') return;
+    send(`start ${JSON.stringify(req)}`);
+    startHeartbeat();
   }
 
-  // Save conversation history to cookie
-  const saveConversationHistory = () => {
+  function showRunView() {
+    $('ask').hidden = true;
+    $('run').hidden = false;
+    const title = $('runTitle');
+    title.textContent = run.task;
+    title.toggleAttribute('data-long', run.task.length > 140);
+    title.removeAttribute('data-clamped');
+    $('titleMore').hidden = true;
+    requestAnimationFrame(() => {
+      title.setAttribute('data-clamped', '');
+      const over = title.scrollHeight > title.clientHeight + 2;
+      if (!over) title.removeAttribute('data-clamped');
+      $('titleMore').hidden = !over;
+      $('titleMore').setAttribute('aria-expanded', 'false');
+      $('titleMore').textContent = 'Show all';
+    });
+    const running = phase === 'running';
+    $('runMeta').hidden = !running;
+    $('stop').hidden = !running;
+    $('doneline').hidden = running;
+    $('steps').hidden = !running;
+    $('stepsToggle').setAttribute('aria-expanded', 'false');
+    $('stepsToggle').textContent = 'Show steps';
+    $('actions').hidden = true;
+    $('followup').hidden = true;
+    $('thread').replaceChildren();
+    $('report').replaceChildren();
+    $('log').replaceChildren();
+    $('log').hidden = true;
+    $('logToggle').setAttribute('aria-expanded', 'false');
+    $('logToggle').textContent = 'Show log';
+    renderSteps();
+    renderFacts();
+    window.scrollTo(0, 0);
+    title.focus({ preventScroll: true });
+  }
+
+  function startRunClock() { stopRunClock(); tick = setInterval(renderFacts, 1000); }
+  function stopRunClock() { clearInterval(tick); tick = null; }
+  function renderFacts() {
+    if (!run) return;
+    const parts = [fmtDur((run.endedAt || Date.now()) - run.startedAt)];
+    if (run.urls.size) parts.push(plural(run.urls.size, 'source', 'sources'));
+    $('facts').textContent = parts.join(' · ');
+  }
+
+  function stopResearch() {
+    if (phase !== 'running') return;
+    closeSocket();          // the server cancels the research when its socket closes
+    clearTimeout(retryTimer);
+    stopHeartbeat();
+    phase = 'stopped';
+    stopRunClock();
+    setConn('idle');
+    $('stop').hidden = true;
+    renderSteps();
+    addLog('Stopped.');
+    showNotice('info', 'Stopped.', [runAgainBtn(), editBtn()]);
+    $('noticeActions').firstChild.focus();
+  }
+
+  function fail(text) {
+    phase = 'failed';
+    closeSocket();
+    stopHeartbeat();
+    stopRunClock();
+    setConn('idle');
+    $('stop').hidden = true;
+    renderSteps();
+    const msg = String(text || '').replace(/^Error:\s*/, '').trim();
+    const sentence = /openai API|context_length|model_not_available|rate.?limit|Failed to get response/i.test(msg)
+      ? 'The research stopped: the model did not answer.'
+      : `The research stopped: ${msg.length > 160 ? msg.slice(0, 157) + '…' : msg || 'the server reported an error.'}`;
+    showNotice('danger', sentence, [runAgainBtn(), editBtn()]);
+  }
+
+  // ---------- messages ----------
+  function onMessage(raw) {
+    if (raw === 'pong') return;
+    let m;
+    try { m = JSON.parse(raw); } catch { debug('not JSON', raw); return; }
+    if (m.type === 'chat') return onChatAnswer(m);
+    if (!run || phase !== 'running') { debug('ignored', m.type, m.content); return; }
+    run.received++;
+    if (m.type === 'logs') return onLog(m);
+    if (m.type === 'report') return onReport(m);
+    if (m.type === 'path') return onDone(m);
+    if (m.type === 'error') { addLog(String(m.output || 'Server error')); return; }
+    if (m.type === 'images') { addLog('Images: ' + String(m.output || '').slice(0, 200)); return; }
+    debug('other message', m);   // the first message (query, sources, context, report) has no type
+  }
+
+  function onLog(m) {
+    const c = m.content;
+    const out = String(m.output ?? '');
+    addLog(out);
+    if (c === 'error') return fail(out);
+    if (STEP_OF[c] !== undefined && STEP_OF[c] > run.step) run.step = STEP_OF[c];
+    const n = parseInt((out.match(/(\d+)/) || [])[1], 10) || 0;
+    switch (c) {
+      case 'planning_research':
+        if (/Browsing the web/i.test(out)) run.searches++;
+        break;
+      case 'subqueries':
+        if (Array.isArray(m.metadata)) run.questions += m.metadata.length;
+        break;
+      case 'running_subquery_research':
+      case 'running_subquery_with_vectorstore_research':
+        run.searches++;
+        break;
+      case 'added_source_url': {
+        const u = typeof m.metadata === 'string' ? m.metadata : out.replace(/^.*?research:\s*/, '').trim();
+        if (u && !run.urls.has(u)) { run.urls.add(u); run.pending.push(u); }
+        break;
+      }
+      case 'scraping_urls':
+        run.queued += n;
+        run.batches.push(run.pending.splice(0));
+        break;
+      case 'scraping_content': {
+        run.read += n;
+        const batch = run.batches.shift() || [];
+        for (const u of batch.slice(0, n)) { const d = domainOf(u); if (d && !run.domains.includes(d)) run.domains.push(d); }
+        break;
+      }
+      case 'generating_draft_sections': run.sectionsPlanned++; break;
+      case 'report_written': if (run.type === 'detailed_report') run.sectionsWritten++; break;
+      default: break;
+    }
+    renderSteps();
+    renderFacts();
+  }
+
+  function onReport(m) {
+    run.md += String(m.output ?? '');
+    if (run.step < 3) run.step = 3;
+    scheduleRender();
+    renderSteps();
+  }
+
+  function onDone(m) {
+    run.endedAt = Date.now();
+    run.links = m.output || {};
+    phase = 'done';
+    stopHeartbeat();
+    stopRunClock();
+    setConn('idle');
+    hideNotice();
+    run.step = 4;
+    renderSteps();
+    showReportState();
+    // The saved Markdown is the report as the downloads hold it (for Detailed, the assembled one).
+    if (run.links.md) {
+      fetch(run.links.md, { cache: 'no-store' })
+        .then((r) => (r.ok ? r.text() : null))
+        .then((md) => { if (md && md.trim() && run && run.links === m.output) { run.md = md; renderReport(true); updateDoneLine(); } })
+        .catch(() => {});
+    }
+    saveToHistory();
+  }
+
+  // ---------- steps ----------
+  function stepFact(i) {
+    const r = run;
+    switch (STEPS[i]) {
+      case 'plan': return r.questions ? plural(r.questions, 'question', 'questions') : '';
+      case 'search': return r.searches || r.urls.size ? `${plural(r.searches, 'search', 'searches')}, ${plural(r.urls.size, 'result', 'results')}` : '';
+      case 'read': return r.queued ? `${nf.format(r.read)} of ${plural(r.queued, 'page', 'pages')}` : '';
+      case 'write': {
+        const words = countWords(r.md);
+        const parts = [];
+        if (r.type === 'detailed_report' && r.sectionsPlanned) parts.push(`${r.sectionsWritten} of ${plural(r.sectionsPlanned, 'section', 'sections')}`);
+        if (words) parts.push(plural(words, 'word', 'words'));
+        return parts.join(', ');
+      }
+      default: return '';
+    }
+  }
+  const LIVE_DEFAULT = ['Choosing what to look for', 'Starting the searches', 'Opening the pages', 'Starting to write'];
+  function renderSteps() {
+    if (!run) return;
+    const items = $('timeline').children;
+    for (let i = 0; i < STEPS.length; i++) {
+      let state;
+      if (i < run.step) state = 'done';
+      else if (i === run.step) state = phase === 'running' ? 'current' : phase === 'done' || phase === 'opened' ? 'done' : 'stopped';
+      else state = 'todo';
+      const li = items[i];
+      if (li.dataset.state !== state) li.dataset.state = state;
+      let fact = state === 'todo' ? '' : stepFact(i);
+      if (!fact && state === 'current') fact = LIVE_DEFAULT[i];
+      if (state === 'stopped' && !fact) fact = 'stopped';
+      const f = li.querySelector('.step__fact');
+      if (f.textContent !== fact) f.textContent = fact;
+    }
+    renderDomains();
+  }
+  let domainsShown = '';
+  function renderDomains() {
+    const ul = $('domains');
+    const key = run.domains.join(' ');
+    if (key === domainsShown) return;
+    domainsShown = key;
+    if (!run.domains.length) { ul.hidden = true; ul.replaceChildren(); return; }
+    ul.hidden = false;
+    fitDomains();
+  }
+  // A mono list of the domains read, at most two lines, then "+N more".
+  function fitDomains() {
+    const ul = $('domains');
+    if (!run || ul.hidden) return;
+    const doms = run.domains;
+    ul.replaceChildren(...doms.map((d) => el('li', { text: d })));
+    const lis = [...ul.children];
+    const top = lis[0].offsetTop;
+    const line = lis[0].offsetHeight;
+    const onThird = (li) => li.offsetTop - top > line * 1.5 + 2;
+    let cut = lis.findIndex(onThird);
+    if (cut === -1) return;
+    for (let k = cut; k < lis.length; k++) lis[k].remove();
+    for (;;) {
+      const more = el('li', { 'data-more': true, text: `+${doms.length - cut} more` });
+      ul.append(more);
+      if (!onThird(more) || cut <= 1) break;
+      more.remove();
+      ul.lastChild.remove();
+      cut--;
+    }
+  }
+
+  // ---------- log ----------
+  function addLog(text) {
+    if (!run) return;
+    const line = stripEmoji(String(text)).replace(/\s+$/, '');
+    if (!line) return;
+    const t = fmtClock(Date.now() - run.startedAt);
+    run.log.push([t, line]);
+    const box = $('log');
+    if (!box.hidden) {
+      const atEnd = box.scrollTop + box.clientHeight >= box.scrollHeight - 8;
+      box.append(logLine(t, line));
+      if (atEnd) box.scrollTop = box.scrollHeight;
+    }
+  }
+  const fmtClock = (ms) => { const s = Math.max(0, Math.floor(ms / 1000)); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
+  const logLine = (t, line) => { const d = el('div'); d.append(el('span', { text: t + '  ' }), line); return d; };
+  function toggleLog() {
+    const box = $('log');
+    const open = box.hidden;
+    box.hidden = !open;
+    $('logToggle').setAttribute('aria-expanded', String(open));
+    $('logToggle').textContent = open ? 'Hide log' : 'Show log';
+    if (open && run) { box.replaceChildren(...run.log.map(([t, l]) => logLine(t, l))); box.scrollTop = box.scrollHeight; }
+  }
+
+  // ---------- Markdown ----------
+  let mdLib = null, converter = null;
+  function loadScript(src) {
+    return new Promise((resolve, reject) => { const s = el('script', { src }); s.onload = resolve; s.onerror = reject; document.head.append(s); });
+  }
+  function loadMarkdown() {
+    if (!mdLib) mdLib = Promise.all([loadScript('site/vendor/js/showdown.min.js'), loadScript('site/vendor/js/purify.min.js')]).then(() => true, () => { debug('Markdown libraries did not load'); return false; });
+    return mdLib;
+  }
+  const escapeHtml = (s) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+  function mdToHtml(md) {
+    if (window.showdown && window.DOMPurify) {
+      if (!converter) {
+        converter = new window.showdown.Converter({
+          tables: true, ghCodeBlocks: true, strikethrough: true, tasklists: true, simplifiedAutoLink: true,
+          openLinksInNewWindow: true, literalMidWordUnderscores: true, noHeaderId: true, disableForced4SpacesIndentedSublists: true,
+        });
+      }
+      // Report text comes from web pages and a model: sanitize before it reaches the page.
+      return window.DOMPurify.sanitize(converter.makeHtml(md), { ADD_ATTR: ['target'] });
+    }
+    return md.split(/\n{2,}/).map((p) => `<p>${escapeHtml(p)}</p>`).join('');
+  }
+
+  let renderQueued = false;
+  function scheduleRender() {
+    if (renderQueued) return;
+    renderQueued = true;
+    setTimeout(() => { renderQueued = false; renderReport(false); }, 120);
+  }
+  async function renderReport(final) {
+    if (!run) return;
+    await loadMarkdown();
+    const md = run.md;
+    const box = document.createElement('div');
+    box.innerHTML = mdToHtml(md);
+    enhanceReport(box, final);
+    $('report').replaceChildren(...box.childNodes);
+  }
+
+  // Links open in a new tab; tables scroll inside themselves; "([Name](url))" citations become numbers; the
+  // References section becomes "Sources", one row per source: number, title, domain.
+  function enhanceReport(root, final) {
+    for (const a of root.querySelectorAll('a[href]')) {
+      if (/^https?:/i.test(a.getAttribute('href'))) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
+    }
+    let n = 0;
+    for (const t of root.querySelectorAll('table')) {
+      const wrap = el('div', { class: 'table', tabindex: '0', role: 'region', 'aria-label': `Table ${++n}` });
+      t.replaceWith(wrap);
+      wrap.append(t);
+    }
+    // The references section, if any.
+    const refs = new Map();      // normalized url -> {url, title, domain}
+    let refHeading = null;
+    const refNodes = [];
+    for (const h of root.querySelectorAll('h1, h2, h3, h4')) {
+      if (/^(references|sources|bibliography|works cited|citations)\s*:?$/i.test(h.textContent.trim())) { refHeading = h; break; }
+    }
+    if (refHeading) {
+      const level = +refHeading.tagName[1];
+      for (let s = refHeading.nextElementSibling; s; s = s.nextElementSibling) {
+        if (/^H[1-6]$/.test(s.tagName) && +s.tagName[1] <= level) break;
+        refNodes.push(s);
+      }
+      const items = refNodes.flatMap((node) => (node.matches('ul, ol') ? [...node.children] : [node]));
+      for (const item of items) {
+        const a = item.querySelector('a[href^="http"]');
+        if (!a) continue;
+        const url = a.getAttribute('href');
+        const em = item.querySelector('em, i');
+        let title = em ? em.textContent : (/^https?:/.test(a.textContent.trim()) ? '' : a.textContent);
+        if (!title) title = item.textContent.replace(/https?:\/\/\S+/g, '').replace(/\(\d{4}[^)]*\)|\(n\.d\.\)/g, '').trim();
+        title = title.replace(/\s+/g, ' ').replace(/[.\s]+$/, '').trim() || domainOf(url);
+        refs.set(normUrl(url), { url, title, domain: domainOf(url) });
+      }
+    }
+    // Citations in the text, numbered in order of first use.
+    const order = [];            // normalized urls
+    const numOf = new Map();
+    const numFor = (url, name) => {
+      const k = normUrl(url);
+      if (!numOf.has(k)) { numOf.set(k, order.length + 1); order.push(k); if (!refs.has(k)) refs.set(k, { url, title: name || domainOf(url), domain: domainOf(url) }); }
+      return numOf.get(k);
+    };
+    const isLink = (node) => node && node.nodeType === 1 && node.tagName === 'A' && /^https?:/i.test(node.getAttribute('href') || '') && !node.classList.contains('cite');
+    for (const a of [...root.querySelectorAll('a[href^="http"]')]) {
+      if (!root.contains(a) || refNodes.some((r) => r.contains(a))) continue;
+      const before = a.previousSibling;
+      if (!before || before.nodeType !== 3 || !/\(\s*$/.test(before.data)) continue;
+      const group = [a];
+      let next = a.nextSibling;
+      while (next && next.nodeType === 3 && /^\s*[;,]\s*$/.test(next.data) && isLink(next.nextSibling)) { group.push(next.nextSibling); next = next.nextSibling.nextSibling; }
+      if (!next || next.nodeType !== 3 || !/^\s*\)/.test(next.data)) continue;
+      before.data = before.data.replace(/\s*\(\s*$/, ' ');
+      next.data = next.data.replace(/^\s*\)/, '');
+      for (let k = 1; k < group.length; k++) group[k].previousSibling.remove();
+      const cites = el('span', { class: 'cites' });
+      group[0].before(cites);
+      for (const g of group) {
+        const url = g.getAttribute('href');
+        const num = numFor(url, g.textContent.trim());
+        const r = refs.get(normUrl(url));
+        cites.append(el('a', { class: 'cite', href: url, target: '_blank', rel: 'noopener noreferrer', title: `${r.title} (${r.domain})`, 'aria-label': `Source ${num}: ${r.title}` }, `[${num}]`));
+        g.remove();
+      }
+    }
+    if (!refHeading && !order.length) return;
+    // Cited sources first (in citation order), then listed ones nobody cited.
+    for (const k of refs.keys()) if (!numOf.has(k)) { numOf.set(k, order.length + 1); order.push(k); }
+    if (!order.length) return;
+    const list = el('ol', { class: 'sources' });
+    for (const k of order) {
+      const r = refs.get(k);
+      list.append(el('li', {}, el('a', { href: r.url, target: '_blank', rel: 'noopener noreferrer' },
+        el('span', { class: 'sources__n', text: String(numOf.get(k)) }),
+        el('span', { class: 'sources__title', text: r.title }),
+        el('span', { class: 'sources__domain', text: r.domain }))));
+    }
+    const heading = el('h2', { text: 'Sources' });
+    if (refHeading) {
+      for (const node of refNodes) node.remove();
+      refHeading.replaceWith(heading);
+      heading.after(list);
+    } else if (final) {
+      root.append(heading, list);
+    }
+  }
+
+  // ---------- the report state ----------
+  function showReportState() {
+    $('runMeta').hidden = true;
+    $('stop').hidden = true;
+    $('steps').hidden = true;
+    $('stepsToggle').setAttribute('aria-expanded', 'false');
+    $('stepsToggle').textContent = 'Show steps';
+    $('doneline').hidden = false;
+    updateDoneLine();
+    renderReport(true);
+    buildDownloads();
+    $('actions').hidden = false;
+    $('followup').hidden = false;
+  }
+  function updateDoneLine() {
+    if (!run) return;
+    const parts = [];
+    if (run.endedAt && run.startedAt) parts.push(`Done in ${fmtDur(run.endedAt - run.startedAt)}`);
+    else if (run.savedAt) parts.push(fmtWhen(run.savedAt));
+    if (run.urls.size) parts.push(plural(run.urls.size, 'source', 'sources'));
+    else if (run.sourceCount) parts.push(plural(run.sourceCount, 'source', 'sources'));
+    const words = countWords(run.md);
+    if (words) parts.push(plural(words, 'word', 'words'));
+    $('doneText').textContent = parts.join(' · ');
+    $('stepsToggle').hidden = !run.log.length;
+  }
+  function toggleSteps() {
+    const open = $('steps').hidden;
+    $('steps').hidden = !open;
+    $('stepsToggle').setAttribute('aria-expanded', String(open));
+    $('stepsToggle').textContent = open ? 'Hide steps' : 'Show steps';
+  }
+
+  // ---------- downloads ----------
+  function buildDownloads() {
+    const links = (run && run.links) || {};
+    const name = slug(run.task);
+    const items = [
+      { label: 'Markdown', hint: '.md', href: links.md, file: `${name}.md` },
+      links.pdf ? { label: 'PDF', hint: '.pdf', href: links.pdf, file: `${name}.pdf` } : { label: 'PDF', hint: 'print', print: true },
+      { label: 'Word', hint: '.docx', href: links.docx, file: `${name}.docx` },
+      { label: 'JSON', hint: '.json', href: links.json, file: `${name}.json` },
+    ].filter((i) => i.href || i.print);
+    $('dlList').replaceChildren(...items.map((i) => el('li', { role: 'none' }, i.print
+      ? el('button', { type: 'button', role: 'menuitem', class: 'menu__item', tabindex: '-1', onclick: () => { closeMenu(); window.print(); } }, i.label, el('small', { text: i.hint }))
+      : el('a', { role: 'menuitem', class: 'menu__item', tabindex: '-1', href: i.href, download: i.file, onclick: () => closeMenu() }, i.label, el('small', { text: i.hint })))));
+  }
+  const menuItems = () => [...$('dlList').querySelectorAll('[role="menuitem"]')];
+  function openMenu(focusLast = false) {
+    $('dlList').hidden = false;
+    $('dlBtn').setAttribute('aria-expanded', 'true');
+    const items = menuItems();
+    (focusLast ? items[items.length - 1] : items[0])?.focus();
+  }
+  function closeMenu(refocus = false) {
+    if ($('dlList').hidden) return;
+    $('dlList').hidden = true;
+    $('dlBtn').setAttribute('aria-expanded', 'false');
+    if (refocus) $('dlBtn').focus();
+  }
+  function onMenuKey(e) {
+    const items = menuItems();
+    const i = items.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length].focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+    else if (e.key === 'Home') { e.preventDefault(); items[0].focus(); }
+    else if (e.key === 'End') { e.preventDefault(); items[items.length - 1].focus(); }
+    else if (e.key === 'Escape') { e.preventDefault(); closeMenu(true); }
+    else if (e.key === 'Tab') closeMenu();
+  }
+
+  async function copyReport() {
+    if (!run || !run.md) return;
+    let ok = false;
+    try { await navigator.clipboard.writeText(run.md); ok = true; } catch {
+      const t = el('textarea', { style: 'position:fixed;opacity:0' });
+      t.value = run.md; document.body.append(t); t.select();
+      try { ok = document.execCommand('copy'); } catch {}
+      t.remove();
+    }
+    const label = $('copyLabel');
+    label.textContent = ok ? 'Copied' : 'Copy failed';
+    setTimeout(() => { label.textContent = 'Copy'; }, 2000);
+  }
+
+  // ---------- follow-up questions ----------
+  async function sendChat(e) {
+    e && e.preventDefault();
+    const input = $('chatInput');
+    const q = input.value.trim();
+    if (!q || chat.pending || !run || !run.md) return;
+    input.value = '';
+    growField(input, window.innerHeight * 0.3);
+    const answer = el('div', { class: 'qa__a prose', 'data-pending': true, 'aria-live': 'polite' }, el('span', { class: 'spin', 'aria-hidden': 'true' }), ' Writing an answer');
+    $('thread').append(el('div', { class: 'qa' }, el('p', { class: 'qa__q', text: q }), answer));
+    chat.thread.push({ role: 'user', content: q });
+    chat.pending = answer;
+    $('chatSend').disabled = true;
+    const payload = { message: q, report: run.md, messages: chat.thread.map(({ role, content }) => ({ role, content })) };
+    if (!socketOpen()) {
+      try { await openSocket(); } catch { return chatFailed('Could not reach the server. Ask again in a moment.'); }
+    }
+    if (!send(`chat ${JSON.stringify(payload)}`)) chatFailed('Could not reach the server. Ask again in a moment.');
+  }
+  function onChatAnswer(m) {
+    const box = chat.pending;
+    if (!box) { debug('chat message with no question', m); return; }
+    chat.pending = null;
+    $('chatSend').disabled = false;
+    const text = String(m.content ?? '');
+    if (/^(Error processing your message|Chat functionality is not available|Error: Invalid message format|No message provided)/.test(text)) {
+      chat.thread.pop();
+      box.removeAttribute('data-pending');
+      box.setAttribute('data-error', '');
+      box.textContent = 'The answer failed. Ask again.';
+      debug('chat error', text);
+      return;
+    }
+    chat.thread.push({ role: 'assistant', content: text });
+    box.removeAttribute('data-pending');
+    loadMarkdown().then(() => { box.innerHTML = mdToHtml(text); enhanceReport(box, false); });
+  }
+  function chatFailed(msg) {
+    const box = chat.pending;
+    chat.pending = null;
+    $('chatSend').disabled = false;
+    if (!box) return;
+    chat.thread.pop();
+    box.removeAttribute('data-pending');
+    box.setAttribute('data-error', '');
+    box.textContent = msg;
+    setConn('idle');
+  }
+
+  // ---------- history (cookie, as upstream's page keeps it) ----------
+  function checkCookiesEnabled() {
     try {
-      if (conversationHistory.length === 0) {
-        deleteCookie('conversationHistory');
-        console.debug('No history to save, deleted storage');
-        return;
-      }
-
-      // Only keep the last 20 entries
-      let storageHistory = [...conversationHistory];
-      if (storageHistory.length > 20) {
-        storageHistory = storageHistory.slice(0, 20);
-        console.debug('Trimmed history to last 20 entries');
-      }
-
-      // Only keep minimal fields: prompt, links and timestamp
-      storageHistory = storageHistory.map(entry => ({
-        prompt: entry.prompt || '',
-        links: entry.links || {},
-        timestamp: entry.timestamp || new Date().toISOString()
-      }));
-
-      const jsonString = JSON.stringify(storageHistory);
-      console.debug('History JSON size:', jsonString.length, 'characters');
-
-      setCookie('conversationHistory', jsonString, 30);
-
-      if (storageHistory.length > 0 && !isInitialLoad) {
-        showToast('Research history saved!');
-      }
-    } catch (error) {
-      console.error('Error saving research history:', error);
-      showToast('Error saving history. Some entries may not be saved.');
-    }
+      document.cookie = 'testcookie=1; path=/';
+      cookiesEnabled = document.cookie.indexOf('testcookie') !== -1;
+      if (cookiesEnabled) document.cookie = 'testcookie=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    } catch { cookiesEnabled = false; }
   }
-
-  // Delete a history entry
-  const deleteHistoryEntry = (index) => {
-    if (confirm('Are you sure you want to delete this research entry?')) {
-      conversationHistory.splice(index, 1);
-      saveConversationHistory();
-      renderHistoryEntries();
-      showToast('Entry deleted successfully');
-    }
-  }
-
-  // Clear all conversation history
-  const clearConversationHistory = () => {
-    if (confirm('Are you sure you want to clear all research history? This cannot be undone.')) {
-      conversationHistory = [];
-      saveConversationHistory();
-      renderHistoryEntries();
-      showToast('Research history cleared successfully');
-    }
-  }
-
-  // Filter history entries based on search term
-  const filterHistoryEntries = () => {
-    const searchTerm = document.getElementById('historySearch').value.toLowerCase();
-    const historyEntries = document.getElementById('historyEntries');
-
-    if (!historyEntries) return;
-
-    const entries = historyEntries.querySelectorAll('.history-entry');
-
-    entries.forEach(entry => {
-      const title = entry.querySelector('.history-entry-title').textContent.toLowerCase();
-      // Search only in the title since we no longer have preview text
-      if (title.includes(searchTerm)) {
-        entry.style.display = 'block';
-      } else {
-        entry.style.display = 'none';
-      }
-    });
-  }
-
-  // Sort history entries by timestamp
-  const sortHistoryEntries = (order) => {
-    conversationHistory.sort((a, b) => {
-      // Default to newest first if timestamps don't exist
-      if (!a.timestamp || !b.timestamp) return 0;
-
-      if (order === 'newest') {
-        return new Date(b.timestamp) - new Date(a.timestamp);
-      } else {
-        return new Date(a.timestamp) - new Date(b.timestamp);
-      }
-    });
-  }
-
-  // Render history entries in the panel
-  const renderHistoryEntries = () => {
-    const historyEntries = document.getElementById('historyEntries');
-    if (!historyEntries) return;
-
-    historyEntries.innerHTML = '';
-
-    if (!conversationHistory || conversationHistory.length === 0) {
-      historyEntries.innerHTML = '<p class="text-center mt-4 text-muted">No research history yet.</p>';
-      return;
-    }
-
-    // Sort by the current selection
-    const sortOrder = document.getElementById('historySortOrder')?.value || 'newest';
-    sortHistoryEntries(sortOrder);
-    console.debug('Sorted history entries:', sortOrder);
-
-    conversationHistory.forEach((entry, index) => {
-      const entryElement = document.createElement('div');
-      entryElement.className = 'history-entry';
-      entryElement.setAttribute('data-id', index);
-
-      // Make the entire entry clickable to load it
-      entryElement.addEventListener('click', () => {
-        loadResearchEntry(index);
-      });
-
-      // Format timestamp if available
-      let timestampHTML = '';
-      if (entry.timestamp) {
-        try {
-          const timestamp = new Date(entry.timestamp);
-          const formattedDate = timestamp.toLocaleDateString();
-          const formattedTime = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          timestampHTML = `<span class="history-entry-timestamp">${formattedDate} ${formattedTime}</span>`;
-        } catch (e) {
-          console.error('Error formatting timestamp:', e);
-        }
-      }
-
-      // Make sure links object exists
-      const links = entry.links || {};
-
-      // Build the HTML for the entry with enhanced formatting
-      entryElement.innerHTML = `
-        <div class="history-entry-header">
-          <h4 class="history-entry-title">${entry.prompt || 'Unnamed Research'}</h4>
-          ${timestampHTML}
-        </div>
-        <div class="history-entry-format">
-          ${links.pdf ? `<a href="${links.pdf}" class="history-entry-action" target="_blank" title="Open PDF Report"><i class="fas fa-file-pdf"></i> PDF</a>` : ''}
-          ${links.docx ? `<a href="${links.docx}" class="history-entry-action" target="_blank" title="Open Word Document"><i class="fas fa-file-word"></i> Word</a>` : ''}
-          ${links.md ? `<a href="${links.md}" class="history-entry-action" target="_blank" title="Open Markdown File"><i class="fas fa-file-lines"></i> MD</a>` : ''}
-          ${links.json ? `<a href="${links.json}" class="history-entry-action" target="_blank" title="Open JSON Data"><i class="fas fa-file-code"></i> JSON</a>` : ''}
-        </div>
-        <div class="history-entry-actions">
-          <button class="history-entry-action delete-entry" title="Delete this research entry"><i class="fas fa-trash-alt"></i></button>
-        </div>
-      `;
-
-      // Add action button handlers
-      const deleteBtn = entryElement.querySelector('.delete-entry');
-      if (deleteBtn) {
-        deleteBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          deleteHistoryEntry(index);
-        });
-      }
-
-      historyEntries.appendChild(entryElement);
-      setTimeout(() => {
-        entryElement.style.animationDelay = `${index * 50}ms`;
-      }, 0);
-    });
-  }
-
-  // Load a research entry from history
-  const loadResearchEntry = (index) => {
-    const entry = conversationHistory[index];
-    if (!entry) return;
-
-    // Fill form with the entry data
-    document.getElementById('task').value = entry.prompt; // Changed from entry.task for consistency
-    
-    // Check if report_type, report_source, and tone are in entry, otherwise use defaults or skip
-    const reportTypeSelect = document.querySelector('select[name="report_type"]');
-    if (reportTypeSelect && entry.reportType) {
-        reportTypeSelect.value = entry.reportType;
-    } else if (reportTypeSelect) {
-        reportTypeSelect.value = reportTypeSelect.options[0].value; // Default to first option
-    }
-
-    const reportSourceSelect = document.querySelector('select[name="report_source"]');
-    if (reportSourceSelect && entry.reportSource) {
-        reportSourceSelect.value = entry.reportSource;
-    } else if (reportSourceSelect) {
-        reportSourceSelect.value = reportSourceSelect.options[0].value; // Default to first option
-    }
-
-    const toneSelect = document.querySelector('select[name="tone"]');
-    if (toneSelect && entry.tone) {
-        toneSelect.value = entry.tone;
-    } else if (toneSelect) {
-        toneSelect.value = toneSelect.options[0].value; // Default to first option
-    }
-
-    const queryDomainsInput = document.querySelector('input[name="query_domains"]');
-    if (queryDomainsInput) {
-        if (entry.queryDomains && Array.isArray(entry.queryDomains) && entry.queryDomains.length > 0) {
-            queryDomainsInput.value = entry.queryDomains.join(', ');
-        } else {
-            queryDomainsInput.value = ''; // Clear if not present
-        }
-    }
-
-    // Clear current research/report areas
-    document.getElementById('output').innerHTML = '';
-    document.getElementById('reportContainer').innerHTML = '';
-    document.getElementById('selectedImagesContainer').innerHTML = '';
-    document.getElementById('selectedImagesContainer').style.display = 'none';
-
-    // Hide download bar and chat
-    const stickyDownloadsBar = document.getElementById('stickyDownloadsBar');
-    if (stickyDownloadsBar) {
-        stickyDownloadsBar.classList.remove('visible');
-    }
-    const chatContainer = document.getElementById('chatContainer');
-    if (chatContainer) {
-        chatContainer.style.display = 'none';
-    }
-
-    // Reset UI state and report-specific buttons
-    updateState('initial'); // This will hide copy buttons etc.
-
-    // Close the history panel
-    const historyPanel = document.getElementById('historyPanel');
-    if (historyPanel) {
-        historyPanel.classList.remove('open');
-    }
-
-    // Scroll to the form
-    const formElement = document.getElementById('form');
-    if (formElement) {
-        formElement.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    // Inform user
-    showToast('Research parameters loaded. You can start the research again.');
-  }
-
-  // Copy entry content to clipboard
-  const copyEntryToClipboard = (index) => {
-    const entry = conversationHistory[index];
-    if (!entry || !entry.content) return;
-
-    const textarea = document.createElement('textarea');
-    textarea.value = entry.content;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-
-    // Show a toast notification
-    showToast('Research content copied to clipboard!');
-  }
-
-  // Show a toast notification
-  const showToast = (message, duration = 3000) => {
-    // Create toast element if it doesn't exist
-    let toast = document.getElementById('toast-notification');
-    if (!toast) {
-      toast = document.createElement('div');
-      toast.id = 'toast-notification';
-      toast.className = 'toast-notification';
-      document.body.appendChild(toast);
-    }
-
-    // Set message and show
-    toast.textContent = message;
-    toast.classList.add('show');
-
-    // Hide after specified duration
-    setTimeout(() => {
-      toast.classList.remove('show');
-    }, duration);
-  }
-
-  // Save current research to history (minimal: prompt and links only)
-  const saveToHistory = (report, downloadLinks) => {
-    if (!downloadLinks) {
-      console.error('No download links provided');
-      showToast('Error: Could not save research to history');
-      return;
-    }
-
-    const prompt = document.getElementById('task').value;
-
-    // Create links object with proper structure
-    const links = {
-      pdf: downloadLinks.pdf || '',
-      docx: downloadLinks.docx || '',
-      md: downloadLinks.md || '',
-      json: downloadLinks.json || ''
-    };
-
-    console.debug('Saving history with links:', links);
-
-    // Create history entry with timestamp
-    const historyEntry = {
-      prompt,
-      links,
-      timestamp: new Date().toISOString()
-    };
-
-    // Add to beginning of array if it's not empty
-    if (!conversationHistory) {
-      conversationHistory = [];
-    }
-
-    conversationHistory.unshift(historyEntry);
-    saveConversationHistory();
-    renderHistoryEntries();
-    document.getElementById('historyPanel').classList.add('open');
-
-    // Prompt user about storage method
-    if (cookiesEnabled) {
-      showToast('Research saved! Your history is stored in a browser cookie.');
-    } else {
-      showToast('Research saved! Your history is stored using localStorage.');
-    }
-  }
-
-  // Function to update the research icon spinning state
-  const updateResearchIcon = (isSpinning) => {
-    const modernSpinner = document.getElementById('modernSpinner');
-    if (modernSpinner) {
-      if (isSpinning) {
-        modernSpinner.classList.add('spinning');
-      } else {
-        modernSpinner.classList.remove('spinning');
-      }
-    }
-  };
-
-  const startResearch = () => {
-    document.getElementById('output').innerHTML = ''
-    document.getElementById('reportContainer').innerHTML = ''
-    dispose_socket?.() // Call previous dispose function if it exists
-
-    // Reset report variables
-    allReports = '';
-    currentReport = '';
-    isFirstReport = true;
-    // A new research is not a reconnect: without this, onopen sees the previous run's request and does not send
-    // `start`, so a second research in the same page load hangs.
-    lastRequestData = null;
-
-    // Hide the download bar
-    const stickyDownloadsBar = document.getElementById('stickyDownloadsBar');
-    if (stickyDownloadsBar) {
-      stickyDownloadsBar.classList.remove('visible');
-    }
-
-    // Hide the chat container
-    chatContainer = document.getElementById('chatContainer');
-    if (chatContainer) {
-      chatContainer.style.display = 'none';
-    }
-
-    const imageContainer = document.getElementById('selectedImagesContainer')
-    imageContainer.innerHTML = ''
-    imageContainer.style.display = 'none'
-
-    updateState('in_progress')
-
-    addAgentResponse({
-      output: '🧙‍♂️ Gathering information and analyzing your research topic...',
-    })
-
-    // Scroll to the "Research Progress" section
-    const researchOutputContainer = document.querySelector('.research-output-container');
-    if (researchOutputContainer) {
-        researchOutputContainer.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-        });
-    }
-
-    dispose_socket = listenToSockEvents() // Assign the new dispose function
-  }
-
-  const listenToSockEvents = () => {
-    const { protocol, host, pathname } = window.location
-    const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'
-      }//${host}${pathname}ws`
-
-    // Set a timeout for connection - if it takes too long, stop the spinner
-    connectionTimeout = setTimeout(() => {
-      updateResearchIcon(false);
-      console.log("WebSocket connection timed out");
-    }, 10000); // 10 seconds timeout
-
-    // Configure Showdown converter to properly handle code blocks
-    const converter = new showdown.Converter({
-      ghCodeBlocks: true,         // GitHub style code blocks
-      tables: true,               // Enable tables
-      tasklists: true,            // Enable task lists
-      smartIndentationFix: true,  // Fix weird indentation
-      simpleLineBreaks: true,     // Treat newlines as <br>
-      openLinksInNewWindow: true, // Open links in new tab
-      parseImgDimensions: true    // Parse image dimensions from markdown
-    });
-
-    // Fix issues with code block formatting
-    converter.setOption('literalMidWordUnderscores', true);
-
-    // Increment connection attempts counter
-    connectionAttempts++;
-
-    // Update WebSocket status
-    updateWebSocketStatus();
-
-    const thisSocket = new WebSocket(ws_uri)
-    socket = thisSocket
-    let reportContent = ''; // Store the report content for history
-    let downloadLinkData = null; // Store download links
-
-    socket.onmessage = (event) => {
-      // Reset reconnect attempts on successful message
-      reconnectAttempts = 0;
-
-      const data = JSON.parse(event.data)
-      console.log("Received message:", data);  // Debug log
-
-      // Update WebSocket metrics
-      messagesReceived++;
-      lastActivityTime = Date.now();
-      updateWebSocketStatus();
-
-      if (data.type === 'logs') {
-        if (data.content === 'subqueries' && data.metadata && Array.isArray(data.metadata)) {
-          displaySubQuestions(data.metadata)
-        }
-        addAgentResponse(data)
-      } else if (data.type === 'images') {
-        console.log("Received images:", data);  // Debug log
-        displaySelectedImages(data)
-      } else if (data.type === 'report') {
-        // Add to reportContent for history
-        reportContent += data.output;
-
-        // Get the current report_type
-        const report_type = document.querySelector('select[name="report_type"]').value;
-
-        // Determine if we're using detailed_report
-        const isDetailedReport = report_type === 'detailed_report';
-
-        if (isDetailedReport) {
-          allReports += data.output; // Accumulate raw markdown
-          // Always render the HTML of *all accumulated markdown* for detailed reports during streaming.
-          // writeReport will replace the container's content.
-          writeReport({ output: allReports, type: 'report' }, converter, false, false);
-        } else {
-          // For all other report types, append HTML of current chunk to the container.
-          writeReport({ output: data.output, type: 'report' }, converter, false, true); // append = true
-        }
-      } else if (data.type === 'path') {
-        updateState('finished')
-        downloadLinkData = updateDownloadLink(data)
-        isResearchActive = false;
-
-        // Get the current report_type
-        const report_type = document.querySelector('select[name="report_type"]').value;
-
-        // Only for detailed_report, show the complete accumulated report at the end
-        if (report_type === 'detailed_report' && allReports) {
-          const finalData = { output: allReports, type: 'report' };
-          writeReport(finalData, converter, true, false); // isFinal=true, append=false
-        }
-
-        // Save to history now that research is complete
-        if (reportContent && downloadLinkData) {
-          saveToHistory(reportContent, downloadLinkData);
-
-          // Reset variables for next research session
-          reportContent = '';
-          allReports = '';
-          currentReport = '';
-          isFirstReport = true;
-        }
-
-        // Update WebSocket status
-        updateWebSocketStatus();
-      } else if (data.type === 'chat') {
-        // Handle chat messages from the AI
-        // Remove loading indicator and add AI's response
-        const loadingElements = document.querySelectorAll('.chat-loading');
-        if (loadingElements.length > 0) {
-          loadingElements[loadingElements.length - 1].remove();
-        }
-
-        // Add AI message to chat
-        if (data.content) {
-          addChatMessage(data.content, false);
-        }
-      }
-    }
-
-    socket.onopen = (event) => {
-      // Clear the connection timeout
-      clearTimeout(connectionTimeout);
-
-      // Update WebSocket metrics
-      connectionStartTime = Date.now();
-      lastActivityTime = Date.now();
-      updateWebSocketStatus();
-
-      // Reset reconnect attempts on successful connection
-      reconnectAttempts = 0;
-
-      // Ensure the research icon is spinning when connection is established
-      updateResearchIcon(true);
-
-      // If this is a reconnection and we're in research mode, don't send a new start command
-      if (isResearchActive && lastRequestData) {
-        console.log("Reconnected during active research, not sending new start command");
-        return;
-      }
-
-      const task = document.getElementById('task').value
-      const report_type = document.querySelector(
-        'select[name="report_type"]'
-      ).value
-      const report_source = document.querySelector(
-        'select[name="report_source"]'
-      ).value
-      const tone = document.querySelector('select[name="tone"]').value
-      const agent = document.querySelector('input[name="agent"]:checked').value
-      let source_urls = tags
-
-      if (report_source !== 'sources' && source_urls.length > 0) {
-        source_urls = source_urls.slice(0, source_urls.length - 1)
-      }
-
-      const query_domains_str = document.querySelector('input[name="query_domains"]').value
-      let query_domains = []
-      if (query_domains_str) {
-        query_domains = query_domains_str.split(',')
-          .map((domain) => domain.trim())
-          .filter((domain) => domain.length > 0);
-      }
-
-      const requestData = {
-        task: task,
-        report_type: report_type,
-        report_source: report_source,
-        source_urls: source_urls,
-        tone: tone,
-        agent: agent,
-        query_domains: query_domains,
-        max_search_results: parseInt(document.getElementById('maxSearchResults').value, 10) || 5,
-      }
-
-      // Add MCP configuration if enabled
-      const mcpData = collectMCPData();
-      if (mcpData) {
-        Object.assign(requestData, mcpData);
-        console.log('Including MCP configuration:', mcpData);
-      }
-
-      // Store the request data for potential reconnection
-      lastRequestData = requestData;
-
-      socket.send(`start ${JSON.stringify(requestData)}`)
-    }
-
-    socket.onclose = (event) => {
-      // Update metrics and status when connection closes
-      connectionStartTime = null;
-      updateWebSocketStatus();
-
-      console.log("WebSocket connection closed", event);
-
-      // Only reconnect if this is still the live socket. A socket replaced by a
-      // new research run closes after that run has set isResearchActive, and
-      // reconnecting it would open a second connection competing for the run.
-      if (isResearchActive && thisSocket === socket) {
-        reconnectWebSocket();
-      }
-    }
-
-    socket.onerror = (error) => {
-      console.error("WebSocket error:", error);
-      updateWebSocketStatus();
-    }
-
-    // return dispose function
-    return () => {
-      try {
-        isResearchActive = false; // Mark research as inactive
-        thisSocket.onclose = null;
-        if (thisSocket.readyState !== WebSocket.CLOSED && thisSocket.readyState !== WebSocket.CLOSING) {
-          thisSocket.close();
-        }
-
-        // Update metrics on socket disposal
-        connectionStartTime = null;
-        updateWebSocketStatus();
-      } catch (e) {
-        console.error('Error closing socket:', e)
-      }
-    };
-  }
-
-  // Sanitize HTML before inserting it into the DOM. Report and agent content is
-  // derived from untrusted sources (scraped web pages and LLM output), so it
-  // must be sanitized to prevent cross-site scripting (XSS).
-  const sanitizeHtml = (html) => {
-    if (typeof DOMPurify !== 'undefined') {
-      return DOMPurify.sanitize(html, { ADD_ATTR: ['target'] });
-    }
-    // Defensive fallback if DOMPurify failed to load: escape everything.
-    console.warn('DOMPurify not loaded; escaping content as a fallback.');
-    const tmp = document.createElement('div');
-    tmp.textContent = html;
-    return tmp.innerHTML;
-  };
-
-  const addAgentResponse = (data) => {
-    const output = document.getElementById('output');
-    const responseDiv = document.createElement('div');
-    responseDiv.className = 'agent_response';
-    responseDiv.innerHTML = sanitizeHtml(data.output);
-    output.appendChild(responseDiv);
-    output.scrollTop = output.scrollHeight;
-    output.style.display = 'block';
-  }
-
-  const displaySubQuestions = (questions) => {
-    const output = document.getElementById('output');
-    const container = document.createElement('div');
-    container.className = 'sub-questions';
-
-    const heading = document.createElement('p');
-    heading.className = 'sub-questions-heading';
-    heading.textContent = '🤔 Pondering your question from several angles';
-    container.appendChild(heading);
-
-    const list = document.createElement('div');
-    list.className = 'sub-questions-list';
-    questions.forEach((q) => {
-      const pill = document.createElement('span');
-      pill.className = 'sub-question-pill';
-      pill.textContent = q;
-      list.appendChild(pill);
-    });
-    container.appendChild(list);
-
-    output.appendChild(container);
-    output.scrollTop = output.scrollHeight;
-    output.style.display = 'block';
-  }
-
-  const writeReport = (data, converter, isFinal = false, append = false) => {
-    const reportContainer = document.getElementById('reportContainer');
-
-    // Convert markdown to HTML, then sanitize to prevent XSS from untrusted
-    // report content (scraped pages / LLM output).
-    const markdownOutput = sanitizeHtml(converter.makeHtml(data.output));
-
-    // If this is the final report or we should append
-    if (isFinal) {
-      // For final reports, always replace content
-      reportContainer.innerHTML = markdownOutput;
-    } else if (append) {
-      // Append mode - add to existing content
-      reportContainer.innerHTML += markdownOutput;
-    } else {
-      // Replace mode - overwrite existing content
-      reportContainer.innerHTML = markdownOutput;
-    }
-
-    // Auto-scroll to the bottom of the container
-    reportContainer.scrollTop = reportContainer.scrollHeight;
-  }
-
-  const updateDownloadLink = (data) => {
-    if (!data.output) {
-      console.error('No output data received');
-      return;
-    }
-
-    const { pdf, docx, md, json } = data.output;
-    console.log('Received paths:', { pdf, docx, md, json });
-
-    // Store these links for history
-    const currentLinks = { pdf, docx, md, json };
-
-    // Helper function to safely update link
-    const updateLink = (id, path) => {
-      const element = document.getElementById(id);
-      if (element && path) {
-        console.log(`Setting ${id} href to:`, path);
-        element.setAttribute('href', path);
-        element.classList.remove('disabled');
-      } else {
-        console.warn(`Either element ${id} not found or path not provided`);
-      }
-    };
-
-    // Update links in sticky download bar
-    updateLink('downloadLink', pdf);
-    updateLink('downloadLinkWord', docx);
-    updateLink('downloadLinkMd', md);
-    updateLink('downloadLinkJson', json);
-
-    // Update duplicate buttons above the report
-    updateLink('downloadLinkTop', pdf);
-    updateLink('downloadLinkWordTop', docx);
-    updateLink('downloadLinkMdTop', md);
-    updateLink('downloadLinkJsonTop', json);
-
-    // Make sure download buttons are visible when download links are ready
-    showDownloadPanels();
-
-    // Return links for history saving
-    return currentLinks;
-  }
-
-  const copyToClipboard = () => {
-    const textarea = document.createElement('textarea')
-    textarea.id = 'temp_element'
-    textarea.style.height = 0
-    document.body.appendChild(textarea)
-    textarea.value = document.getElementById('reportContainer').innerText
-    const selector = document.querySelector('#temp_element')
-    selector.select()
-    document.execCommand('copy')
-    document.body.removeChild(textarea)
-
-    // Show a temporary success message with icon change and toast notification
-    const copyBtn = document.getElementById('copyToClipboard');
-    const copyBtnTop = document.getElementById('copyToClipboardTop');
-
-    // Function to reset the icon for both buttons
-    const resetIcons = () => {
-      if (copyBtn) {
-        copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy';
-      }
-      if (copyBtnTop) {
-        copyBtnTop.innerHTML = '<i class="fas fa-copy"></i>';
-      }
-    };
-
-    // Change to green check mark
-    if (copyBtn) {
-      copyBtn.innerHTML = '<i class="fas fa-check" style="color: green;"></i> Copied!';
-    }
-    if (copyBtnTop) {
-      copyBtnTop.innerHTML = '<i class="fas fa-check" style="color: green;"></i>';
-    }
-
-    // Show toast notification
-    showToast('Copied to clipboard!');
-
-    // Reset the button after 3 seconds
-    setTimeout(resetIcons, 3000);
-  }
-
-  const updateState = (state) => {
-    var status = ''
-    switch (state) {
-      case 'in_progress':
-        status = 'Research in progress...'
-        setReportActionsStatus('disabled')
-        isResearchActive = true;
-        // Make the research icon spin
-        updateResearchIcon(true);
-        // Hide chat container during research
-        chatContainer = document.getElementById('chatContainer');
-        if (chatContainer) {
-          chatContainer.style.display = 'none';
-        }
-        // Hide the copy button in the header
-        const copyBtnTop = document.getElementById('copyToClipboardTop');
-        if (copyBtnTop) {
-          copyBtnTop.style.display = 'none';
-        }
-        // Hide the JSON button container
-        const jsonContainer = document.getElementById('jsonButtonContainer');
-        if (jsonContainer) {
-          jsonContainer.style.display = 'none';
-        }
-        break
-      case 'finished':
-        status = 'Research finished!'
-        setReportActionsStatus('enabled')
-        isResearchActive = false;
-        // Stop the research icon spinning
-        updateResearchIcon(false);
-
-        // Show download panels and hide feature panels when research is finished
-        showDownloadPanels();
-
-        // Enable the copy button
-        const copyButton = document.getElementById('copyToClipboard');
-        if (copyButton) {
-          copyButton.classList.remove('disabled');
-        }
-
-        // Show copy button in the header
-        const topCopyButton = document.getElementById('copyToClipboardTop');
-        if (topCopyButton) {
-          topCopyButton.style.display = 'inline-block';
-          topCopyButton.addEventListener('click', copyToClipboard);
-        }
-
-        // Show JSON button container
-        const jsonButtonContainer = document.getElementById('jsonButtonContainer');
-        if (jsonButtonContainer) {
-          jsonButtonContainer.style.display = 'block';
-        }
-
-        // Show chat container when research is finished
-        chatContainer = document.getElementById('chatContainer');
-        if (chatContainer) {
-          chatContainer.style.display = 'block';
-          // Initialize chat if not already initialized
-          initChat();
-        }
-        break
-      case 'error':
-        status = 'Research failed!'
-        setReportActionsStatus('disabled')
-        isResearchActive = false;
-        // Stop the research icon spinning
-        updateResearchIcon(false);
-        break
-      case 'initial':
-        status = ''
-        setReportActionsStatus('hidden')
-        isResearchActive = false;
-        // Make sure the research icon is not spinning initially
-        updateResearchIcon(false);
-        // Hide the copy button in the header
-        const initialCopyBtnTop = document.getElementById('copyToClipboardTop');
-        if (initialCopyBtnTop) {
-          initialCopyBtnTop.style.display = 'none';
-        }
-        // Hide the JSON button container
-        const initialJsonContainer = document.getElementById('jsonButtonContainer');
-        if (initialJsonContainer) {
-          initialJsonContainer.style.display = 'none';
-        }
-        break
-      default:
-        setReportActionsStatus('disabled')
-    }
-    document.getElementById('status').innerHTML = status
-    if (document.getElementById('status').innerHTML == '') {
-      document.getElementById('status').style.display = 'none'
-    } else {
-      document.getElementById('status').style.display = 'block'
-    }
-  }
-
-  /**
-   * Shows or hides the download and copy buttons
-   * @param {str} status Kind of hacky. Takes "enabled", "disabled", or "hidden". "Hidden is same as disabled but also hides the div"
-   */
-  const setReportActionsStatus = (status) => {
-    const reportActions = document.getElementById('reportActions')
-    // Disable everything in reportActions until research is finished
-
-    if (status == 'enabled') {
-      reportActions.querySelectorAll('a').forEach((link) => {
-        link.classList.remove('disabled')
-        link.removeAttribute('onclick')
-        reportActions.style.display = 'block'
-      })
-    } else {
-      reportActions.querySelectorAll('a').forEach((link) => {
-        link.classList.add('disabled')
-        link.setAttribute('onclick', 'return false;')
-      })
-      if (status == 'hidden') {
-        reportActions.style.display = 'none'
-      }
-    }
-  }
-
-  const tagsInput = document.getElementById('tags-input');
-  const input = document.getElementById('custom_source');
-
-  const tags = [];
-
-  const addTag = (url) => {
-    if (tags.includes(url)) return;
-    tags.push(url);
-
-    const tagElement = document.createElement('span');
-    tagElement.className = 'tag';
-    tagElement.textContent = url;
-
-    const removeButton = document.createElement('span');
-    removeButton.className = 'remove-tag';
-    removeButton.textContent = 'x';
-    removeButton.onclick = function () {
-      tagsInput.removeChild(tagElement);
-      tags.splice(tags.indexOf(url), 1);
-    };
-
-    tagElement.appendChild(removeButton);
-    tagsInput.insertBefore(tagElement, input);
-  }
-
-  const displaySelectedImages = (data) => {
-    const imageContainer = document.getElementById('selectedImagesContainer')
-    //imageContainer.innerHTML = '<h3>Selected Images</h3>'
-    const images = JSON.parse(data.output)
-    console.log("Received images:", images);  // Debug log
-    if (images && images.length > 0) {
-      images.forEach(imageUrl => {
-        const imgElement = document.createElement('img')
-        imgElement.src = imageUrl
-        imgElement.alt = 'Research Image'
-        imgElement.style.maxWidth = '200px'
-        imgElement.style.margin = '5px'
-        imgElement.style.cursor = 'pointer'
-        imgElement.onclick = () => showImageDialog(imageUrl)
-        imageContainer.appendChild(imgElement)
-      })
-      imageContainer.style.display = 'block'
-    } else {
-      imageContainer.innerHTML += '<p>No images found for this research.</p>'
-    }
-  }
-
-  const showImageDialog = (imageUrl) => {
-    let dialog = document.querySelector('.image-dialog');
-    if (!dialog) {
-        dialog = document.createElement('div');
-        dialog.className = 'image-dialog';
-
-        const img = document.createElement('img');
-        img.alt = 'Full-size Research Image';
-
-        const closeBtn = document.createElement('button');
-        closeBtn.textContent = 'Close';
-        closeBtn.className = 'close-btn'; // Added class for styling
-
-        dialog.appendChild(img);
-        dialog.appendChild(closeBtn);
-        document.body.appendChild(dialog);
-
-        closeBtn.onclick = () => {
-            dialog.classList.remove('visible');
-        };
-        // Close on clicking backdrop
-        dialog.addEventListener('click', (e) => {
-            if (e.target === dialog) {
-                dialog.classList.remove('visible');
-            }
-        });
-    }
-
-    const imgElement = dialog.querySelector('img');
-    imgElement.src = imageUrl;
-    dialog.classList.add('visible');
-
-    // Close with Escape key
-    const escapeKeyListener = (e) => {
-        if (e.key === 'Escape') {
-            dialog.classList.remove('visible');
-            document.removeEventListener('keydown', escapeKeyListener);
-        }
-    };
-    document.addEventListener('keydown', escapeKeyListener);
-}
-
-  // Function to show download bar and enable buttons
-  const showDownloadPanels = () => {
-    // Show the bar by adding the visible class
-    const stickyDownloadsBar = document.getElementById('stickyDownloadsBar');
-    if (stickyDownloadsBar) {
-      stickyDownloadsBar.classList.add('visible');
-    }
-
-    // Enable all download buttons
-    const downloadButtons = document.querySelectorAll('.download-option-btn, .report-action-btn');
-    downloadButtons.forEach(button => {
-      button.classList.remove('disabled');
-    });
-
-    // Make top buttons report-actions section visible
-    const reportActions = document.querySelector('.report-actions');
-    if (reportActions) {
-      reportActions.style.display = 'flex';
-    }
-  }
-
-  // --- Storage Helpers (Cookies or LocalStorage) ---
   function setCookie(name, value, days) {
-    // Maximum cookie size is around 4KB (4096 bytes)
-    const MAX_COOKIE_SIZE = 4000;
-
-    // If cookies are disabled, use localStorage instead
-    if (!cookiesEnabled) {
-      try {
-        localStorage.setItem(name, value);
-        console.debug(`Data saved to localStorage: ${name}`);
-        return true;
-      } catch (e) {
-        console.error("Error saving to localStorage:", e);
-        return false;
-      }
+    if (!cookiesEnabled) { try { localStorage.setItem(name, value); return true; } catch { return false; } }
+    const date = new Date(Date.now() + days * 864e5);
+    const expires = `; expires=${date.toUTCString()}`;
+    const encoded = encodeURIComponent(value);
+    if ((name + '=' + encoded + expires + '; path=/').length > 4000) {
+      // Too big for a cookie: drop the oldest entry and try again (upstream's rule).
+      const list = JSON.parse(value);
+      if (Array.isArray(list) && list.length > 1) return setCookie(name, JSON.stringify(list.slice(0, -1)), days);
+      return false;
     }
-
-    let expires = '';
-    if (days) {
-      const date = new Date();
-      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-      expires = '; expires=' + date.toUTCString();
-    }
-
-    // Encode the value
-    const encodedValue = encodeURIComponent(value);
-
-    // Calculate cookie size
-    const cookieSize = (name + '=' + encodedValue + expires + '; path=/').length;
-    console.debug(`Setting cookie: ${name}, size: ${cookieSize} bytes`);
-
-    // If cookie is too large, display warning and truncate history
-    if (cookieSize > MAX_COOKIE_SIZE) {
-      console.warn(`Cookie size (${cookieSize} bytes) exceeds the ${MAX_COOKIE_SIZE} bytes limit!`);
-      showToast('Warning: History too large for cookie storage! Oldest entries will be removed.');
-
-      if (name === 'conversationHistory') {
-        try {
-          // Parse, reduce entries, and try again
-          const historyData = JSON.parse(value);
-          if (Array.isArray(historyData) && historyData.length > 1) {
-            // Remove the last entry and try again recursively
-            const reducedHistory = historyData.slice(0, -1);
-            console.debug(`Reducing history from ${historyData.length} to ${reducedHistory.length} entries`);
-            setCookie(name, JSON.stringify(reducedHistory), days);
-            return; // Exit after recursive call
-          }
-        } catch (e) {
-          console.error('Could not parse history to reduce size:', e);
-        }
-      }
-
-      return false; // Indicate failure
-    }
-
-    // Set the cookie
-    document.cookie = name + '=' + encodedValue + expires + '; path=/';
-    console.debug(`Cookie set: ${name}`);
-    return true; // Indicate success
+    document.cookie = `${name}=${encoded}${expires}; path=/`;
+    return true;
   }
-
   function getCookie(name) {
-    console.debug(`Getting data: ${name}`);
-
-    // If cookies are disabled, use localStorage instead
-    if (!cookiesEnabled) {
-      try {
-        const value = localStorage.getItem(name);
-        if (value) {
-          console.debug(`Data found in localStorage: ${name}, length: ${value.length} chars`);
-          return value;
-        }
-        console.debug(`Data not found in localStorage: ${name}`);
-        return null;
-      } catch (e) {
-        console.error("Error retrieving from localStorage:", e);
-        return null;
-      }
+    if (!cookiesEnabled) { try { return localStorage.getItem(name); } catch { return null; } }
+    for (const part of document.cookie.split(';')) {
+      const c = part.trim();
+      if (c.startsWith(name + '=')) { try { return decodeURIComponent(c.slice(name.length + 1)); } catch { return null; } }
     }
-
-    const nameEQ = name + '=';
-    const ca = document.cookie.split(';');
-    for (let i = 0; i < ca.length; i++) {
-      let c = ca[i];
-      while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-      if (c.indexOf(nameEQ) == 0) {
-        const value = decodeURIComponent(c.substring(nameEQ.length, c.length));
-        console.debug(`Found cookie: ${name}, length: ${value.length} chars`);
-        return value;
-      }
-    }
-    console.debug(`Cookie not found: ${name}`);
     return null;
   }
-
   function deleteCookie(name) {
-    console.debug(`Deleting storage: ${name}`);
-
-    // If cookies are disabled, use localStorage instead
-    if (!cookiesEnabled) {
-      try {
-        localStorage.removeItem(name);
-        return;
-      } catch (e) {
-        console.error("Error removing from localStorage:", e);
-        return;
-      }
-    }
-
-    document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    if (!cookiesEnabled) { try { localStorage.removeItem(name); } catch {} return; }
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
   }
-  // --- End Storage Helpers ---
+  function loadHistory() {
+    try {
+      const raw = getCookie('conversationHistory');
+      const list = raw ? JSON.parse(raw) : [];
+      history = Array.isArray(list) ? list.filter((e) => e && (e.prompt || e.task)) : [];
+    } catch { history = []; deleteCookie('conversationHistory'); }
+    history.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+  }
+  function persistHistory() {
+    if (!history.length) { deleteCookie('conversationHistory'); return; }
+    const slim = history.slice(0, 20).map((e) => ({ prompt: e.prompt || e.task || '', links: e.links || {}, timestamp: e.timestamp || new Date().toISOString(), type: e.type, stats: e.stats }));
+    setCookie('conversationHistory', JSON.stringify(slim), 30);
+    loadHistory();
+  }
+  function saveToHistory() {
+    if (!run || !run.links) return;
+    const l = run.links;
+    history.unshift({
+      prompt: run.task,
+      links: { pdf: l.pdf || '', docx: l.docx || '', md: l.md || '', json: l.json || '' },
+      timestamp: new Date().toISOString(),
+      type: run.type,
+      stats: [Math.round((run.endedAt - run.startedAt) / 1000), run.urls.size],
+    });
+    persistHistory();
+  }
 
-  // Debug Helper - check cookie status
-  const checkCookieStatus = () => {
-    if (!cookiesEnabled) {
-      const storageData = localStorage.getItem('conversationHistory');
-      if (storageData) {
-        const byteSize = new Blob([storageData]).size;
-        const kilobyteSize = (byteSize / 1024).toFixed(2);
-
-        try {
-          const parsed = JSON.parse(storageData);
-          const entryCount = Array.isArray(parsed) ? parsed.length : 0;
-
-          showToast(`Using localStorage: ${kilobyteSize}KB, ${entryCount} entries`);
-          console.debug(`LocalStorage size: ${byteSize} bytes, ${kilobyteSize}KB`);
-          console.debug(`LocalStorage entries: ${entryCount}`);
-        } catch (e) {
-          showToast(`LocalStorage contains invalid data: ${kilobyteSize}KB`);
-          console.error('LocalStorage parse error:', e);
-        }
-      } else {
-        showToast('No research history found in localStorage');
-      }
+  function renderHistory() {
+    const q = $('histSearch').value.trim().toLowerCase();
+    const list = $('histList');
+    const empty = $('histEmpty');
+    const busy = phase === 'running';
+    $('histBusy').hidden = !busy || !history.length;
+    $('histSearchWrap').hidden = !history.length;
+    $('histFoot').hidden = !history.length;
+    if (!history.length) {
+      list.replaceChildren();
+      empty.textContent = 'No research yet.';
+      empty.hidden = false;
       return;
     }
-
-    const allCookies = document.cookie;
-    console.debug('All cookies:', allCookies);
-
-    const conversationCookie = getCookie('conversationHistory');
-    if (conversationCookie) {
-      const byteSize = new Blob([conversationCookie]).size;
-      const kilobyteSize = (byteSize / 1024).toFixed(2);
-
-      try {
-        const parsed = JSON.parse(conversationCookie);
-        const entryCount = Array.isArray(parsed) ? parsed.length : 0;
-
-        showToast(`Cookie found: ${kilobyteSize}KB, ${entryCount} research entries`);
-        console.debug(`Cookie size: ${byteSize} bytes, ${kilobyteSize}KB`);
-        console.debug(`Cookie entries: ${entryCount}`);
-      } catch (e) {
-        showToast(`Cookie found but invalid: ${kilobyteSize}KB`);
-        console.error('Cookie parse error:', e);
-      }
-    } else {
-      showToast('No research history cookie found');
-    }
+    const rows = history.filter((e) => (e.prompt || e.task || '').toLowerCase().includes(q));
+    list.replaceChildren(...rows.map((e) => el('li', {}, el('button', {
+      type: 'button',
+      'aria-disabled': busy ? 'true' : null,
+      onclick: () => { if (!busy) openEntry(e); },
+    }, el('span', { class: 'hist__q', text: e.prompt || e.task }), el('span', { class: 'hist__meta', text: [LENGTHS[e.type], fmtWhen(e.timestamp)].filter(Boolean).join(' · ') })))));
+    empty.hidden = rows.length > 0;
+    empty.textContent = rows.length ? '' : `Nothing matches “${$('histSearch').value.trim()}”.`;
   }
 
-  // Export history to a downloadable JSON file
-  const exportHistory = () => {
+  let lastFocus = null;
+  function openDrawer() {
+    loadHistory();
+    lastFocus = document.activeElement;
+    $('histSearch').value = '';
+    $('histConfirm').hidden = true;
+    $('histClear').hidden = false;
+    renderHistory();
+    $('history').hidden = false;
+    $('historyOpen').setAttribute('aria-expanded', 'true');
+    for (const id of ['top', 'main']) $(id).inert = true;
+    document.querySelector('.foot').inert = true;
+    document.body.style.overflow = 'hidden';
+    (history.length ? $('histSearch') : $('history').querySelector('[data-close].btn')).focus();
+  }
+  function closeDrawer() {
+    if ($('history').hidden) return;
+    $('history').hidden = true;
+    $('historyOpen').setAttribute('aria-expanded', 'false');
+    for (const id of ['top', 'main']) $(id).inert = false;
+    document.querySelector('.foot').inert = false;
+    document.body.style.overflow = '';
+    (lastFocus && lastFocus.isConnected ? lastFocus : $('historyOpen')).focus();
+  }
+  function trapFocus(e) {
+    if (e.key === 'Escape') { e.preventDefault(); closeDrawer(); return; }
+    if (e.key !== 'Tab') return;
+    const f = [...$('history').querySelectorAll('button, input, a[href], [tabindex="0"]')].filter((x) => !x.disabled && x.offsetParent !== null);
+    if (!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && (document.activeElement === first || !$('history').contains(document.activeElement))) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+  function askClear() {
+    $('histConfirmText').textContent = history.length === 1 ? 'Clear the one research?' : `Clear all ${history.length}?`;
+    $('histClear').hidden = true;
+    $('histConfirm').hidden = false;
+    $('histClearNo').focus();
+  }
+  function cancelClear() { $('histConfirm').hidden = true; $('histClear').hidden = false; $('histClear').focus(); }
+  function doClear() {
+    history = [];
+    persistHistory();
+    $('histConfirm').hidden = true;
+    $('histClear').hidden = false;
+    renderHistory();
+    $('history').querySelector('.drawer__head [data-close]').focus();
+  }
+
+  // A history row opens its report (state 3), read back from the server's outputs/.
+  async function openEntry(e) {
+    closeDrawer();
+    closeSocket();
+    hideNotice();
+    chat = { thread: [], pending: null };
+    const req = { task: e.prompt || e.task, report_type: e.type || 'research_report', report_source: 'web', source_urls: [], tone: 'Objective', agent: 'Auto Agent', query_domains: [], max_search_results: 5 };
+    lastRequest = req;
+    run = newRun(req);
+    run.startedAt = null;
+    run.savedAt = e.timestamp;
+    run.links = e.links || {};
+    if (Array.isArray(e.stats)) { run.durationMs = e.stats[0] * 1000; run.sourceCount = e.stats[1]; }
+    phase = 'opened';
+    setConn('idle');
+    showRunView();
+    $('runMeta').hidden = true;
+    $('doneline').hidden = false;
+    $('stepsToggle').hidden = true;
+    $('doneText').textContent = [LENGTHS[run.type], fmtWhen(e.timestamp)].filter(Boolean).join(' · ');
+    $('report').replaceChildren(el('p', { class: 'report__missing' }, el('span', { class: 'spin', 'aria-hidden': 'true' }), ' Opening the report'));
+    let md = null;
     try {
-      if (!conversationHistory || conversationHistory.length === 0) {
-        showToast('No research history to export');
-        return;
-      }
-
-      // Create a formatted JSON string with pretty-printing
-      const historyJson = JSON.stringify(conversationHistory, null, 2);
-
-      // Create a Blob containing the data
-      const blob = new Blob([historyJson], { type: 'application/json' });
-
-      // Create an object URL for the blob
-      const url = URL.createObjectURL(blob);
-
-      // Create a temporary link element
-      const link = document.createElement('a');
-      link.href = url;
-
-      // Set download attribute with filename
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      link.download = `research-history-${timestamp}.json`;
-
-      // Append to the document
-      document.body.appendChild(link);
-
-      // Programmatically click the link to trigger the download
-      link.click();
-
-      // Clean up
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      showToast('Research history exported to JSON file');
-      console.debug('History exported, entries:', conversationHistory.length);
-    } catch (error) {
-      console.error('Error exporting history:', error);
-      showToast('Error exporting research history');
-    }
-  }
-
-  // Trigger the file input for importing history
-  const triggerImportHistory = () => {
-    const fileInput = document.getElementById('historyFileInput');
-    if (fileInput) {
-      fileInput.click();
-    } else {
-      showToast('Import functionality not available');
-    }
-  }
-
-  // Handle the file import for history
-  const handleFileImport = (event) => {
-    const file = event.target.files[0];
-    if (!file) {
+      const [r] = await Promise.all([fetch(run.links.md, { cache: 'no-store' }), loadMarkdown()]);
+      md = r.ok ? await r.text() : null;
+    } catch { md = null; }
+    if (!run || run.savedAt !== e.timestamp) return;
+    if (!md || !md.trim()) {
+      $('report').replaceChildren();
+      showNotice('info', 'This report is no longer on the server: each deploy starts a fresh one.', [runAgainBtn()]);
       return;
     }
-
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      try {
-        const content = e.target.result;
-        const importedData = JSON.parse(content);
-
-        // Validate the imported data
-        if (!Array.isArray(importedData)) {
-          throw new Error('Imported data is not an array');
-        }
-
-        // Check if each entry has the required fields
-        const validEntries = importedData.filter(entry => {
-          return entry &&
-            typeof entry === 'object' &&
-            (entry.prompt || entry.task) && // Allow both prompt and legacy task field
-            (entry.links || entry.downloadLinks); // Allow both links and legacy downloadLinks
-        });
-
-        if (validEntries.length === 0) {
-          showToast('No valid research entries found in the imported file');
-          return;
-        }
-
-        // Map the entries to the current structure if needed
-        const mappedEntries = validEntries.map(entry => {
-          return {
-            prompt: entry.prompt || entry.task || '',
-            links: entry.links || entry.downloadLinks || {},
-            timestamp: entry.timestamp || new Date().toISOString()
-          };
-        });
-
-        // Confirm before overwriting existing history
-        if (conversationHistory && conversationHistory.length > 0) {
-          if (confirm(`You have ${conversationHistory.length} existing research entries. Do you want to:
-- Click OK to MERGE imported history with existing history
-- Click Cancel to REPLACE all existing history with imported data`)) {
-            // Merge with existing history
-            conversationHistory = [...mappedEntries, ...conversationHistory];
-          } else {
-            // Replace existing history
-            conversationHistory = mappedEntries;
-          }
-        } else {
-          // No existing history, just set the imported data
-          conversationHistory = mappedEntries;
-        }
-
-        // Save the new history and update the UI
-        saveConversationHistory();
-        renderHistoryEntries();
-
-        showToast(`Successfully imported ${validEntries.length} research entries`);
-        console.debug('Research history imported, valid entries:', validEntries.length);
-
-      } catch (error) {
-        console.error('Error importing history:', error);
-        showToast('Error importing research history: Invalid file format');
-      }
-
-      // Reset the file input so the same file can be selected again
-      event.target.value = '';
-    };
-
-    reader.onerror = () => {
-      console.error('Error reading file');
-      showToast('Error reading the imported file');
-      event.target.value = '';
-    };
-
-    reader.readAsText(file);
+    run.md = md;
+    renderReport(true);
+    const parts = [];
+    if (run.durationMs) parts.push(`Done in ${fmtDur(run.durationMs)}`);
+    if (run.sourceCount) parts.push(plural(run.sourceCount, 'source', 'sources'));
+    parts.push(plural(countWords(md), 'word', 'words'));
+    parts.push(fmtWhen(e.timestamp));
+    $('doneText').textContent = parts.join(' · ');
+    buildDownloads();
+    $('actions').hidden = false;
+    $('followup').hidden = false;
   }
 
-  // Initialize chat functionality
-  const initChat = () => {
-    const chatInput = document.getElementById('chatInput');
-    const sendChatBtn = document.getElementById('sendChatBtn');
-    const voiceInputBtn = document.getElementById('voiceInputBtn');
-
-    if (!chatInput || !sendChatBtn) return;
-
-    // Clear previous messages
-    const chatMessages = document.getElementById('chatMessages');
-    if (chatMessages) {
-      chatMessages.innerHTML = '';
-    }
-
-    // Add event listeners for chat input
-    chatInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendChatMessage();
-      }
+  // ---------- wiring ----------
+  function init() {
+    checkCookiesEnabled();
+    loadHistory();
+    $('hintMod').textContent = isMac ? '⌘' : 'Ctrl';
+    const task = $('task');
+    task.addEventListener('input', () => { growField(task, window.innerHeight * 0.4); $('taskError').hidden = true; });
+    task.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); $('askForm').requestSubmit(); }
     });
-
-    sendChatBtn.addEventListener('click', sendChatMessage);
-
-    // Initialize speech recognition if supported
-    if (voiceInputBtn) {
-      initSpeechRecognition(voiceInputBtn, chatInput);
-    }
-
-    // Auto-resize textarea as content grows
-    chatInput.addEventListener('input', () => {
-      chatInput.style.height = 'auto';
-      chatInput.style.height = (chatInput.scrollHeight) + 'px';
+    $('askForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const req = readRequest();
+      if (!req.task) { $('taskError').textContent = 'Type a question first.'; $('taskError').hidden = false; task.focus(); return; }
+      startResearch(req);
     });
-
-    // Add welcome message
-    addChatMessage('I can answer questions about the research report. What would you like to know?', false);
-  }
-
-  // Initialize speech recognition
-  const initSpeechRecognition = (button, inputElement) => {
-    // Check if browser supports speech recognition
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-      console.warn('Speech recognition not supported in this browser');
-      button.style.display = 'none';
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-
-    // Configure speech recognition
-    recognition.continuous = false;
-    recognition.lang = 'en-US';
-    recognition.interimResults = true;
-    recognition.maxAlternatives = 1;
-
-    let isListening = false;
-    let finalTranscript = '';
-
-    // Add event listeners for speech recognition
-    recognition.onstart = () => {
-      isListening = true;
-      finalTranscript = '';
-      button.classList.add('listening');
-      button.innerHTML = '<i class="fas fa-microphone-slash"></i>';
-      button.title = 'Stop listening';
-
-      // Show visual feedback
-      showToast('Listening...', 1000);
-    };
-
-    recognition.onresult = (event) => {
-      let interimTranscript = '';
-
-      // Loop through the results
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript;
-        } else {
-          interimTranscript += transcript;
-        }
-      }
-
-      // Update the input element with the transcription
-      inputElement.value = finalTranscript + interimTranscript;
-
-      // Trigger input event to resize textarea
-      const inputEvent = new Event('input', { bubbles: true });
-      inputElement.dispatchEvent(inputEvent);
-    };
-
-    recognition.onerror = (event) => {
-      console.error('Speech recognition error', event.error);
-      resetRecognition();
-
-      if (event.error === 'not-allowed') {
-        showToast('Microphone access denied. Please allow microphone access in your browser settings.', 3000);
-      } else {
-        showToast('Speech recognition error: ' + event.error, 3000);
-      }
-    };
-
-    recognition.onend = () => {
-      resetRecognition();
-    };
-
-    // Reset the recognition state
-    const resetRecognition = () => {
-      isListening = false;
-      button.classList.remove('listening');
-      button.innerHTML = '<i class="fas fa-microphone"></i>';
-      button.title = 'Use voice input';
-    };
-
-    // Toggle speech recognition on button click
-    button.addEventListener('click', () => {
-      if (isListening) {
-        recognition.stop();
-      } else {
-        recognition.start();
-      }
+    $('optionsToggle').addEventListener('click', () => {
+      const open = $('options').hidden;
+      $('options').hidden = !open;
+      $('optionsToggle').setAttribute('aria-expanded', String(open));
+      if (open) $('tone').focus();
     });
-  };
-
-  // Create a new function to handle WebSocket reconnection
-  const reconnectWebSocket = (message = null) => {
-    // Don't attempt too many reconnections
-    if (reconnectAttempts >= maxReconnectAttempts) {
-      console.error(`Failed to reconnect after ${maxReconnectAttempts} attempts`);
-      addChatMessage(`Unable to reconnect after ${maxReconnectAttempts} attempts. Please refresh the page.`, false);
-      return false;
-    }
-
-    reconnectAttempts++;
-
-    // Calculate backoff time (exponential backoff)
-    const backoff = reconnectInterval * Math.pow(1.5, reconnectAttempts - 1);
-    console.log(`Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts}) in ${backoff}ms...`);
-
-    // Show reconnection status to user
-    addChatMessage(`Connection lost. Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`, false);
-
-    // Try to reconnect after delay
-    setTimeout(() => {
-      try {
-        // Setup new WebSocket connection
-        dispose_socket = listenToSockEvents();
-
-        // Set up a one-time handler to send the message after reconnection
-        if (message) {
-          const messageToSend = message;
-          const checkConnectionAndSend = () => {
-            if (socket && socket.readyState === WebSocket.OPEN) {
-              console.log("Reconnected successfully, sending queued message");
-              socket.send(messageToSend);
-              return true;
-            } else if (reconnectAttempts < maxReconnectAttempts) {
-              console.log("Socket not ready yet, retrying...");
-              setTimeout(checkConnectionAndSend, 1000);
-              return false;
-            }
-            return false;
-          };
-
-          setTimeout(checkConnectionAndSend, 1000);
-        }
-
-        return true;
-      } catch (e) {
-        console.error("Error during reconnection:", e);
-        return false;
-      }
-    }, backoff);
-
-    return true;
-  };
-
-  // Send a chat message
-  const sendChatMessage = () => {
-    const chatInput = document.getElementById('chatInput');
-    if (!chatInput || !chatInput.value.trim()) return;
-
-    const message = chatInput.value.trim();
-
-    // Add user message to chat
-    addChatMessage(message, true);
-
-    // Clear input
-    chatInput.value = '';
-    chatInput.style.height = 'auto';
-
-    // Add loading indicator
-    const loadingId = addLoadingIndicator();
-
-    // Prepare the message to send
-    const messageToSend = `chat ${JSON.stringify({ message: message })}`;
-
-    // Send message through WebSocket
-    if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(messageToSend);
-    } else {
-      // If socket is closed, try to reconnect
-      removeLoadingIndicator(loadingId);
-
-      // Reset reconnect attempts if this is a new chat session
-      if (reconnectAttempts >= maxReconnectAttempts) {
-        reconnectAttempts = 0;
-      }
-
-      // Attempt to reconnect and queue the message to be sent after reconnection
-      if (!reconnectWebSocket(messageToSend)) {
-        // If reconnection fails or max attempts reached
-        addChatMessage('Unable to send message. Connection is unavailable.', false);
-      }
-    }
-  }
-
-  // Add a chat message to the UI
-  const addChatMessage = (message, isUser = false) => {
-    const chatMessages = document.getElementById('chatMessages');
-    if (!chatMessages) return;
-
-    const messageEl = document.createElement('div');
-    messageEl.className = `chat-message ${isUser ? 'user-message' : 'ai-message'}`;
-
-    // Process message for AI responses (convert markdown to HTML for AI messages)
-    let processedMessage = message;
-    if (!isUser) {
-      // Use showdown for markdown conversion
-      const converter = new showdown.Converter({
-        ghCodeBlocks: true,
-        tables: true,
-        tasklists: true,
-        openLinksInNewWindow: true
-      });
-      processedMessage = converter.makeHtml(message);
-    }
-
-    // Set message content
-    messageEl.innerHTML = isUser ? escapeHtml(processedMessage) : processedMessage;
-
-    // Add timestamp
-    const timestampEl = document.createElement('div');
-    timestampEl.className = 'chat-timestamp';
-    const now = new Date();
-    timestampEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    messageEl.appendChild(timestampEl);
-
-    // Add to chat container
-    chatMessages.appendChild(messageEl);
-
-    // Scroll to bottom
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
-
-  // Add a loading indicator
-  const addLoadingIndicator = () => {
-    const chatMessages = document.getElementById('chatMessages');
-    if (!chatMessages) return null;
-
-    const loadingId = 'loading-' + Date.now();
-    const loadingEl = document.createElement('div');
-    loadingEl.className = 'chat-message ai-message chat-loading';
-    loadingEl.id = loadingId;
-
-    // Create the dots
-    for (let i = 0; i < 3; i++) {
-      const dot = document.createElement('div');
-      dot.className = 'chat-dot';
-      loadingEl.appendChild(dot);
-    }
-
-    chatMessages.appendChild(loadingEl);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-
-    return loadingId;
-  }
-
-  // Remove loading indicator
-  const removeLoadingIndicator = (loadingId) => {
-    if (!loadingId) return;
-
-    const loadingEl = document.getElementById(loadingId);
-    if (loadingEl) {
-      loadingEl.remove();
-    }
-  }
-
-  // Escape HTML to prevent XSS in user messages
-  const escapeHtml = (text) => {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
-
-  // Initialize expand buttons
-  const initExpandButtons = () => {
-    // Report container expand button
-    const expandReportBtn = document.getElementById('expandReportBtn');
-    if (expandReportBtn) {
-      expandReportBtn.addEventListener('click', () => {
-        const reportContainer = document.querySelector('.report-container');
-        toggleExpand(reportContainer);
+    for (const b of document.querySelectorAll('.stepper [data-step]')) {
+      b.addEventListener('click', () => {
+        const i = $('maxSearchResults');
+        i.value = String(Math.min(20, Math.max(1, (parseInt(i.value, 10) || 5) + +b.dataset.step)));
       });
     }
-
-    // Chat container expand button
-    const expandChatBtn = document.getElementById('expandChatBtn');
-    if (expandChatBtn) {
-      expandChatBtn.addEventListener('click', () => {
-        const chatContainer = document.getElementById('chatContainer');
-        toggleExpand(chatContainer);
-      });
+    for (const b of $('examples').querySelectorAll('button')) {
+      b.addEventListener('click', () => { task.value = b.textContent.trim(); growField(task, window.innerHeight * 0.4); $('taskError').hidden = true; task.focus(); });
     }
-
-    // Output container expand button
-    const expandOutputBtn = document.getElementById('expandOutputBtn');
-    if (expandOutputBtn) {
-      expandOutputBtn.addEventListener('click', () => {
-        const outputContainer = document.querySelector('.research-output-container');
-        toggleExpand(outputContainer);
-      });
-    }
-
-    // Close expanded view when ESC key is pressed
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        const expandedElements = document.querySelectorAll('.expanded-view');
-        expandedElements.forEach(el => {
-          // Reset the button icon
-          const button = el.querySelector('.expand-button i');
-          if (button) {
-            button.classList.remove('fa-compress-alt');
-            button.classList.add('fa-expand-alt');
-          }
-
-          // Reset content container styles
-          const contentContainers = el.querySelectorAll('#reportContainer, #output, #chatMessages');
-          contentContainers.forEach(container => {
-            if (container) {
-              container.style.maxHeight = '';
-            }
-          });
-
-          // Remove expanded-view class
-          el.classList.remove('expanded-view');
-        });
-      }
+    $('stop').addEventListener('click', stopResearch);
+    $('logToggle').addEventListener('click', toggleLog);
+    $('stepsToggle').addEventListener('click', toggleSteps);
+    $('titleMore').addEventListener('click', () => {
+      const t = $('runTitle');
+      const clamped = t.hasAttribute('data-clamped');
+      t.toggleAttribute('data-clamped', !clamped);
+      $('titleMore').setAttribute('aria-expanded', String(clamped));
+      $('titleMore').textContent = clamped ? 'Show less' : 'Show all';
     });
+    $('copy').addEventListener('click', copyReport);
+    $('dlBtn').addEventListener('click', () => ($('dlList').hidden ? openMenu() : closeMenu()));
+    $('dlBtn').addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); openMenu(e.key === 'ArrowUp'); }
+    });
+    $('dlList').addEventListener('keydown', onMenuKey);
+    document.addEventListener('click', (e) => { if (!$('dlMenu').contains(e.target)) closeMenu(); });
+    $('newResearch').addEventListener('click', () => showAsk(''));
+    $('chatForm').addEventListener('submit', sendChat);
+    const chatInput = $('chatInput');
+    chatInput.addEventListener('input', () => growField(chatInput, window.innerHeight * 0.3));
+    chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) sendChat(e); });
+    $('historyOpen').addEventListener('click', openDrawer);
+    for (const c of $('history').querySelectorAll('[data-close]')) c.addEventListener('click', closeDrawer);
+    $('history').addEventListener('keydown', trapFocus);
+    $('histSearch').addEventListener('input', renderHistory);
+    $('histClear').addEventListener('click', askClear);
+    $('histClearNo').addEventListener('click', cancelClear);
+    $('histClearYes').addEventListener('click', doClear);
+    let resizeT = null;
+    window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => { domainsShown = ''; if (run) renderDomains(); }, 150); });
+    window.addEventListener('pagehide', () => closeSocket());
+    task.focus();
   }
 
-  // Toggle expand mode for an element
-  const toggleExpand = (element) => {
-    if (!element) return;
-
-    // Toggle expanded-view class
-    element.classList.toggle('expanded-view');
-
-    // Change button icon and title based on state
-    const buttonIcon = element.querySelector('.expand-button i');
-    const button = element.querySelector('.expand-button');
-
-    if (buttonIcon && button) {
-      if (element.classList.contains('expanded-view')) {
-        buttonIcon.classList.remove('fa-compress-alt');
-        buttonIcon.classList.add('fa-compress-alt');
-        button.title = 'Collapse'; // Update title to Collapse
-
-        // Find content containers and expand their height
-        const contentContainers = element.querySelectorAll('#reportContainer, #output, #chatMessages');
-        contentContainers.forEach(container => {
-          if (container) {
-            // Set expanded heights - no positioning changes
-            if (container.id === 'reportContainer') {
-              container.style.maxHeight = '800px'; // Fixed expanded height for report
-            } else {
-              container.style.maxHeight = '600px'; // Fixed expanded height for other content
-            }
-          }
-        });
-      } else {
-        buttonIcon.classList.remove('fa-compress-alt');
-        buttonIcon.classList.add('fa-expand-alt');
-        button.title = 'Expand'; // Update title to Expand
-
-        // Reset heights back to original when collapsed
-        const contentContainers = element.querySelectorAll('#reportContainer, #output, #chatMessages');
-        contentContainers.forEach(container => {
-          if (container) {
-            container.style.maxHeight = '';
-          }
-        });
-      }
-    }
-  }
-
-  // MCP Configuration Management
-  
-  // Initialize MCP functionality
-  const initMCPSection = () => {
-    const mcpEnabled = document.getElementById('mcpEnabled');
-    const mcpConfigSection = document.getElementById('mcpConfigSection');
-    const mcpInfoBtn = document.getElementById('mcpInfoBtn');
-    const mcpConfig = document.getElementById('mcpConfig');
-    const mcpFormatBtn = document.getElementById('mcpFormatBtn');
-    const mcpExampleLink = document.getElementById('mcpExampleLink');
-
-    if (!mcpEnabled || !mcpConfigSection) {
-      console.warn('MCP elements not found');
-      return;
-    }
-
-    // Toggle MCP config section
-    mcpEnabled.addEventListener('change', () => {
-      if (mcpEnabled.checked) {
-        mcpConfigSection.style.display = 'block';
-        updateRetrieverForMCP(true);
-      } else {
-        mcpConfigSection.style.display = 'none';
-        updateRetrieverForMCP(false);
-      }
-    });
-
-    // MCP info modal
-    if (mcpInfoBtn) {
-      mcpInfoBtn.addEventListener('click', showMCPInfo);
-    }
-
-    // JSON validation and formatting
-    if (mcpConfig) {
-      mcpConfig.addEventListener('input', validateMCPConfig);
-      mcpConfig.addEventListener('blur', validateMCPConfig);
-    }
-
-    if (mcpFormatBtn) {
-      mcpFormatBtn.addEventListener('click', formatMCPConfig);
-    }
-
-    if (mcpExampleLink) {
-      mcpExampleLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        showMCPExample();
-      });
-    }
-
-    // Preset buttons
-    const presetButtons = document.querySelectorAll('.preset-btn');
-    presetButtons.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const preset = e.currentTarget.dataset.preset;
-        addMCPPreset(preset);
-      });
-    });
-
-    // Create MCP info modal
-    createMCPInfoModal();
-
-    // Initial validation
-    validateMCPConfig();
-  };
-
-  // Validate MCP JSON configuration
-  const validateMCPConfig = () => {
-    const mcpConfig = document.getElementById('mcpConfig');
-    const mcpConfigStatus = document.getElementById('mcpConfigStatus');
-    
-    if (!mcpConfig || !mcpConfigStatus) return;
-
-    const configText = mcpConfig.value.trim();
-    
-    if (!configText || configText === '[]') {
-      mcpConfig.className = 'form-control mcp-config-textarea';
-      mcpConfigStatus.textContent = 'Empty configuration';
-      mcpConfigStatus.className = 'mcp-status-text';
-      return true;
-    }
-
-    try {
-      const parsed = JSON.parse(configText);
-      
-      if (!Array.isArray(parsed)) {
-        throw new Error('Configuration must be an array');
-      }
-
-      // Validate each server config
-      const errors = [];
-      parsed.forEach((server, index) => {
-        if (!server.name) {
-          errors.push(`Server ${index + 1}: missing name`);
-        }
-        if (!server.command && !server.connection_url) {
-          errors.push(`Server ${index + 1}: missing command or connection_url`);
-        }
-      });
-
-      if (errors.length > 0) {
-        throw new Error(errors.join('; '));
-      }
-
-      mcpConfig.className = 'form-control mcp-config-textarea valid';
-      mcpConfigStatus.textContent = `Valid JSON ✓ (${parsed.length} server${parsed.length !== 1 ? 's' : ''})`;
-      mcpConfigStatus.className = 'mcp-status-text valid';
-      return true;
-
-    } catch (error) {
-      mcpConfig.className = 'form-control mcp-config-textarea invalid';
-      mcpConfigStatus.textContent = `Invalid JSON: ${error.message}`;
-      mcpConfigStatus.className = 'mcp-status-text invalid';
-      return false;
-    }
-  };
-
-  // Format MCP JSON configuration
-  const formatMCPConfig = () => {
-    const mcpConfig = document.getElementById('mcpConfig');
-    if (!mcpConfig) return;
-
-    try {
-      const parsed = JSON.parse(mcpConfig.value.trim() || '[]');
-      mcpConfig.value = JSON.stringify(parsed, null, 2);
-      validateMCPConfig();
-      showToast('JSON formatted successfully!');
-    } catch (error) {
-      showToast('Cannot format invalid JSON');
-    }
-  };
-
-  // Show MCP configuration example
-  const showMCPExample = () => {
-    const exampleConfig = [
-      {
-        "name": "github",
-        "command": "npx",
-        "args": ["-y", "@modelcontextprotocol/server-github"],
-        "env": {
-          "GITHUB_PERSONAL_ACCESS_TOKEN": "your_github_token_here"
-        }
-      },
-      {
-        "name": "filesystem",
-        "command": "npx",
-        "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed/directory"],
-        "env": {}
-      }
-    ];
-
-    const mcpConfig = document.getElementById('mcpConfig');
-    if (mcpConfig) {
-      mcpConfig.value = JSON.stringify(exampleConfig, null, 2);
-      validateMCPConfig();
-      showToast('Example configuration loaded!');
-    }
-  };
-
-  // Update retriever configuration for MCP
-  const updateRetrieverForMCP = (enableMCP) => {
-    if (enableMCP) {
-      showToast('MCP enabled - will be included in research process');
-    } else {
-      showToast('MCP disabled - using web search only');
-    }
-  };
-
-  // Show MCP information modal
-  const showMCPInfo = () => {
-    const modal = document.getElementById('mcpInfoModal');
-    if (modal) {
-      modal.classList.add('visible');
-    }
-  };
-
-  // Create MCP info modal
-  const createMCPInfoModal = () => {
-    if (document.getElementById('mcpInfoModal')) return;
-
-    const modal = document.createElement('div');
-    modal.id = 'mcpInfoModal';
-    modal.className = 'mcp-info-modal';
-    
-    modal.innerHTML = `
-      <div class="mcp-info-content">
-        <button class="mcp-info-close" onclick="closeMCPInfo()">
-          <i class="fas fa-times"></i>
-        </button>
-        <h3>Model Context Protocol (MCP)</h3>
-        <p>MCP enables GPT Researcher to connect with external tools and data sources through a standardized protocol.</p>
-        
-        <h4 class="highlight">Benefits:</h4>
-        <ul>
-          <li><span class="highlight">Access Local Data:</span> Connect to databases, file systems, and APIs</li>
-          <li><span class="highlight">Use External Tools:</span> Integrate with web services and third-party tools</li>
-          <li><span class="highlight">Extend Capabilities:</span> Add custom functionality through MCP servers</li>
-          <li><span class="highlight">Maintain Security:</span> Controlled access with proper authentication</li>
-        </ul>
-
-        <h4 class="highlight">Quick Start:</h4>
-        <ul>
-          <li>Enable MCP using the checkbox above</li>
-          <li>Click a preset to add pre-configured servers to the JSON</li>
-          <li>Or paste your own MCP configuration as a JSON array</li>
-          <li>Start your research - MCP will run with optimal settings</li>
-        </ul>
-
-        <h4 class="highlight">Configuration Format:</h4>
-        <p>Each MCP server should be a JSON object with these properties:</p>
-        <ul>
-          <li><span class="highlight">name:</span> Unique identifier (e.g., "github", "filesystem")</li>
-          <li><span class="highlight">command:</span> Command to run the server (e.g., "npx", "python")</li>
-          <li><span class="highlight">args:</span> Array of arguments (e.g., ["-y", "@modelcontextprotocol/server-github"])</li>
-          <li><span class="highlight">env:</span> Object with environment variables (e.g., {"API_KEY": "your_key"})</li>
-        </ul>
-      </div>
-    `;
-
-    document.body.appendChild(modal);
-
-    // Close modal when clicking outside
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        modal.classList.remove('visible');
-      }
-    });
-
-    // Close with Escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && modal.classList.contains('visible')) {
-        modal.classList.remove('visible');
-      }
-    });
-  };
-
-  // Close MCP info modal
-  window.closeMCPInfo = () => {
-    const modal = document.getElementById('mcpInfoModal');
-    if (modal) {
-      modal.classList.remove('visible');
-    }
-  };
-
-  // Add MCP preset configurations
-  const addMCPPreset = (preset) => {
-    const presets = {
-      github: {
-        "name": "github",
-        "command": "npx",
-        "args": ["-y", "@modelcontextprotocol/server-github"],
-        "env": {
-          "GITHUB_PERSONAL_ACCESS_TOKEN": "your_github_token_here"
-        }
-      },
-      tavily: {
-        "name": "tavily",
-        "command": "npx",
-        "args": ["-y", "tavily-mcp@0.1.2"],
-        "env": {
-          "TAVILY_API_KEY": "your_tavily_api_key_here"
-        }
-      },
-      filesystem: {
-        "name": "filesystem",
-        "command": "npx",
-        "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed/directory"],
-        "env": {}
-      }
-    };
-
-    const config = presets[preset];
-    if (!config) return;
-
-    const mcpConfig = document.getElementById('mcpConfig');
-    if (!mcpConfig) return;
-
-    try {
-      let currentConfig = [];
-      const currentText = mcpConfig.value.trim();
-      
-      if (currentText && currentText !== '[]') {
-        currentConfig = JSON.parse(currentText);
-      }
-
-      // Check if server already exists
-      const existingIndex = currentConfig.findIndex(server => server.name === config.name);
-      
-      if (existingIndex !== -1) {
-        // Replace existing server
-        currentConfig[existingIndex] = config;
-        showToast(`Updated ${preset} MCP server configuration`);
-      } else {
-        // Add new server
-        currentConfig.push(config);
-        showToast(`Added ${preset} MCP server configuration`);
-      }
-
-      mcpConfig.value = JSON.stringify(currentConfig, null, 2);
-      validateMCPConfig();
-
-    } catch (error) {
-      console.error('Error adding preset:', error);
-      showToast('Error adding preset configuration');
-    }
-  };
-
-  // Collect MCP configuration data
-  const collectMCPData = () => {
-    const mcpEnabled = document.getElementById('mcpEnabled');
-    if (!mcpEnabled || !mcpEnabled.checked) {
-      return null;
-    }
-
-    const mcpConfig = document.getElementById('mcpConfig');
-    
-    if (!mcpConfig) {
-      console.warn('MCP config element not found for data collection');
-      return null;
-    }
-
-    // Validate configuration before collecting
-    if (!validateMCPConfig()) {
-      showToast('Invalid MCP configuration - please fix errors before submitting');
-      return null;
-    }
-
-    try {
-      const configText = mcpConfig.value.trim();
-      const mcpConfigs = configText && configText !== '[]' ? JSON.parse(configText) : [];
-
-      return {
-        mcp_enabled: true,
-        mcp_strategy: "fast", // Always use "fast" strategy as default
-        mcp_configs: mcpConfigs
-      };
-    } catch (error) {
-      console.error('Error collecting MCP data:', error);
-      showToast('Error processing MCP configuration');
-      return null;
-    }
-  };
-
-  return {
-    init,
-    startResearch,
-    addTag,
-    copyToClipboard,
-    displaySelectedImages,
-    showImageDialog,
-    checkCookieStatus,
-    exportHistory,
-    importHistory: triggerImportHistory,  // Add import function to return object
-    initChat,
-    sendChatMessage,
-    addChatMessage
-  }
-})()
-
-window.addEventListener('DOMContentLoaded', GPTResearcher.init)
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();

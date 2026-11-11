@@ -1,449 +1,195 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
-    <title>B3OS Researcher</title>
-    <meta name="description" content="A research assistant powered by GPT-4">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" href="./static/favicon.ico">
-    <link href="site/vendor/css/bootstrap.min.css" rel="stylesheet">
-    <link href="site/vendor/css/fontawesome.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="site/styles.css" />
-    <style>
-        .avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-        }
-
-        .agent-name {
-            text-align: center;
-        }
-
-        .agent-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .agent-choices {
-            display: none;
-        }
-
-        .btn-show {
-            display: none;
-        }
-
-        /* Icon button style for inline buttons */
-        .icon-button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 5px;
-            margin-left: 5px;
-            border-radius: 4px;
-            transition: background-color 0.2s, color 0.2s;
-        }
-
-        .icon-button:hover {
-            background-color: rgba(123, 104, 238, 0.1); /* Placeholder, adjust in styles.css */
-        }
-
-        .icon-button:active {
-        }
-
-        /* Ensure buttons are properly aligned in headings */
-        h2 .icon-button, h2 .expand-button {
-            vertical-align: middle;
-            font-size: 0.8em;
-        }
-        
-        /* New navigation buttons in the top-right corner */
-        .nav-buttons {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            gap: 10px;
-            z-index: 100;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>B3OS Researcher</title>
+<meta name="description" content="Searches the web, reads the pages, writes a cited report.">
+<meta name="color-scheme" content="light dark">
+<!-- Every path is relative: the page runs under the B3OS preview's path prefix and at a root address alike. -->
+<link rel="icon" href="static/brand/b3os-favicon.svg" type="image/svg+xml">
+<link rel="preload" href="site/static/fonts/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="site/styles.css">
+<script src="site/scripts.js" defer></script>
 </head>
-
 <body>
-    <!-- Navigation Buttons (moved from top bar) -->
-    <div class="nav-buttons">
-        <div id="websocketPanelOpenBtn" class="top-websocket-button">
-            <i class="fas fa-network-wired"></i> Status
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></symbol>
+</svg>
+
+<header class="top" id="top">
+  <div class="brand">
+    <svg class="brand__mark" viewBox="6.5 3.5 88 20" role="img" aria-label="B3OS"><path fill="currentColor" d="M92.6703 14.187C91.7718 12.9772 90.5099 12.5286 87.8465 12.5286C84.5933 12.5099 82.5648 12.5005 81.7608 12.5005C79.1812 12.4725 77.7516 12.3603 76.8532 12.0519C75.6752 11.6873 75.3677 11.1225 75.3677 9.46405C75.3677 8.50664 75.5634 7.83365 75.9547 7.43707C76.8252 6.59182 79.0135 6.25532 83.8093 6.25532C87.2595 6.25532 88.9686 6.53574 89.867 7.26882C90.3143 7.60531 90.458 8.08602 90.458 9.46405V10.3694H92.9538V9.48809C92.9059 7.2568 92.5784 6.36749 91.5522 5.55028C90.2624 4.50875 88.1859 4.11617 83.981 4.11617C82.0723 4.11617 79.4927 4.25638 78.0911 4.42463C76.0705 4.677 75.1441 4.98545 74.2216 5.74657C73.5787 6.27535 73.1594 7.03647 72.9558 8.01792C72.7322 6.87223 72.3968 6.19924 71.8098 5.63441C70.6038 4.42463 68.5832 4.11617 62.1901 4.11617C60.3932 4.11617 57.1427 4.2003 55.9927 4.28442C53.6087 4.42463 52.6823 4.677 51.7559 5.38204C51.061 5.92283 50.6018 6.70398 50.3183 7.99789C50.1666 6.54375 49.6954 5.67046 48.7689 5.02952C47.6029 4.22433 45.774 4 40.4231 4C33.0357 4 30.1846 4.38056 29.1703 6.43559C28.6592 5.03753 27.5411 4.45667 25.5005 4.30845C24.9468 4.27107 23.2084 4.24302 20.2854 4.22433H7V22.7797H20.2814C23.2018 22.761 24.9401 22.7329 25.4965 22.6956C27.4931 22.5473 28.6072 21.9865 29.1343 20.6525C29.31 21.0171 29.5337 21.3055 29.8252 21.5819C30.9912 22.6395 32.9319 23 37.6439 23C43.6057 23 46.5168 22.8037 47.9863 22.303C49.34 21.8383 50.1107 21.1453 50.4701 19.9155C50.6777 20.5123 50.9572 20.949 51.3286 21.3335C52.1712 22.2349 53.0936 22.5994 54.9744 22.7677C56.0406 22.8798 60.1895 22.992 62.9967 22.992C68.747 22.992 70.7955 22.6555 71.8856 21.4738C72.3448 20.977 72.6763 20.288 72.9039 19.2785C73.0716 20.7487 73.5787 21.5218 74.6609 22.1227C75.8389 22.7997 77.4641 22.996 81.5891 22.996C87.3952 22.996 90.0866 22.7156 91.4603 21.9825C92.8899 21.1933 93.5368 19.7873 93.5368 17.4799C93.5368 16.0458 93.2573 14.9762 92.6663 14.187H92.6703ZM23.2244 18.4813C22.9209 18.5374 22.8371 18.5374 20.2854 18.5655H12.3509V15.6171H20.2814C22.278 15.6171 23.0806 15.6732 23.444 15.8415C23.8593 16.0097 24.055 16.4824 24.055 17.1474C24.055 17.9245 23.8074 18.3451 23.2244 18.4813ZM23.444 11.471C23.0846 11.6393 22.278 11.6953 20.2814 11.6953H12.3509V8.747H20.2814C22.8331 8.77504 22.9169 8.77504 23.2204 8.83112C23.8034 8.97133 24.051 9.38794 24.051 10.1651C24.051 10.8341 23.8553 11.3068 23.44 11.471H23.444ZM43.7375 18.6496C43.2943 18.7057 40.6108 18.7858 39.5846 18.7858C37.6718 18.7858 35.2879 18.7017 34.9524 18.6456C34.1778 18.4493 33.9541 18.0888 33.9541 16.5865V16.2541H29.366C29.0984 14.868 28.4435 14.0628 27.2016 13.6542C28.4994 13.2256 29.1583 12.3643 29.3979 10.8581H34.034V10.4415C34.034 9.35189 34.034 8.85515 34.9485 8.63082C35.7191 8.43854 37.1367 8.43854 39.7443 8.43854C44.5122 8.43854 44.9035 8.55071 44.9035 9.9688C44.9035 11.2467 44.2646 11.5271 41.4933 11.5271H37.2246V15.505H40.4671C43.8214 15.561 43.9611 15.561 44.4323 15.6732C45.0153 15.8415 45.2629 16.2581 45.2629 17.0913C45.2629 18.1489 44.9035 18.5094 43.7375 18.6496ZM47.3793 13.2336C48.733 12.9572 49.5277 12.5206 49.9549 11.6793C49.939 12.2321 49.931 12.833 49.931 13.482C49.931 13.7704 49.931 14.0468 49.931 14.3152C49.4278 13.8105 48.6292 13.514 47.3793 13.2336ZM70.46 18.4613C70.2364 19.587 69.6454 20.1758 68.5513 20.3761C67.2894 20.6005 64.6819 20.7407 61.9625 20.7407C60.6168 20.7407 57.4462 20.6565 56.408 20.5724C54.4712 20.4603 53.7445 20.264 53.2653 19.7272C52.6743 19.0782 52.4786 17.4478 52.4786 13.2857C52.4786 9.68438 52.7582 7.90976 53.433 7.29285C54.1638 6.61585 56.0685 6.36348 60.7246 6.36348C65.3807 6.36348 66.95 6.41957 68.3796 6.6439C69.6414 6.84019 70.3163 7.40502 70.484 8.47459C70.6517 9.31984 70.7635 11.5712 70.7635 13.6783C70.7635 15.4208 70.6238 17.4478 70.4561 18.4613H70.46ZM89.1922 20.4603C88.126 20.7126 85.6302 20.8809 83.1904 20.8809C79.2371 20.8809 77.1047 20.7407 76.374 20.4322C75.5035 20.0396 75.3358 19.615 75.2798 17.4759V16.4744H73.2513C73.2992 15.6452 73.3192 14.7038 73.3192 13.6222C73.3192 13.1495 73.3112 12.6447 73.2952 12.14C74.1138 13.9427 76.0465 14.6637 79.5686 14.6637C85.7208 14.6637 89.1057 14.7759 89.7233 15.0002C90.6497 15.3367 90.9851 16.0698 90.9851 17.6721C90.9851 19.2745 90.3981 20.2039 89.1882 20.4563L89.1922 20.4603ZM93.0297 4.4086V4.50875H92.7382V5.2859H92.6223V4.50875H92.3308V4.4086H93.0297ZM93.2892 4.4086L93.5647 5.14569L93.8403 4.4086H94V5.2859H93.8882V4.55682L93.6167 5.2859H93.5168L93.2453 4.55682V5.2859H93.1335V4.4086H93.2932H93.2892Z"/></svg>
+    <span class="brand__rule" aria-hidden="true"></span>
+    <span class="brand__name">Researcher</span>
+  </div>
+  <div class="top__right">
+    <span class="conn" id="conn" data-state="idle" role="img" aria-label="Connection idle" title="Connection idle"><span class="conn__dot"></span></span>
+    <button type="button" class="btn btn--ghost" id="historyOpen" aria-haspopup="dialog" aria-expanded="false" aria-controls="history">
+      <svg class="icon" aria-hidden="true"><use href="#i-history"/></svg>History
+    </button>
+  </div>
+</header>
+
+<main id="main">
+  <!-- 1. Ask -->
+  <section class="ask col" id="ask" aria-labelledby="askTitle">
+    <div class="ask__center">
+      <h1 class="ask__title" id="askTitle">What should I research?</h1>
+      <form id="askForm" novalidate>
+        <div class="prompt">
+          <label for="task" class="sr-only">Question</label>
+          <textarea id="task" name="task" rows="3" autofocus autocomplete="off" spellcheck="true" placeholder="A question, a topic or an idea" aria-describedby="taskError"></textarea>
+          <div class="prompt__bar">
+            <span class="prompt__hint" id="hint" aria-hidden="true"><span class="kbd" id="hintMod">Ctrl</span> <span class="kbd">Enter</span></span>
+            <button type="submit" class="btn btn--brand" id="go">Research</button>
+          </div>
         </div>
-        <div id="historyPanelOpenBtn" class="top-history-button">
-            <i class="fas fa-history"></i> History
+        <p class="prompt__error" id="taskError" role="alert" hidden></p>
+        <div class="controls">
+          <div class="seg" role="radiogroup" aria-label="Report length">
+            <label class="seg__opt"><input type="radio" name="report_type" value="research_report" checked><span>Summary <small>about 30 s</small></span></label>
+            <label class="seg__opt"><input type="radio" name="report_type" value="detailed_report"><span>Detailed <small>about 1.5 min</small></span></label>
+            <label class="seg__opt"><input type="radio" name="report_type" value="deep"><span>Deep <small>about 1.5 min</small></span></label>
+          </div>
+          <button type="button" class="btn btn--ghost options-btn" id="optionsToggle" aria-expanded="false" aria-controls="options" aria-label="Options" title="Options">
+            <span class="options-btn__label">Options</span><svg class="icon chev" aria-hidden="true"><use href="#i-chevron"/></svg>
+            <svg class="icon options-btn__icon" aria-hidden="true"><use href="#i-sliders"/></svg>
+          </button>
         </div>
-    </div>
-
-    <!-- WebSocket Status Panel -->
-    <div class="websocket-panel" id="websocketPanel">
-        <div class="websocket-panel-header">
-            <h3><i class="fas fa-plug"></i> Connection Status</h3>
-            <div class="websocket-panel-actions">
-                <button id="websocketPanelToggle" class="websocket-action-btn" title="Close panel">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-            </div>
-        </div>
-        <div class="websocket-status">
-            <div class="status-item">
-                <span class="status-label">Connection:</span>
-                <span class="status-value" id="connectionStatus">Disconnected</span>
-                <span class="status-indicator" id="connectionIndicator"></span>
-            </div>
-            <div class="status-item">
-                <span class="status-label">Research:</span>
-                <span class="status-value" id="researchStatus">Inactive</span>
-            </div>
-            <div class="status-item">
-                <span class="status-label">Connected for:</span>
-                <span class="status-value" id="connectionDuration">-</span>
-            </div>
-            <div class="status-item">
-                <span class="status-label">Last activity:</span>
-                <span class="status-value" id="lastActivity">-</span>
-            </div>
-            <div class="status-item">
-                <span class="status-label">ReadyState:</span>
-                <span class="status-value" id="readyState">-</span>
-            </div>
-            <div class="status-divider"></div>
-            <div class="status-item">
-                <span class="status-label">Connection attempts:</span>
-                <span class="status-value" id="connectionAttempts">0</span>
-            </div>
-            <div class="status-item">
-                <span class="status-label">Messages received:</span>
-                <span class="status-value" id="messagesReceived">0</span>
-            </div>
-            <div class="status-divider"></div>
-            <div class="status-item">
-                <span class="status-label">Current task:</span>
-                <span class="status-value" id="currentTask">-</span>
-            </div>
-        </div>
-    </div>
-
-    <section class="landing">
-        <div class="max-w-5xl mx-auto text-center">
-            <h1 class="text-4xl font-extrabold mx-auto lg:text-7xl">
-                Say Goodbye to <br>
-                <span
-                    style="background-image:linear-gradient(to right, #9867F0, #ED4E50); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Hours
-                    of Research</span>
-            </h1>
-            <p class="max-w-6xl mx-auto text-gray-600 mt-8" style="font-size:20px">
-                Say Hello to <b>GPT Researcher</b>, your AI mate for rapid insights and comprehensive research. <br>
-                GPT Researcher takes care of everything from accurate source gathering and organization of research results to generation of customized reports with citations.
-            </p>
-            <a href="#form" class="btn btn-primary">Start Researching</a>
-        </div>
-    </section>
-
-    <main class="container" id="form">
-        <div class="agent-item"><img src="static/gptr-logo.png" class="avatar" alt="Auto Agent"></div>
-        <form method="POST" class="mt-3" id="researchForm">
-            <div class="form-group">
-                <label for="task" class="agent-question">What would you like me to research next?</label>
-                <textarea id="task" name="task" class="form-control highlight-connection" placeholder="Enter any topic, question, or idea..." required autocomplete="on"></textarea>
-                <input type="radio" name="agent" id="autoAgent" value="Auto Agent" checked hidden>
-            </div>
-            <div class="form-group">
-                <div class="row">
-
-
-                </div>
-                <button type="button" id="btnShowAuto" class="btn btn-secondary mt-3 btn-show">Auto Agent</button>
-            </div>
-            <div class="form-group">
-                <label for="report_type" class="agent-question">What type of report would you like me to
-                    generate?</label>
-                <select name="report_type" id="report_type" class="form-control highlight-connection" required>
-                    <option value="research_report">Summary - Short and fast (~2 min)</option>
-                    <option value="detailed_report">Detailed - In depth and longer (~5 min)</option>
-                    <option value="resource_report">Resource Report</option>
-                    <option value="deep">Deep Research</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="tone" class="agent-question">In which tone would you like the report to be
-                    generated?</label>
-                <select name="tone" id="tone" class="form-control highlight-connection" required>
-                    <option value="Objective">Objective - Impartial and unbiased presentation of facts and findings
-                    </option>
-                    <option value="Formal">Formal - Adheres to academic standards with sophisticated language and
-                        structure</option>
-                    <option value="Analytical">Analytical - Critical evaluation and detailed examination of data and
-                        theories</option>
-                    <option value="Persuasive">Persuasive - Convincing the audience of a particular viewpoint or
-                        argument</option>
-                    <option value="Informative">Informative - Providing clear and comprehensive information on a topic
-                    </option>
-                    <option value="Explanatory">Explanatory - Clarifying complex concepts and processes</option>
-                    <option value="Descriptive">Descriptive - Detailed depiction of phenomena, experiments, or case
-                        studies</option>
-                    <option value="Critical">Critical - Judging the validity and relevance of the research and its
-                        conclusions</option>
-                    <option value="Comparative">Comparative - Juxtaposing different theories, data, or methods to
-                        highlight differences and similarities</option>
-                    <option value="Speculative">Speculative - Exploring hypotheses and potential implications or future
-                        research directions</option>
-                    <option value="Reflective">Reflective - Considering the research process and personal insights or
-                        experiences</option>
-                    <option value="Narrative">Narrative - Telling a story to illustrate research findings or
-                        methodologies</option>
-                    <option value="Humorous">Humorous - Light-hearted and engaging, usually to make the content more
-                        relatable</option>
-                    <option value="Optimistic">Optimistic - Highlighting positive findings and potential benefits
-                    </option>
-                    <option value="Pessimistic">Pessimistic - Focusing on limitations, challenges, or negative outcomes
-                    </option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="report_source" class="agent-question">What sources would you like me to research
-                    from?</label>
-                <p class="text-left mt-0 pt-0" style="font-size: 0.7rem;">You can now do research on local documents as
-                    well. Please make sure to add the DOC_PATH env variable pointing to your documents folder.</p>
-                <select name="report_source" id="report_source" class="form-control highlight-connection" required>
-                    <option value="web">The Web</option>
-                    <option value="local">My Documents</option>
-                    <option value="hybrid">Hybrid</option>
-                    <option value="azure">Azure storage</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="maxSearchResults" class="agent-question">How many websites should be scraped per query?</label>
-                <input type="number" class="form-control highlight-connection" id="maxSearchResults" name="max_search_results" min="1" max="20" value="5">
-                <small class="text-muted">Controls the number of websites scraped per search query (default: 5)</small>
-            </div>
-            <div class="form-group">
-                <label for="queryDomains" class="form-label">Query Domains (Optional)</label>
-                <input type="text" class="form-control highlight-connection" id="queryDomains" name="query_domains" placeholder="Enter domains separated by commas" autocomplete="on">
-                <small class="text-muted">Example: techcrunch.com, forbes.com</small>
-            </div>
-
-            <!-- MCP Configuration Section -->
-            <div class="form-group">
-                <div class="mcp-section">
-                    <div class="mcp-header">
-                        <label for="mcpEnabled" class="form-label">
-                            <input type="checkbox" id="mcpEnabled" name="mcp_enabled" class="mcp-toggle">
-                            Enable MCP (Model Context Protocol)
-                        </label>
-                        <button type="button" id="mcpInfoBtn" class="mcp-info-btn" title="Learn about MCP">
-                            <i class="fas fa-info-circle"></i>
-                        </button>
-                    </div>
-                    <small class="text-muted">Connect to external tools and data sources through MCP servers</small>
-                    
-                    <div id="mcpConfigSection" class="mcp-config-section" style="display: none;">
-                        <div class="mcp-presets">
-                            <label class="form-label">Quick Presets</label>
-                            <div class="preset-buttons">
-                                <button type="button" class="btn btn-outline-secondary btn-sm preset-btn" data-preset="github">
-                                    <i class="fab fa-github"></i> GitHub
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm preset-btn" data-preset="tavily">
-                                    <i class="fas fa-search"></i> Tavily Web Search
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm preset-btn" data-preset="filesystem">
-                                    <i class="fas fa-folder"></i> Local Files
-                                </button>
-                            </div>
-                            <small class="text-muted">Click a preset to add pre-configured MCP servers to the JSON below</small>
-                        </div>
-
-                        <div class="mcp-config-group">
-                            <label for="mcpConfig" class="form-label">MCP Servers Configuration</label>
-                            <textarea id="mcpConfig" name="mcp_config" class="form-control mcp-config-textarea" rows="8" placeholder="Paste your MCP servers configuration as JSON array...">[]</textarea>
-                            <div class="mcp-config-status">
-                                <span id="mcpConfigStatus" class="mcp-status-text">Valid JSON ✓</span>
-                                <button type="button" id="mcpFormatBtn" class="btn btn-sm btn-secondary">
-                                    <i class="fas fa-code"></i> Format JSON
-                                </button>
-                            </div>
-                            <small class="text-muted">
-                                Paste your MCP servers configuration as a JSON array. Each server should have properties like 
-                                <code>name</code>, <code>command</code>, <code>args</code>, and optional <code>env</code> variables.
-                                <a href="#" id="mcpExampleLink">See example →</a>
-                            </small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <input type="submit" value="Begin Research" class="btn btn-primary button-padding" id="submitButton">
-        </form>
-
-        <!-- Add JSON button above Research Progress section -->
-        <div class="margin-div" id="jsonButtonContainer" style="display: none; text-align: right; margin-bottom: 10px;">
-            <a id="downloadLinkJsonTop" href="#" class="report-action-btn disabled" target="_blank" rel="noopener noreferrer">
-                <i class="fas fa-file-code"></i> JSON
-            </a>
-        </div>
-
-        <div class="margin-div research-output-container">
-            <!-- Move spinner to the left side of the text -->
-            <h2><div id="modernSpinner" class="modern-spinner"></div> Research Progress <button id="expandOutputBtn" class="expand-button" title="Expand"><i class="fas fa-expand-alt"></i></button></h2>
-            <p class="mt-2 text-left" style="font-size: 0.8rem;">
-                Watch as the AI works to gather information and analyze your topic in real-time.</p>
-            <div id="output"></div>
-        </div>
-        <div class="images_div">
-            <div id="selectedImagesContainer" style="display: none;"></div>
-        </div>
-        <div class="margin-div report-container">
-            <h2>Research Report
-                <button id="copyToClipboardTop" class="icon-button" title="Copy" style="display: none;">
-                    <i class="fas fa-copy"></i>
-                </button>
-                <button id="expandReportBtn" class="expand-button" title="Expand">
-                    <i class="fas fa-expand-alt"></i>
-                </button>
-            </h2>
-            <!-- Add download buttons above the report container -->
-            <div class="report-actions" style="display: none;">
-                <a id="downloadLinkTop" href="#" class="report-action-btn disabled" target="_blank" rel="noopener noreferrer">
-                    <i class="fas fa-file-pdf"></i> PDF
-                </a>
-                <a id="downloadLinkWordTop" href="#" class="report-action-btn disabled" target="_blank" rel="noopener noreferrer">
-                    <i class="fas fa-file-word"></i> Word
-                </a>
-                <a id="downloadLinkMdTop" href="#" class="report-action-btn disabled" target="_blank" rel="noopener noreferrer">
-                    <i class="fas fa-file-lines"></i> Markdown
-                </a>
-            </div>
-            <div id="reportContainer"></div>
-            <div id="reportActions" style="display: none;">
-                <div class="alert alert-info" role="alert" id="status"></div>
-            </div>
-        </div>
-
-        <!-- Chat Container -->
-        <div class="margin-div chat-container" id="chatContainer" style="display: none;">
-            <h2><i class="fas fa-comments"></i> Chat with AI about this research <button id="expandChatBtn" class="expand-button" title="Expand"><i class="fas fa-expand-alt"></i></button></h2>
-            <p class="text-muted">Ask questions about the research report to get more insights</p>
-            <div id="chatMessages" class="chat-messages"></div>
-            <div class="chat-input-container">
-                <textarea id="chatInput" class="form-control chat-input" placeholder="Ask a question about this research..." rows="2"></textarea>
-                <button id="voiceInputBtn" class="btn btn-secondary" title="Use voice input">
-                    <i class="fas fa-microphone"></i>
-                </button>
-                <button id="sendChatBtn" class="btn btn-primary">
-                    <i class="fas fa-paper-plane"></i> Send
-                </button>
-            </div>
-        </div>
-
-        <!-- Fixed bottom bar styled like the top credits bar -->
-    </main>
-
-    <!-- Conversation History Panel -->
-    <div class="history-panel" id="historyPanel">
-        <div class="history-panel-header">
-            <h3><i class="fas fa-history"></i> Research History</h3>
-            <div class="history-panel-actions">
-                <button id="historyPanelToggle" class="history-action-btn" title="Close panel">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-        <div class="history-panel-search">
-            <input type="text" id="historySearch" placeholder="Search research history...">
-            <button id="historySearchBtn" class="history-action-btn" title="Search">
-                <i class="fas fa-search"></i>
-            </button>
-        </div>
-        <div class="history-panel-filters">
-            <select id="historySortOrder">
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
+        <div class="options" id="options" hidden>
+          <div class="field">
+            <label for="tone">Tone</label>
+            <select class="select" id="tone" name="tone">
+              <option value="Objective" selected>Objective</option>
+              <option value="Formal">Formal</option>
+              <option value="Analytical">Analytical</option>
+              <option value="Informative">Informative</option>
+              <option value="Explanatory">Explanatory</option>
+              <option value="Descriptive">Descriptive</option>
+              <option value="Critical">Critical</option>
+              <option value="Comparative">Comparative</option>
+              <option value="Persuasive">Persuasive</option>
+              <option value="Speculative">Speculative</option>
+              <option value="Reflective">Reflective</option>
+              <option value="Narrative">Narrative</option>
+              <option value="Humorous">Humorous</option>
+              <option value="Optimistic">Optimistic</option>
+              <option value="Pessimistic">Pessimistic</option>
             </select>
-            <!-- JS will add Import/Export/Debug buttons here -->
-            <button id="historyClearBtn" class="history-action-btn" title="Clear all history">
-                <i class="fas fa-trash-alt"></i>
-            </button>
+          </div>
+          <div class="field">
+            <label for="maxSearchResults">Sources per search</label>
+            <div class="stepper">
+              <button type="button" class="btn btn--neutral btn--sm" data-step="-1" aria-label="Fewer sources per search"><svg class="icon" aria-hidden="true"><use href="#i-minus"/></svg></button>
+              <input class="input" id="maxSearchResults" name="max_search_results" type="number" inputmode="numeric" min="1" max="20" value="5">
+              <button type="button" class="btn btn--neutral btn--sm" data-step="1" aria-label="More sources per search"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></button>
+            </div>
+          </div>
+          <div class="field field--wide">
+            <label for="queryDomains">Limit to domains</label>
+            <input class="input" id="queryDomains" name="query_domains" type="text" placeholder="example.com, another.org" autocomplete="off" autocapitalize="off" spellcheck="false">
+          </div>
         </div>
-        <div class="history-panel-entries" id="historyEntries">
-            <!-- Entries will be populated dynamically -->
-        </div>
+      </form>
+      <ul class="examples" id="examples">
+        <li><button type="button" class="linkbtn">How well do heat pumps work in very cold climates?</button></li>
+        <li><button type="button" class="linkbtn">What does the research say about four-day work weeks?</button></li>
+        <li><button type="button" class="linkbtn">Which battery chemistries are winning grid storage, and why?</button></li>
+      </ul>
     </div>
-    
-    <!-- Sticky Downloads Bar -->
-    <div class="sticky-downloads-bar" id="stickyDownloadsBar" style="display: none;"> <!-- Initially hidden -->
-        <div class="download-buttons-container">
-            <a id="copyToClipboard" class="download-option-btn disabled">
-                <i class="fas fa-copy"></i> Copy (Markdown)
-            </a>
-            <a id="downloadLinkMd" href="#" class="download-option-btn disabled" target="_blank" rel="noopener noreferrer">
-                <i class="fas fa-file-lines"></i> Markdown
-            </a>
-            <a id="downloadLink" href="#" class="download-option-btn disabled" target="_blank" rel="noopener noreferrer">
-                <i class="fas fa-file-pdf"></i> PDF
-            </a>
-            <a id="downloadLinkWord" href="#" class="download-option-btn disabled" target="_blank" rel="noopener noreferrer">
-                <i class="fas fa-file-word"></i> Word
-            </a>
-            <a id="downloadLinkJson" href="#" class="download-option-btn disabled" target="_blank" rel="noopener noreferrer">
-                <i class="fas fa-file-code"></i> Log (JSON)
-            </a>
-        </div>
+    <p class="ask__note">Searches the web, reads the pages, writes a cited report.</p>
+  </section>
+
+  <!-- 2 and 3. Running, then the report -->
+  <section class="run col" id="run" aria-labelledby="runTitle" hidden>
+    <h1 class="run__title" id="runTitle" tabindex="-1"></h1>
+    <button type="button" class="linkbtn linkbtn--quiet run__more" id="titleMore" aria-expanded="false" hidden>Show all</button>
+    <div class="run__meta" id="runMeta">
+      <p class="facts" id="facts" aria-live="off"></p>
+      <button type="button" class="btn btn--ghost btn--sm" id="stop" hidden>Stop</button>
+    </div>
+    <div class="doneline" id="doneline" hidden>
+      <span id="doneText"></span>
+      <button type="button" class="linkbtn" id="stepsToggle" aria-expanded="false" aria-controls="steps">Show steps</button>
+    </div>
+    <div class="notice" id="notice" role="status" hidden>
+      <span class="notice__text" id="noticeText"></span>
+      <span class="notice__actions" id="noticeActions"></span>
     </div>
 
-    <footer>
-        <p>
-            <a target="_blank" href="https://gptr.dev">Homepage</a> |
-            <a target="_blank" href="https://github.com/assafelovic/gpt-researcher">GitHub</a> |
-            <a target="_blank" href="https://discord.gg/spBgZmm3Xe">Discord</a>
-        </p>
-        <p>GPT Researcher &copy; 2024</p>
-    </footer>
-    <script src="site/vendor/js/showdown.min.js"></script>
-    <script src="site/vendor/js/purify.min.js"></script>
-    <script src="site/scripts.js"></script>
-    <script>
-        // Auto-resize textarea as content grows
-        const taskTextarea = document.getElementById('task');
-        if (taskTextarea) {
-            // Set initial height
-            taskTextarea.setAttribute('style', 'height: 38px; overflow-y: hidden;');
+    <div id="steps">
+      <ol class="timeline" id="timeline" aria-label="Steps">
+        <li class="step" data-step="plan" data-state="todo"><span class="step__dot" aria-hidden="true"></span><div><p class="step__line">Plan<span class="step__fact" aria-live="polite"></span></p></div></li>
+        <li class="step" data-step="search" data-state="todo"><span class="step__dot" aria-hidden="true"></span><div><p class="step__line">Search<span class="step__fact" aria-live="polite"></span></p></div></li>
+        <li class="step" data-step="read" data-state="todo"><span class="step__dot" aria-hidden="true"></span><div><p class="step__line">Read<span class="step__fact" aria-live="polite"></span></p><ul class="domains" id="domains" aria-label="Pages read" hidden></ul></div></li>
+        <li class="step" data-step="write" data-state="todo"><span class="step__dot" aria-hidden="true"></span><div><p class="step__line">Write<span class="step__fact" aria-live="polite"></span></p></div></li>
+      </ol>
+      <div class="logbar">
+        <button type="button" class="linkbtn linkbtn--quiet" id="logToggle" aria-expanded="false" aria-controls="log">Show log</button>
+      </div>
+      <div class="log" id="log" tabindex="0" role="log" aria-label="Log" hidden></div>
+    </div>
 
-            // Function to resize textarea based on content
-            const resizeTextarea = () => {
-                taskTextarea.style.height = 'auto';
-                taskTextarea.style.height = taskTextarea.scrollHeight + 'px';
-            };
+    <div class="actions" id="actions" hidden>
+      <button type="button" class="btn btn--ghost btn--sm" id="copy" title="Copy the report as Markdown"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span id="copyLabel">Copy</span></button>
+      <div class="menu" id="dlMenu">
+        <button type="button" class="btn btn--ghost btn--sm" id="dlBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="dlList"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg>Download<svg class="icon chev" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+        <ul class="menu__list" id="dlList" role="menu" aria-labelledby="dlBtn" hidden></ul>
+      </div>
+      <span class="actions__spacer"></span>
+      <button type="button" class="btn btn--neutral btn--sm" id="newResearch">New research</button>
+    </div>
 
-            // Add event listeners for input and focus
-            taskTextarea.addEventListener('input', resizeTextarea);
-            taskTextarea.addEventListener('focus', resizeTextarea);
-        }
+    <article class="report prose" id="report" aria-live="off"></article>
 
-        // Ensure feature panels are positioned correctly on window resize
-        window.addEventListener('resize', function () {
-            // Adjust the feature panel width based on screen size
-            const viewportWidth = window.innerWidth;
-            const featurePanel = document.querySelector('.feature-panel');
+    <section class="followup" id="followup" aria-label="Ask about this report" hidden>
+      <div class="thread" id="thread"></div>
+      <form class="chat" id="chatForm" novalidate>
+        <label for="chatInput" class="sr-only">Ask about this report</label>
+        <textarea id="chatInput" rows="1" placeholder="Ask about this report" autocomplete="off"></textarea>
+        <button type="submit" class="btn btn--brand btn--icon" id="chatSend" aria-label="Send"><svg class="icon" aria-hidden="true"><use href="#i-send"/></svg></button>
+      </form>
+    </section>
+  </section>
+</main>
 
-            if (featurePanel) {
-                if (viewportWidth < 1400) {
-                    featurePanel.style.display = 'none';
-                } else {
-                    featurePanel.style.display = 'block';
-                    // Adjust width based on screen size
-                    const panelWidth = Math.min(280, Math.max(200, viewportWidth * 0.15));
-                    featurePanel.style.width = `${panelWidth}px`;
-                }
-            }
-        });
-    </script>
+<footer class="foot">
+  <a class="foot__b3os" href="https://beta.b3os.org" target="_blank" rel="noopener"><svg class="foot__mark" viewBox="-1 -1 71 62" aria-hidden="true"><path fill="currentColor" d="M67.6445 45.7959C66.2474 43.8455 64.2831 43.1188 60.1351 43.1188C52.5369 43.0736 49.2497 43.0736 47.3724 43.0736C43.3549 43.0285 41.1278 43.0247 39.7307 42.5258C37.8968 41.9366 37.4166 40.8522 37.4166 38.1751C37.4166 36.6333 37.7392 35.5621 38.3335 34.9088C39.9663 33.1129 46.3793 33.0037 53.8471 33.0037C59.2182 33.0037 61.882 33.4574 63.2791 34.6359C63.9786 35.1799 64.1961 35.9518 64.1961 38.1751V39.6341H68.0831V38.2166C68.0088 34.6208 67.4996 33.1825 65.8995 31.8703C64.7307 30.8933 63.1451 30.2701 60.7313 29.92C62.0886 29.7543 63.1034 29.5416 63.8645 29.2724C66.9904 28.1598 68.1048 26.2471 68.1048 21.8418C68.1048 16.9038 67.2912 15.7912 62.9222 14.7689C66.4775 14.0121 67.5467 12.5437 67.5467 8.36246C67.5467 4.80248 66.8617 2.93496 65.0623 1.64538C63.2628 0.355809 60.4377 0 52.1709 0C40.7636 0 36.3565 0.606194 34.7927 3.89319C34.0026 1.65856 32.2774 0.730444 29.1262 0.489473C28.2696 0.430485 25.5859 0.385931 21.0749 0.355809H0.565381V30.0311H6.96216C4.60821 30.3963 3.31799 31.0138 2.35938 32.0097C1.17969 33.19 0.655987 34.6415 0.306248 37.68C0.132285 39.3122 0 42.3978 0 44.8941C0 52.3322 0.610684 55.7359 2.22709 57.5507C3.93048 59.4559 7.118 60 16.0699 60H20.3501C29.3019 60 32.4895 59.4559 34.1928 57.5507C34.7274 56.9502 35.1515 56.1746 35.4794 55.1373C35.8546 56.8015 36.6374 57.7936 38.0327 58.5937C39.8666 59.6818 43.9058 60 48.8184 60C57.8573 60 63.6289 59.5463 65.769 58.3659C67.9961 57.0952 69 54.8266 69 51.1066C69 48.7929 68.5633 47.0704 67.6463 45.7996L67.6445 45.7959ZM35.1641 10.9698H42.322V10.3034C42.322 8.5639 42.322 7.76944 43.7355 7.40611C44.9242 7.10113 47.1132 7.10113 51.1434 7.10113C58.5097 7.10113 59.1095 7.27809 59.1095 9.54849C59.1095 11.5949 58.1255 12.0392 53.8416 12.0392H47.2473V18.4023H52.2578C57.4405 18.4908 57.6543 18.4908 58.3828 18.6696C59.2816 18.937 59.6676 19.6034 59.6676 20.9382C59.6676 22.6287 59.1113 23.2067 57.3118 23.4288C56.6269 23.5173 52.4717 23.651 50.8879 23.651C47.9323 23.651 44.2501 23.5173 43.7355 23.4288C42.5358 23.1182 42.1933 22.5384 42.1933 20.1362V19.6015H35.1098C34.6984 17.3876 33.6855 16.0961 31.7682 15.441C33.7742 14.7576 34.789 13.3758 35.1623 10.9698H35.1641ZM34.7437 26.6292C35.0137 27.2109 35.3635 27.6722 35.8129 28.1146C36.9291 29.1632 38.5093 29.7844 41.2873 30.1045C38.397 30.5036 37.0089 31.0119 35.6244 32.1866C35.3399 32.4295 35.0826 32.7024 34.8525 33.0056C34.6259 32.6384 34.365 32.3128 34.0569 32.0059C33.0023 30.9083 31.5453 30.272 28.7039 29.9237C28.8362 29.9162 28.9721 29.9068 29.128 29.8955C32.2122 29.6602 33.9319 28.7641 34.7437 26.6311V26.6292ZM8.83045 7.58872H21.0786C25.0181 7.6339 25.1468 7.6339 25.6179 7.72238C26.5167 7.94453 26.9027 8.61285 26.9027 9.85724C26.9027 10.9247 26.6037 11.6815 25.9604 11.9488C25.4041 12.2161 24.161 12.3046 21.0786 12.3046H8.83045V7.58872ZM8.83045 18.5774H21.0786C24.1628 18.5774 25.4041 18.6659 25.9604 18.9332C26.6019 19.2005 26.9027 19.9573 26.9027 21.0248C26.9027 22.271 26.5167 22.9375 25.6179 23.1596C25.1468 23.2481 25.0181 23.2481 21.0786 23.2933H8.83045V18.5774ZM31.9639 52.6918C31.6142 54.5066 30.6973 55.4592 28.9939 55.7755C27.0295 56.1388 22.9686 56.3666 18.7319 56.3666H17.6826C13.4477 56.3666 9.38677 56.1388 7.42062 55.7755C5.71723 55.4573 4.8003 54.5066 4.45056 52.6918C4.18962 51.0577 3.97035 47.7914 3.97035 44.9788C3.97035 41.577 4.14431 37.9473 4.40707 36.5862C4.66983 34.8618 5.71723 33.9544 7.68157 33.6381C9.76188 33.2992 11.8821 33.1976 18.2045 33.1863C24.5288 33.1976 26.6472 33.2992 28.7275 33.6381C30.6918 33.9563 31.7392 34.8637 32.002 36.5862C32.2629 37.9473 32.4387 41.577 32.4387 44.9788C32.4387 47.7914 32.2195 51.0577 31.9585 52.6918H31.9639ZM62.2299 55.9129C60.57 56.3214 57.3662 56.5925 53.568 56.5925C43.0015 56.5925 41.8309 56.3666 40.6947 55.8658C39.3411 55.2314 39.0783 54.5499 38.9913 51.1029V49.4895H36.3094C36.3801 48.2056 36.4127 46.7447 36.4163 45.0767C38.0943 46.1159 40.5498 46.5658 43.9656 46.5658C58.3321 46.5658 61.6174 46.5658 63.0599 47.1099C64.5005 47.654 65.0242 48.8325 65.0242 51.4192C65.0242 54.0058 64.1073 55.5025 62.2299 55.9091V55.9129Z"/></svg>Runs on B3OS</a>
+  <a href="https://github.com/assafelovic/gpt-researcher" target="_blank" rel="noopener">Built on GPT Researcher</a>
+  <a href="https://github.com/b3-fun/gpt-researcher/tree/b3os" target="_blank" rel="noopener">Source</a>
+</footer>
+
+<!-- 4. History -->
+<div class="drawer" id="history" role="dialog" aria-modal="true" aria-labelledby="historyTitle" hidden>
+  <div class="drawer__scrim" data-close></div>
+  <div class="drawer__panel" tabindex="-1">
+    <div class="drawer__head">
+      <h2 id="historyTitle">History</h2>
+      <button type="button" class="btn btn--ghost btn--icon" data-close aria-label="Close history"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="drawer__search" id="histSearchWrap">
+      <label for="histSearch" class="sr-only">Search history</label>
+      <input class="input" id="histSearch" type="search" placeholder="Search" autocomplete="off">
+    </div>
+    <p class="drawer__note" id="histBusy" hidden>These open when the current research ends.</p>
+    <ul class="hist" id="histList"></ul>
+    <p class="hist__empty" id="histEmpty" hidden>No research yet.</p>
+    <div class="drawer__foot" id="histFoot">
+      <button type="button" class="linkbtn linkbtn--quiet" id="histClear">Clear history</button>
+      <span class="confirm" id="histConfirm" hidden><span id="histConfirmText">Clear all?</span><button type="button" class="linkbtn danger-text" id="histClearYes">Clear</button><button type="button" class="linkbtn linkbtn--quiet" id="histClearNo">Cancel</button></span>
+    </div>
+  </div>
+</div>
+<noscript><p class="col">This page needs JavaScript.</p></noscript>
 </body>
-
 </html>
