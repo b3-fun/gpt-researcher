@@ -227,12 +227,12 @@
     return {
       request: req, task: req.task, type: req.report_type,
       startedAt: Date.now(), endedAt: null, restarts: 0, received: 0,
-      step: 0, questions: 0, searches: 0, urls: new Set(), pending: [], queued: 0, read: 0, domains: [], starts: 0,
+      step: 0, questions: 0, searches: 0, urls: new Set(), pending: [], queued: 0, read: 0, domains: [], starts: 0, finalized: 0,
       sectionsPlanned: 0, sectionsWritten: 0, md: '', links: null, log: [], restOpen: false,
     };
   }
   function resetProgress() {
-    Object.assign(run, { startedAt: Date.now(), received: 0, step: 0, reached: 0, questions: 0, searches: 0, urls: new Set(), pending: [], queued: 0, read: 0, domains: [], starts: 0, sectionsPlanned: 0, sectionsWritten: 0, md: '', restOpen: false });
+    Object.assign(run, { startedAt: Date.now(), received: 0, step: 0, reached: 0, questions: 0, searches: 0, urls: new Set(), pending: [], queued: 0, read: 0, domains: [], starts: 0, finalized: 0, sectionsPlanned: 0, sectionsWritten: 0, md: '', restOpen: false });
     $('report').replaceChildren();
     renderSteps();
   }
@@ -366,9 +366,12 @@
     addLog(out);
     if (c === 'error') return fail(out);
     // Detailed and Deep search and read again while writing (one sub-research per section): the dot goes back to
-    // Read, and a writing message or report text takes it to Write again.
+    // Read, and a writing message or report text takes it to Write again. While sub-researches run side by side,
+    // the first one done sends a writing message as the others still read: the dot waits in Read until each
+    // research that started has finished (report text still moves it at once).
     const s = STEP_OF[c];
-    if (s !== undefined && s > run.step) run.step = s;
+    const waiting = s === 3 && run.step === 2 && run.starts > 1 && run.finalized < run.starts;
+    if (s !== undefined && s > run.step && !waiting) run.step = s;
     else if (run.step === 3 && (s === 1 || s === 2)) run.step = 2;
     const n = parseInt((out.match(/(\d+)/) || [])[1], 10) || 0;
     switch (c) {
@@ -397,6 +400,7 @@
         break;
       }
       case 'starting_research': run.starts++; break;
+      case 'research_step_finalized': run.finalized++; break;
       case 'generating_draft_sections': run.sectionsPlanned++; break;
       case 'report_written': if (run.type === 'detailed_report') run.sectionsWritten++; break;
       default: break;
