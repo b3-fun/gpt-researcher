@@ -889,6 +889,7 @@
     chat.thread.push({ role: 'user', content: q });
     chat.pending = answer;
     $('chatSend').disabled = true;
+    input.focus();   // a click on Send would leave the focus on the disabled button, so on the page
     const payload = { message: q, report: run.md, messages: chat.thread.map(({ role, content }) => ({ role, content })) };
     if (!socketOpen()) {
       try { await openSocket(); } catch { return chatFailed('Server not reached. Ask again.'); }
@@ -911,7 +912,12 @@
     }
     chat.thread.push({ role: 'assistant', content: text });
     box.removeAttribute('data-pending');
-    loadMarkdown().then(() => { box.innerHTML = mdToHtml(text); enhanceReport(box, false); });
+    loadMarkdown().then(() => {
+      box.innerHTML = mdToHtml(text);
+      enhanceReport(box, false);
+      // The question goes to the top, under the action row: the whole answer and the field are in view.
+      box.parentNode.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    });
   }
   function chatFailed(msg) {
     const box = chat.pending;
