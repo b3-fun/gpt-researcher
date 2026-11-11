@@ -323,7 +323,7 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
 .kbd {
   display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px;
   border: 1px solid var(--line-soft); border-radius: 6px; background: var(--muted);
-  font: 500 11px/1 var(--font-mono); color: var(--ink-3);
+  font: 500 11px/1 var(--font-sans); color: var(--ink-3);   /* sans: the first screen loads no mono font */
 }
 @media (hover: none), (max-width: 767px) { .prompt__hint { visibility: hidden; } }
 .prompt__error { margin: 8px 0 0; color: var(--danger); font-size: 13px; }
