@@ -607,14 +607,16 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
 .prose .toc a { color: inherit; text-decoration: none; }
 .prose .toc a:hover { color: var(--ink); text-decoration: underline; }
 /* On a phone each contents link is a 44 px row to tap. */
-@media (max-width: 767px) { .prose .toc a { display: flex; align-items: center; min-height: 44px; padding: 6px 0; line-height: 1.45; } .prose .toc li + li { margin-top: 0; } }
+@media (max-width: 767px) { .prose .toc a { display: flex; align-items: center; min-height: 44px; padding: 6px 0; line-height: 1.45; } .prose .toc li + li, .prose .toc li > :is(ul, ol) { margin-top: 0; } }
 .prose h1 { margin-top: 0; font-size: 24px; letter-spacing: -0.02em; color: var(--ink-display); }
 .prose h2 { font-size: 20px; }
 .prose h3 { font-size: 17px; }
 .prose :is(h4, h5, h6) { font-size: 15px; }
-.prose :is(p, ul, ol, blockquote, pre, .table) { margin: 0 0 1em; }
+/* :where, so a rule for one case (a list in a list, Sources) wins without a heavier selector. */
+.prose :where(p, ul, ol, blockquote, pre, .table) { margin: 0 0 1em; }
 .prose :is(ul, ol) { padding-left: 1.4em; }
 .prose li + li { margin-top: 0.3em; }
+.prose li > :is(ul, ol) { margin: 0.3em 0 0; }   /* a list inside a list: an item's gap, not a paragraph's */
 .prose a { color: var(--accent-text); text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); text-underline-offset: 3px; }
 .prose a:hover { text-decoration-color: currentColor; }
 .prose strong { color: var(--ink); font-weight: 600; }
