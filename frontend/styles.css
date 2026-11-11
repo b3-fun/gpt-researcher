@@ -361,7 +361,7 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
 .seg__opt input:checked + span { background: var(--surface-raised); border-color: var(--line); color: var(--ink); box-shadow: var(--shadow-pressed); }
 .seg__opt input:focus-visible + span { outline: 2px solid var(--focus); outline-offset: 1px; }
 @media (hover: hover) { .seg__opt span:hover { color: var(--ink); } }
-.options-btn { flex: none; margin-left: auto; }
+.options-btn { flex: none; margin-left: auto; margin-right: -12px; }   /* its word ends on the column's edge */
 .options-btn .options-btn__icon { display: none; }
 @media (max-width: 767px) {
   .seg__opt span { height: 44px; padding: 0 10px; }
@@ -370,7 +370,7 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
   .seg__opt span { padding: 0 8px; }
 }
 @media (max-width: 379px) {
-  .options-btn { width: 44px; padding: 0; }
+  .options-btn { width: 44px; padding: 0; margin-right: 0; }
   .options-btn .options-btn__label, .options-btn .chev { display: none; }
   .options-btn .options-btn__icon { display: block; }
 }
@@ -445,6 +445,7 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
 .facts__note:empty { display: none; }
 .facts__note::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 999px; background: var(--warning-dot); vertical-align: 1px; }
 .run__meta .btn { margin-left: auto; }
+.run__meta .btn--ghost { margin-right: -12px; }
 
 .notice {
   display: flex;
@@ -537,9 +538,11 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
 }
 .actions__spacer { flex: 1; }
 #copyLabel { display: inline-block; min-width: 3.3em; text-align: left; }   /* Copy, Copied, Failed: one width */
+.actions > .btn--ghost:first-child { margin-left: -12px; }   /* its glyph starts on the column's edge */
 @media (max-width: 420px) {
   .actions { gap: 4px; }
   .actions .btn--ghost { padding: 0 8px; }
+  .actions > .btn--ghost:first-child { margin-left: -8px; }
 }
 @media (max-width: 379px) {
   .actions #copy > .icon, .actions #dlBtn > .icon:first-child { display: none; }
