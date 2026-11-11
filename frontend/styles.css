@@ -124,7 +124,9 @@
 
 /* ---------- Base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+/* The scrollbar's room is always kept: with a classic scrollbar the page does not shift sideways when it starts or
+   stops scrolling (Options, a streaming report, History). */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; overflow-y: scroll; }
 body {
   margin: 0;
   min-height: 100vh;
@@ -780,6 +782,7 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
 
 /* ---------- Print: the report only ---------- */
 @media print {
+  html { overflow: visible; }
   body { background: #fff; color: #000; display: block; }
   .top, .foot, .ask, .run__meta, .notice, .timeline, .logbar, .log, .doneline, .actions, .followup, .drawer, .run__more, .prose [data-rest] { display: none !important; }
   .run { padding: 0; }

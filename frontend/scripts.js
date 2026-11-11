@@ -1022,7 +1022,10 @@
     $('historyOpen').setAttribute('aria-expanded', 'true');
     for (const id of ['top', 'main']) $(id).inert = true;
     document.querySelector('.foot').inert = true;
-    document.body.style.overflow = 'hidden';
+    // The page stops scrolling under the drawer; its scrollbar's room is kept as padding, so nothing shifts.
+    const sbw = window.innerWidth - document.documentElement.clientWidth;
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.paddingRight = sbw ? sbw + 'px' : '';
     (history.length ? $('histSearch') : $('history').querySelector('[data-close].btn')).focus();
   }
   function closeDrawer() {
@@ -1031,7 +1034,8 @@
     $('historyOpen').setAttribute('aria-expanded', 'false');
     for (const id of ['top', 'main']) $(id).inert = false;
     document.querySelector('.foot').inert = false;
-    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+    document.body.style.paddingRight = '';
     (lastFocus && lastFocus.isConnected ? lastFocus : $('historyOpen')).focus();
   }
   function trapFocus(e) {
