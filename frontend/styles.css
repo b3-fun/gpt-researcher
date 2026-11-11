@@ -140,6 +140,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overflow-x: clip;
 }
+body.is-run { background-image: none; }   /* the dots are the Ask screen's stage; the report is read on plain ground */
 ::selection { background: var(--accent-soft); color: var(--ink); }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 a { color: var(--accent-text); text-decoration-thickness: 1px; text-underline-offset: 3px; }

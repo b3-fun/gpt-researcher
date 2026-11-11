@@ -198,6 +198,7 @@
     setConn('idle');
     $('run').hidden = true;
     $('ask').hidden = false;
+    document.body.classList.remove('is-run');
     const t = $('task');
     t.value = text;
     growField(t, window.innerHeight * 0.4);
@@ -246,6 +247,7 @@
   function showRunView() {
     $('ask').hidden = true;
     $('run').hidden = false;
+    document.body.classList.add('is-run');
     const title = $('runTitle');
     title.textContent = run.task;
     title.toggleAttribute('data-long', run.task.length > 140);
