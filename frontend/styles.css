@@ -746,8 +746,13 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
 .foot__mark { width: 18px; height: 16px; color: var(--ink); }
 .foot__b3os { margin-right: auto; color: var(--ink-2) !important; font-weight: 500; }
 @media (max-width: 767px) {
-  .foot { gap: 0 20px; }
+  .foot { gap: 0 20px; padding-block: 10px; }   /* 44 px links in a 64 px row: the first screen does not scroll */
   .foot a { min-height: 44px; min-width: 44px; }
+}
+@media (max-width: 379px) {
+  .foot { column-gap: 12px; }   /* the three links stay on one line down to 360 px */
+}
+@media (max-width: 359px) {
   .foot__b3os { flex-basis: 100%; }
 }
 
