@@ -1,0 +1,488 @@
+{
+ "about": "One real Summary run on the live app gpt-researcher (beta.b3os.org, fork commit bf8b960, the old page), recorded 2026-11-11 13:29 UTC from the browser. Times are ms after the start command was sent. Test data for frontend-dev/stub.mjs.",
+ "recorded_at": "2026-11-11T13:28:56.319Z",
+ "start": {
+  "task": "How well do air-source heat pumps work in very cold climates, and how do their running costs compare with gas furnaces?",
+  "report_type": "research_report",
+  "report_source": "web",
+  "source_urls": [],
+  "tone": "Objective",
+  "agent": "Auto Agent",
+  "query_domains": [],
+  "max_search_results": 5
+ },
+ "frames": [
+  {
+   "t": 112,
+   "data": "{\"query\":\"How well do air-source heat pumps work in very cold climates, and how do their running costs compare with gas furnaces?\",\"sources\":[],\"context\":[],\"report\":\"\"}"
+  },
+  {
+   "t": 1156,
+   "data": "{\"type\":\"logs\",\"content\":\"starting_research\",\"output\":\"🔍 Starting the research task for 'How well do air-source heat pumps work in very cold climates, and how do their running costs compare with gas furnaces?'...\",\"metadata\":null}"
+  },
+  {
+   "t": 1157,
+   "data": "{\"type\":\"logs\",\"content\":\"agent_generated\",\"output\":\"💰 Finance Agent\",\"metadata\":null}"
+  },
+  {
+   "t": 1158,
+   "data": "{\"type\":\"logs\",\"content\":\"planning_research\",\"output\":\"🌐 Browsing the web to learn more about the task: How well do air-source heat pumps work in very cold climates, and how do their running costs compare with gas furnaces?...\",\"metadata\":null}"
+  },
+  {
+   "t": 1754,
+   "data": "{\"type\":\"logs\",\"content\":\"planning_research\",\"output\":\"🤔 Planning the research strategy and subtasks...\",\"metadata\":null}"
+  },
+  {
+   "t": 2115,
+   "data": "{\"type\":\"logs\",\"content\":\"subqueries\",\"output\":\"🗂️ I will conduct my research based on the following queries: ['how effective are cold climate heat pumps in temperatures below zero and do they still work efficiently', 'running cost comparison between modern cold climate heat pumps and 96% AFUE gas furnaces in 2026', 'electricity to gas price ratio threshold where heat pumps become cheaper than gas furnaces in very cold climates', 'How well do air-source heat pumps work in very cold climates, and how do their running costs compare with gas furnaces?']...\",\"metadata\":[\"how effective are cold climate heat pumps in temperatures below zero and do they still work efficiently\",\"running cost comparison between modern cold climate heat pumps and 96% AFUE gas furnaces in 2026\",\"electricity to gas price ratio threshold where heat pumps become cheaper than gas furnaces in very cold climates\",\"How well do air-source heat pumps work in very cold climates, and how do their running costs compare with gas furnaces?\"]}"
+  },
+  {
+   "t": 2125,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.consumerreports.org/heat-pumps/can-heat-pumps-actually-work-in-cold-climates-a4929629430/\\n\",\"metadata\":\"https://www.consumerreports.org/heat-pumps/can-heat-pumps-actually-work-in-cold-climates-a4929629430/\"}"
+  },
+  {
+   "t": 2127,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.zerohomes.com/blog/heat-pump-vs-furnace\\n\",\"metadata\":\"https://www.zerohomes.com/blog/heat-pump-vs-furnace\"}"
+  },
+  {
+   "t": 2128,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://blog.supplyhouse.com/heat-pump-vs-gas-furnace-cost-efficiency-climate/\\n\",\"metadata\":\"https://blog.supplyhouse.com/heat-pump-vs-gas-furnace-cost-efficiency-climate/\"}"
+  },
+  {
+   "t": 2129,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://hvac.best/encyclopedia/heat-pump-vs-furnace-climate-cost-and-efficiency-compared/\\n\",\"metadata\":\"https://hvac.best/encyclopedia/heat-pump-vs-furnace-climate-cost-and-efficiency-compared/\"}"
+  },
+  {
+   "t": 2131,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.acdirect.com/blog/heat-pump-vs-gas-furnace-2026-cost-comparison/\\n\",\"metadata\":\"https://www.acdirect.com/blog/heat-pump-vs-gas-furnace-2026-cost-comparison/\"}"
+  },
+  {
+   "t": 2131,
+   "data": "{\"type\":\"logs\",\"content\":\"researching\",\"output\":\"🤔 Researching for relevant information across multiple sources...\\n\",\"metadata\":null}"
+  },
+  {
+   "t": 2132,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_urls\",\"output\":\"🌐 Scraping content from 5 URLs...\",\"metadata\":null}"
+  },
+  {
+   "t": 3156,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_content\",\"output\":\"📄 Scraped 5 pages of content\",\"metadata\":null}"
+  },
+  {
+   "t": 3156,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_images\",\"output\":\"🖼️ Selected 0 new images from 0 total images\",\"metadata\":[]}"
+  },
+  {
+   "t": 3157,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_complete\",\"output\":\"🌐 Scraping complete\",\"metadata\":null}"
+  },
+  {
+   "t": 3159,
+   "data": "{\"type\":\"logs\",\"content\":\"fetching_query_content\",\"output\":\"📚 Getting relevant content based on query: How well do air-source heat pumps work in very cold climates, and how do their running costs compare with gas furnaces?...\",\"metadata\":null}"
+  },
+  {
+   "t": 3181,
+   "data": "{\"type\":\"logs\",\"content\":\"running_subquery_research\",\"output\":\"\\n🔍 Running research for 'how effective are cold climate heat pumps in temperatures below zero and do they still work efficiently'...\",\"metadata\":null}"
+  },
+  {
+   "t": 3182,
+   "data": "{\"type\":\"logs\",\"content\":\"running_subquery_research\",\"output\":\"\\n🔍 Running research for 'running cost comparison between modern cold climate heat pumps and 96% AFUE gas furnaces in 2026'...\",\"metadata\":null}"
+  },
+  {
+   "t": 3183,
+   "data": "{\"type\":\"logs\",\"content\":\"running_subquery_research\",\"output\":\"\\n🔍 Running research for 'electricity to gas price ratio threshold where heat pumps become cheaper than gas furnaces in very cold climates'...\",\"metadata\":null}"
+  },
+  {
+   "t": 3186,
+   "data": "{\"type\":\"logs\",\"content\":\"running_subquery_research\",\"output\":\"\\n🔍 Running research for 'How well do air-source heat pumps work in very cold climates, and how do their running costs compare with gas furnaces?'...\",\"metadata\":null}"
+  },
+  {
+   "t": 3260,
+   "data": "{\"type\":\"logs\",\"content\":\"researching\",\"output\":\"🤔 Researching for relevant information across multiple sources...\\n\",\"metadata\":null}"
+  },
+  {
+   "t": 3260,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_urls\",\"output\":\"🌐 Scraping content from 0 URLs...\",\"metadata\":null}"
+  },
+  {
+   "t": 3261,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_content\",\"output\":\"📄 Scraped 0 pages of content\",\"metadata\":null}"
+  },
+  {
+   "t": 3261,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_images\",\"output\":\"🖼️ Selected 0 new images from 0 total images\",\"metadata\":[]}"
+  },
+  {
+   "t": 3261,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_complete\",\"output\":\"🌐 Scraping complete\",\"metadata\":null}"
+  },
+  {
+   "t": 3261,
+   "data": "{\"type\":\"logs\",\"content\":\"subquery_context_not_found\",\"output\":\"🤷 No content found for 'How well do air-source heat pumps work in very cold climates, and how do their running costs compare with gas furnaces?'...\",\"metadata\":null}"
+  },
+  {
+   "t": 3653,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://homes.rewiringamerica.org/articles/heating-and-cooling/heat-pumps-cold-weather\\n\",\"metadata\":\"https://homes.rewiringamerica.org/articles/heating-and-cooling/heat-pumps-cold-weather\"}"
+  },
+  {
+   "t": 3653,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.energysage.com/heat-pumps/heat-pumps-cold-climates/\\n\",\"metadata\":\"https://www.energysage.com/heat-pumps/heat-pumps-cold-climates/\"}"
+  },
+  {
+   "t": 3653,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.washingtonpost.com/climate-solutions/2024/11/14/cold-climate-heat-pump-winter/\\n\",\"metadata\":\"https://www.washingtonpost.com/climate-solutions/2024/11/14/cold-climate-heat-pump-winter/\"}"
+  },
+  {
+   "t": 3655,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://www.sealed.com/resources/winter-heat-pump/\\n\",\"metadata\":\"https://www.sealed.com/resources/winter-heat-pump/\"}"
+  },
+  {
+   "t": 3655,
+   "data": "{\"type\":\"logs\",\"content\":\"researching\",\"output\":\"🤔 Researching for relevant information across multiple sources...\\n\",\"metadata\":null}"
+  },
+  {
+   "t": 3655,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_urls\",\"output\":\"🌐 Scraping content from 4 URLs...\",\"metadata\":null}"
+  },
+  {
+   "t": 3684,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://nuwattenergy.com/en/heat-pump-running-cost-vs-gas-2026\\n\",\"metadata\":\"https://nuwattenergy.com/en/heat-pump-running-cost-vs-gas-2026\"}"
+  },
+  {
+   "t": 3684,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://utilityexplained.com/blog/48-heat-pump-vs-gas-furnace-savings/\\n\",\"metadata\":\"https://utilityexplained.com/blog/48-heat-pump-vs-gas-furnace-savings/\"}"
+  },
+  {
+   "t": 3684,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://hvachaven.com/how-much-does-it-cost-to-install-a-heat-pump-vs-furnace-in-2026/\\n\",\"metadata\":\"https://hvachaven.com/how-much-does-it-cost-to-install-a-heat-pump-vs-furnace-in-2026/\"}"
+  },
+  {
+   "t": 3685,
+   "data": "{\"type\":\"logs\",\"content\":\"researching\",\"output\":\"🤔 Researching for relevant information across multiple sources...\\n\",\"metadata\":null}"
+  },
+  {
+   "t": 3685,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_urls\",\"output\":\"🌐 Scraping content from 3 URLs...\",\"metadata\":null}"
+  },
+  {
+   "t": 3757,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://seenra.com/guides/heat-pump-vs-gas-furnace-bill-impact\\n\",\"metadata\":\"https://seenra.com/guides/heat-pump-vs-gas-furnace-bill-impact\"}"
+  },
+  {
+   "t": 3758,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://jouleio.com/blog/heat-pump-operating-cost-by-climate/\\n\",\"metadata\":\"https://jouleio.com/blog/heat-pump-operating-cost-by-climate/\"}"
+  },
+  {
+   "t": 3758,
+   "data": "{\"type\":\"logs\",\"content\":\"added_source_url\",\"output\":\"✅ Added source url to research: https://electrifyatlas.com/blog/cold-climate-worth-it\\n\",\"metadata\":\"https://electrifyatlas.com/blog/cold-climate-worth-it\"}"
+  },
+  {
+   "t": 3759,
+   "data": "{\"type\":\"logs\",\"content\":\"researching\",\"output\":\"🤔 Researching for relevant information across multiple sources...\\n\",\"metadata\":null}"
+  },
+  {
+   "t": 3759,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_urls\",\"output\":\"🌐 Scraping content from 3 URLs...\",\"metadata\":null}"
+  },
+  {
+   "t": 4703,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_content\",\"output\":\"📄 Scraped 4 pages of content\",\"metadata\":null}"
+  },
+  {
+   "t": 4704,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_images\",\"output\":\"🖼️ Selected 0 new images from 0 total images\",\"metadata\":[]}"
+  },
+  {
+   "t": 4706,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_complete\",\"output\":\"🌐 Scraping complete\",\"metadata\":null}"
+  },
+  {
+   "t": 4707,
+   "data": "{\"type\":\"logs\",\"content\":\"fetching_query_content\",\"output\":\"📚 Getting relevant content based on query: how effective are cold climate heat pumps in temperatures below zero and do they still work efficiently...\",\"metadata\":null}"
+  },
+  {
+   "t": 4708,
+   "data": "{\"type\":\"logs\",\"content\":\"context_combined\",\"output\":\"📚 Combined research context: 0 MCP sources, web content\",\"metadata\":null}"
+  },
+  {
+   "t": 4888,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_content\",\"output\":\"📄 Scraped 3 pages of content\",\"metadata\":null}"
+  },
+  {
+   "t": 4906,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_images\",\"output\":\"🖼️ Selected 0 new images from 0 total images\",\"metadata\":[]}"
+  },
+  {
+   "t": 4906,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_complete\",\"output\":\"🌐 Scraping complete\",\"metadata\":null}"
+  },
+  {
+   "t": 4906,
+   "data": "{\"type\":\"logs\",\"content\":\"fetching_query_content\",\"output\":\"📚 Getting relevant content based on query: electricity to gas price ratio threshold where heat pumps become cheaper than gas furnaces in very cold climates...\",\"metadata\":null}"
+  },
+  {
+   "t": 4907,
+   "data": "{\"type\":\"logs\",\"content\":\"context_combined\",\"output\":\"📚 Combined research context: 0 MCP sources, web content\",\"metadata\":null}"
+  },
+  {
+   "t": 6330,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_content\",\"output\":\"📄 Scraped 3 pages of content\",\"metadata\":null}"
+  },
+  {
+   "t": 6330,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_images\",\"output\":\"🖼️ Selected 0 new images from 0 total images\",\"metadata\":[]}"
+  },
+  {
+   "t": 6330,
+   "data": "{\"type\":\"logs\",\"content\":\"scraping_complete\",\"output\":\"🌐 Scraping complete\",\"metadata\":null}"
+  },
+  {
+   "t": 6330,
+   "data": "{\"type\":\"logs\",\"content\":\"fetching_query_content\",\"output\":\"📚 Getting relevant content based on query: running cost comparison between modern cold climate heat pumps and 96% AFUE gas furnaces in 2026...\",\"metadata\":null}"
+  },
+  {
+   "t": 6340,
+   "data": "{\"type\":\"logs\",\"content\":\"context_combined\",\"output\":\"📚 Combined research context: 0 MCP sources, web content\",\"metadata\":null}"
+  },
+  {
+   "t": 6341,
+   "data": "{\"type\":\"logs\",\"content\":\"research_step_finalized\",\"output\":\"Finalized research step.\\n💸 Total Research Costs: $0.007550000000000001\",\"metadata\":null}"
+  },
+  {
+   "t": 6350,
+   "data": "{\"type\":\"logs\",\"content\":\"writing_report\",\"output\":\"✍️ Writing report for 'How well do air-source heat pumps work in very cold climates, and how do their running costs compare with gas furnaces?'...\",\"metadata\":null}"
+  },
+  {
+   "t": 7174,
+   "data": "{\"type\":\"report\",\"output\":\"# Operational Efficiency and Economic Viability of Air-Source Heat Pumps in Extreme Cold Climates\\n\\n\"}"
+  },
+  {
+   "t": 7194,
+   "data": "{\"type\":\"report\",\"output\":\"## Executive Summary\\n\\n\"}"
+  },
+  {
+   "t": 8101,
+   "data": "{\"type\":\"report\",\"output\":\"The historical perception that air-source heat pumps are ineffective in cold climates has been fundamentally altered by recent technological advancements. Modern cold-climate heat pumps (ccASHPs) utilize variable-speed inverter compressors and enhanced vapor injection (EVI) technology to maintain heating capacity and efficiency at temperatures where older models would fail. While gas furnaces remain a competitive option in regions with extremely low temperatures and cheap natural gas, air-source heat pumps generally offer superior operational efficiency, lower long-term running costs, and greater comfort in most U.S. climate zones. The economic viability of a heat pump versus a gas furnace is primarily dictated by the local electricity-to-gas price ratio, with heat pumps becoming the clear economic winner when electricity costs less than approximately 3.5 times the cost of gas per equivalent BTU ([Seenra](https://seenra.com/guides/heat-pump-vs-gas-furnace-bill-impact)).\\n\\n\"}"
+  },
+  {
+   "t": 8158,
+   "data": "{\"type\":\"report\",\"output\":\"## Technological Capabilities in Sub-Zero Environments\\n\\n\"}"
+  },
+  {
+   "t": 8892,
+   "data": "{\"type\":\"report\",\"output\":\"The primary barrier to heat pump adoption in cold regions was the belief that heat pumps require outdoor air temperatures above freezing to function. This misconception stems from early-generation units that lacked the capacity to extract sufficient thermal energy from frigid air. However, contemporary cold-climate models have redefined operational limits. According to the Department of Energy's Cold-Climate Heat Pump Technology Challenge, major manufacturers including Bosch, Carrier, Daikin, and Trane have successfully tested units in sub-zero conditions, with some prototypes maintaining maximum efficiency at temperatures as low as -15°F to -22°F ([Rewiring America](https://homes.rewiringamerica.org/articles/heating-and-cooling/heat-pumps-cold-weather)).\\n\\n\"}"
+  },
+  {
+   "t": 9661,
+   "data": "{\"type\":\"report\",\"output\":\"The mechanism behind this performance lies in the physics of heat transfer and advanced refrigerant engineering. Even at 0°F, air contains more than 75% of the thermal energy found in air at 140°F. Modern units achieve this by using refrigerants with lower boiling points, allowing the system to remain colder than the outdoor air and continue absorbing heat ([EnergySage](https://www.energysage.com/heat-pumps/heat-pumps-cold-climates/)). Furthermore, variable-speed compressors allow the system to modulate output rather than cycling on and off, which maintains steady indoor temperatures and prevents the \\\"short-cycling\\\" common in older furnaces ([EnergySage](https://www.energysage.com/heat-pumps/heat-pumps-cold-climates/)).\\n\\n\"}"
+  },
+  {
+   "t": 9697,
+   "data": "{\"type\":\"report\",\"output\":\"### Performance Metrics at Low Temperatures\\n\\n\"}"
+  },
+  {
+   "t": 9991,
+   "data": "{\"type\":\"report\",\"output\":\"Efficiency in cold climates is measured by the Coefficient of Performance (COP), which represents the ratio of heat delivered to electricity consumed. Unlike gas furnaces, whose efficiency (measured by AFUE) remains constant regardless of outdoor temperature, a heat pump's COP fluctuates with the weather.\\n\\n\"}"
+  },
+  {
+   "t": 10101,
+   "data": "{\"type\":\"report\",\"output\":\"| Outdoor Temperature | Standard Heat Pump COP | Cold-Climate Heat Pump COP | Gas Furnace AFUE |\\n\"}"
+  },
+  {
+   "t": 10174,
+   "data": "{\"type\":\"report\",\"output\":\"| :--- | :--- | :--- | :--- |\\n\"}"
+  },
+  {
+   "t": 10322,
+   "data": "{\"type\":\"report\",\"output\":\"| 47°F (Mild) | 4.0 | 4.0+ | 0.96 (96%) |\\n\"}"
+  },
+  {
+   "t": 10468,
+   "data": "{\"type\":\"report\",\"output\":\"| 25°F | 2.0 | 2.8 | 0.96 (96%) |\\n\"}"
+  },
+  {
+   "t": 10633,
+   "data": "{\"type\":\"report\",\"output\":\"| 5°F | 1.5 - 1.75 | 1.75 - 2.0 | 0.96 (96%) |\\n\"}"
+  },
+  {
+   "t": 10753,
+   "data": "{\"type\":\"report\",\"output\":\"| -5°F | Backup Heat Only | 1.6 | 0.96 (96%) |\\n\"}"
+  },
+  {
+   "t": 10991,
+   "data": "{\"type\":\"report\",\"output\":\"| -15°F | N/A | 1.5 - 1.8 | 0.96 (96%) |\\n\\n\"}"
+  },
+  {
+   "t": 10993,
+   "data": "{\"type\":\"report\",\"output\":\"*Data synthesized from multiple industry analyses and manufacturer specifications.*\\n\\n\"}"
+  },
+  {
+   "t": 11839,
+   "data": "{\"type\":\"report\",\"output\":\"At 5°F, a certified cold-climate heat pump must maintain a COP of at least 1.75 to earn the ENERGY STAR label, delivering 1.75 units of heat for every unit of electricity consumed ([SupplyHouse](https://blog.supplyhouse.com/heat-pump-vs-gas-furnace-cost-efficiency-climate/)). While this is lower than the COP of 3.0+ seen in mild weather, it still exceeds the theoretical maximum efficiency of a gas furnace, which is capped at 1.0 (or 100% AFUE). In fact, a 2023 study published in *Joule* found that heat pumps are twice as efficient as traditional fossil-fuel systems even in cold weather ([EnergySage](https://www.energysage.com/heat-pumps/heat-pumps-cold-climates/)).\\n\\n\"}"
+  },
+  {
+   "t": 11892,
+   "data": "{\"type\":\"report\",\"output\":\"## Economic Analysis: Running Costs and Fuel Ratios\\n\\n\"}"
+  },
+  {
+   "t": 12562,
+   "data": "{\"type\":\"report\",\"output\":\"The decision between a heat pump and a gas furnace is ultimately an economic calculation based on local utility rates. The critical metric is the electricity-to-gas price ratio. If electricity costs less than 3.5 times the cost of gas (per equivalent BTU), a heat pump almost always wins on operating cost. Conversely, if the ratio exceeds 5.0, a high-efficiency gas furnace may be cheaper to run, particularly during the coldest weeks of winter ([HVACHaven](https://hvachaven.com/how-much-does-it-cost-to-install-a-heat-pump-vs-furnace-in-2026/)).\\n\\n\"}"
+  },
+  {
+   "t": 12565,
+   "data": "{\"type\":\"report\",\"output\":\"### Annual Operating Cost Comparisons\\n\\n\"}"
+  },
+  {
+   "t": 13161,
+   "data": "{\"type\":\"report\",\"output\":\"Real-world data from 2026 indicates a significant divergence in running costs depending on the climate zone and fuel prices. In nine states analyzed, the average annual cost to run a heat pump ranged from $800 to $1,400, whereas gas furnaces cost between $1,200 and $2,200 annually. This represents an average savings of 25% to 45% for homeowners switching to heat pumps ([NuWatt Energy](https://nuwattenergy.com/en/heat-pump-running-cost-vs-gas-2026)).\\n\\n\"}"
+  },
+  {
+   "t": 14250,
+   "data": "{\"type\":\"report\",\"output\":\"In specific scenarios, such as a typical 2,000-square-foot home in the Northeast with a 50 million BTU annual heating load, the cost difference becomes stark. Using national average rates for January 2026 (electricity at 17.45¢/kWh and natural gas at $1.35/therm), a heat pump with a seasonal COP of 2.5 costs $2.05 per 100,000 BTU, while a 96% AFUE gas furnace costs only $1.41 per 100,000 BTU. In this specific, cold-weather-heavy scenario, the gas furnace is cheaper per unit of heat ([UtilityExplained](https://utilityexplained.com/blog/48-heat-pump-vs-gas-furnace-savings/)). However, over a full year, the heat pump's superior performance during the milder months (where COP is 3.0+) often offsets the higher winter costs, leading to net savings for most homeowners.\\n\\n\"}"
+  },
+  {
+   "t": 14292,
+   "data": "{\"type\":\"report\",\"output\":\"### The Dual-Fuel Hybrid Solution\\n\\n\"}"
+  },
+  {
+   "t": 14832,
+   "data": "{\"type\":\"report\",\"output\":\"For homeowners in the coldest climates (Climate Zones 5-7) where gas prices are low, the optimal solution is often a dual-fuel system. This configuration pairs a cold-climate heat pump with a gas furnace backup. The system automatically switches to the gas furnace when outdoor temperatures drop below a configured \\\"balance point,\\\" typically between 30°F and 35°F, depending on local utility rates ([SupplyHouse](https://blog.supplyhouse.com/heat-pump-vs-gas-furnace-cost-efficiency-climate/)).\\n\\n\"}"
+  },
+  {
+   "t": 15338,
+   "data": "{\"type\":\"report\",\"output\":\"In Denver, Colorado, a dual-fuel system has been shown to reduce annual heating costs by approximately $40 (5%) compared to a heat pump alone and by $170 (19%) compared to an older furnace and air conditioner combination ([Zero Homes](https://www.zerohomes.com/blog/heat-pump-vs-furnace)). This hybrid approach mitigates the risk of high electric bills during polar vortex events while leveraging the heat pump's efficiency for the majority of the heating season.\\n\\n\"}"
+  },
+  {
+   "t": 15365,
+   "data": "{\"type\":\"report\",\"output\":\"## Comfort and System Dynamics\\n\\n\"}"
+  },
+  {
+   "t": 15896,
+   "data": "{\"type\":\"report\",\"output\":\"Beyond raw efficiency and cost, the user experience differs significantly between the two technologies. Gas furnaces operate by burning fuel in a heat exchanger and blasting hot air (120°F–140°F) into the home in short cycles. In contrast, heat pumps move heat and deliver supply air at a lower temperature (90°F–110°F) but run continuously at variable speeds ([SupplyHouse](https://blog.supplyhouse.com/heat-pump-vs-gas-furnace-cost-efficiency-climate/)).\\n\\n\"}"
+  },
+  {
+   "t": 16525,
+   "data": "{\"type\":\"report\",\"output\":\"This continuous, low-velocity airflow results in more stable room-to-room temperatures and eliminates the \\\"on/off\\\" cycling that can cause temperature swings. However, this dynamic requires a properly sized system. An undersized heat pump may struggle to meet the load during extreme cold, leading to constant runtime without reaching the thermostat setpoint. Conversely, an oversized furnace can short-cycle, wasting energy and failing to dehumidify the air effectively in summer ([Zero Homes](https://www.zerohomes.com/blog/heat-pump-vs-furnace)). Proper Manual J load calculations are therefore more critical for heat pump installations than for gas furnaces.\\n\\n\"}"
+  },
+  {
+   "t": 16539,
+   "data": "{\"type\":\"report\",\"output\":\"## Conclusion\\n\\n\"}"
+  },
+  {
+   "t": 17320,
+   "data": "{\"type\":\"report\",\"output\":\"Air-source heat pumps have evolved from niche appliances for mild climates to robust, high-performance heating solutions capable of withstanding temperatures down to -22°F. While gas furnaces retain an efficiency advantage during the briefest periods of extreme cold in regions with cheap natural gas, the seasonal average efficiency of cold-climate heat pumps makes them the superior choice for the majority of U.S. households. The economic case for electrification is strongest where electricity prices are moderate to low relative to gas, but even in high-gas-price regions, the dual-fuel hybrid model offers a balanced approach that maximizes comfort and minimizes cost. As utility rates continue to shift and technology improves, the operational and economic gap between heat pumps and gas furnaces is expected to widen further in favor of electric heat recovery systems.\\n\\n\"}"
+  },
+  {
+   "t": 17333,
+   "data": "{\"type\":\"report\",\"output\":\"## References\\n\\n\"}"
+  },
+  {
+   "t": 17806,
+   "data": "{\"type\":\"report\",\"output\":\"Consumer Reports. (2022). *Can heat pumps actually work in cold climates?* [https://www.consumerreports.org/heat-pumps/can-heat-pumps-actually-work-in-cold-climates-a4929629430/](https://www.consumerreports.org/heat-pumps/can-heat-pumps-actually-work-in-cold-climates-a4929629430/)\\n\\n\"}"
+  },
+  {
+   "t": 18097,
+   "data": "{\"type\":\"report\",\"output\":\"EnergySage. (2024). *Do heat pumps work in cold climates?* [https://www.energysage.com/heat-pumps/heat-pumps-cold-climates/](https://www.energysage.com/heat-pumps/heat-pumps-cold-climates/)\\n\\n\"}"
+  },
+  {
+   "t": 18581,
+   "data": "{\"type\":\"report\",\"output\":\"HVACHaven. (2026, May 7). *Heat pump vs. furnace installation cost: The long-term truth about what you'll really pay.* [https://hvachaven.com/how-much-does-it-cost-to-install-a-heat-pump-vs-furnace-in-2026/](https://hvachaven.com/how-much-does-it-cost-to-install-a-heat-pump-vs-furnace-in-2026/)\\n\\n\"}"
+  },
+  {
+   "t": 18944,
+   "data": "{\"type\":\"report\",\"output\":\"NuWatt Energy. (2026, February). *Heat pump running cost vs gas furnace (2026).* [https://nuwattenergy.com/en/heat-pump-running-cost-vs-gas-2026](https://nuwattenergy.com/en/heat-pump-running-cost-vs-gas-2026)\\n\\n\"}"
+  },
+  {
+   "t": 19256,
+   "data": "{\"type\":\"report\",\"output\":\"Rewiring America. (n.d.). *Heat pumps in cold weather.* [https://homes.rewiringamerica.org/articles/heating-and-cooling/heat-pumps-cold-weather](https://homes.rewiringamerica.org/articles/heating-and-cooling/heat-pumps-cold-weather)\\n\\n\"}"
+  },
+  {
+   "t": 19621,
+   "data": "{\"type\":\"report\",\"output\":\"Seenra. (2026). *Heat pump vs gas furnace — the 2026 utility-bill math.* [https://seenra.com/guides/heat-pump-vs-gas-furnace-bill-impact](https://seenra.com/guides/heat-pump-vs-gas-furnace-bill-impact)\\n\\n\"}"
+  },
+  {
+   "t": 19967,
+   "data": "{\"type\":\"report\",\"output\":\"SupplyHouse. (n.d.). *Heat pumps vs. gas furnaces: Cost, efficiency & climate guide.* [https://blog.supplyhouse.com/heat-pump-vs-gas-furnace-cost-efficiency-climate/](https://blog.supplyhouse.com/heat-pump-vs-gas-furnace-cost-efficiency-climate/)\\n\\n\"}"
+  },
+  {
+   "t": 20307,
+   "data": "{\"type\":\"report\",\"output\":\"UtilityExplained. (2026). *Heat pump vs gas furnace: Which is cheaper to run?* [https://utilityexplained.com/blog/48-heat-pump-vs-gas-furnace-savings/](https://utilityexplained.com/blog/48-heat-pump-vs-gas-furnace-savings/)\\n\\n\"}"
+  },
+  {
+   "t": 20616,
+   "data": "{\"type\":\"report\",\"output\":\"Zero Homes. (n.d.). *Heat pump vs furnace: Which one makes sense for a Colorado home?* [https://www.zerohomes.com/blog/heat-pump-vs-furnace](https://www.zerohomes.com/blog/heat-pump-vs-furnace)\"}"
+  },
+  {
+   "t": 20617,
+   "data": "{\"type\":\"logs\",\"content\":\"report_written\",\"output\":\"📝 Report written for 'How well do air-source heat pumps work in very cold climates, and how do their running costs compare with gas furnaces?'\",\"metadata\":null}"
+  },
+  {
+   "t": 20978,
+   "data": "{\"type\":\"path\",\"output\":{\"pdf\":\"\",\"docx\":\"outputs/task_1794403741_e9f9f31f81.docx\",\"md\":\"outputs/task_1794403741_e9f9f31f81.md\",\"json\":\"outputs/task_1794403741_e9f9f31f81.json\"}}"
+  }
+ ],
+ "chat": {
+  "about": "The chat command as the new page sends it (message, report, messages); answered over a fresh socket. Times are ms after the command.",
+  "question": "Which costs matter most when comparing the two?",
+  "frames": [
+   {
+    "t": 2638,
+    "data": "{\"type\":\"chat\",\"content\":\"Based on the provided research report, the specific monetary costs (such as upfront installation or long-term operational bills) are not detailed. However, the report highlights that **user experience and comfort** are the most significant differentiating factors that influence the overall value proposition when comparing the two technologies.\\n\\nThe report notes that the \\\"user experience differs significantly\\\" between gas furnaces and heat pumps due to their operational mechanics:\\n\\n| Feature | Gas Furnace | Heat Pump |\\n| :--- | :--- | :--- |\\n| **Operating Mechanism** | Burns fuel in a heat exchanger | Moves heat |\\n| **Air Delivery** | Blasts hot air in short cycles | Runs continuously at variable speeds |\\n| **Supply Air Temperature** | High (120°F–140°F) | Lower (90°F–110°F) |\\n\\nWhile the report mentions that \\\"raw efficiency and cost\\\" are factors, it explicitly contrasts these with the **comfort** provided by the system dynamics. The continuous, variable-speed operation of heat pumps delivering air at a more moderate temperature is presented as a key distinction from the short, high-temperature bursts of gas furnaces.\\n\\n**Conclusion:**\\nAccording to the text, while efficiency and raw cost are mentioned, the **comfort and system dynamics** (specifically air temperature and cycle duration) are the most distinct aspects highlighted in the comparison.\\n\\n> \\\"Beyond raw efficiency and cost, the user experience differs significantly between the two technologies.\\\" — *Research Report*\\n\\n*Source: Research report content provided.*\",\"role\":\"assistant\",\"metadata\":null}"
+   }
+  ]
+ },
+ "chat_old_page": {
+  "about": "The old page sent only the message, so the answer was not about the report (it answered about cars). Kept as evidence; the stub does not replay it.",
+  "sent": "chat {\"message\":\"Which costs matter most when comparing the two?\"}",
+  "after_ms": 3163,
+  "frames": [
+   {
+    "t": 3163,
+    "data": "{\"type\":\"chat\",\"content\":\"To determine which costs matter most when comparing electric vehicles (EVs) and gas vehicles, we need to look at the total cost of ownership, which includes purchase price, fueling, maintenance, and potential government incentives.\\n\\nHere is a breakdown of the key cost factors:\\n\\n### 1. Purchase Price (Upfront Cost)\\nHistorically, EVs have had a higher upfront purchase price compared to gas vehicles. However, this gap is narrowing due to:\\n*   **Battery Costs:** While battery costs have decreased significantly, they still represent a large portion of an EV's price.\\n*   **Economies of Scale:** As EV production scales up, prices are expected to drop.\\n*   **Incentives:** Government tax credits and rebates can significantly reduce the effective purchase price of an EV.\\n\\n### 2. Fueling Costs\\nThis is often the most significant long-term difference between the two types of vehicles.\\n*   **EVs:** Electricity is generally cheaper per mile than gasoline. For example, if electricity costs $0.15/kWh and gasoline costs $3.50/gallon, an EV owner can save hundreds of dollars annually on fueling.\\n*   **Gas Vehicles:** Fuel prices fluctuate based on market conditions, but they tend to be more expensive per mile driven compared to electricity.\\n\\n### 3. Maintenance Costs\\nEVs typically have lower maintenance costs due to their simpler mechanical design.\\n*   **EVs:** Fewer moving parts mean less wear and tear. No oil changes, fewer brake replacements (due to regenerative braking), and less complex transmission systems.\\n*   **Gas Vehicles:** Require regular maintenance such as oil changes, transmission fluid checks, and more frequent brake replacements.\\n\\n### 4. Insurance Costs\\nInsurance costs for EVs can be higher due to the higher repair costs associated with battery and specialized parts. However, this varies by region and insurance provider.\\n\\n### 5. Depreciation\\nDepreciation rates for EVs have been a concern in the past, but as the technology matures and battery reliability improves, this is changing. Gas vehicles often have more predictable depreciation rates.\\n\\n### Summary Table\\n\\n| Cost Factor | Electric Vehicles (EVs) | Gas Vehicles |\\n| :--- | :--- | :--- |\\n| **Purchase Price** | Higher (but narrowing gap) | Lower |\\n| **Fueling Costs** | Lower | Higher |\\n| **Maintenance** | Lower | Higher |\\n| **Insurance** | Potentially Higher | Potentially Lower |\\n| **Depreciation** | Variable | More Predictable |\\n\\n### Conclusion\\nThe **fueling costs** and **maintenance costs** are often the most significant long-term savings for EV owners, while the **purchase price** is the most significant upfront cost difference. When comparing the two, it's important to consider the total cost of ownership over the vehicle's lifespan, as the lower operating costs of EVs can offset the higher initial purchase price.\",\"role\":\"assistant\",\"metadata\":null}"
+   }
+  ]
+ },
+ "downloads": {
+  "pdf": {
+   "path": "",
+   "note": "the server sent no link (no PDF on this deployment: README-B3OS.md, Known not to work)"
+  },
+  "docx": {
+   "path": "outputs/task_1794403741_e9f9f31f81.docx",
+   "status": 200,
+   "type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+   "bytes": 41501,
+   "file": "files/task_1794403741_e9f9f31f81.docx"
+  },
+  "md": {
+   "path": "outputs/task_1794403741_e9f9f31f81.md",
+   "status": 200,
+   "type": "text/markdown; charset=utf-8",
+   "bytes": 11150,
+   "file": "files/task_1794403741_e9f9f31f81.md"
+  },
+  "json": {
+   "path": "outputs/task_1794403741_e9f9f31f81.json",
+   "status": 200,
+   "type": "application/json",
+   "bytes": 20986,
+   "file": "files/task_1794403741_e9f9f31f81.json"
+  }
+ },
+ "history_cookie": [
+  {
+   "prompt": "How well do air-source heat pumps work in very cold climates, and how do their running costs compare with gas furnaces?",
+   "links": {
+    "pdf": "",
+    "docx": "outputs/task_1794403741_e9f9f31f81.docx",
+    "md": "outputs/task_1794403741_e9f9f31f81.md",
+    "json": "outputs/task_1794403741_e9f9f31f81.json"
+   },
+   "timestamp": "2026-11-11T13:29:22.758Z"
+  }
+ ],
+ "api_reports": {
+  "status": 200,
+  "body": "{\"reports\":[]}"
+ }
+}
