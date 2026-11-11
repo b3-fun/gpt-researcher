@@ -1150,7 +1150,6 @@
       const open = $('options').hidden;
       $('options').hidden = !open;
       $('optionsToggle').setAttribute('aria-expanded', String(open));
-      if (open) $('tone').focus();
     });
     for (const b of document.querySelectorAll('.stepper [data-step]')) {
       b.addEventListener('click', () => {
