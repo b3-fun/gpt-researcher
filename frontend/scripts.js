@@ -282,12 +282,12 @@
 
   function startRunClock() { stopRunClock(); tick = setInterval(renderFacts, 1000); }
   function stopRunClock() { clearInterval(tick); tick = null; }
+  // While it runs: the time against the length's estimate ("8 s of about 30 s"); past the estimate, the time alone.
   function renderFacts() {
     if (!run) return;
-    const parts = [fmtDur((run.endedAt || Date.now()) - run.startedAt)];
-    // A source is a page the server read; what its searches found is under Search.
-    if (run.read) parts.push(plural(run.read, 'source', 'sources'));
-    $('facts').textContent = parts.join(' · ');
+    const ms = (run.endedAt || Date.now()) - run.startedAt;
+    const [est, words] = ESTIMATE[run.type] || ESTIMATE.research_report;
+    $('facts').textContent = ms < est * 1000 ? `${fmtDur(ms)} of ${words}` : fmtDur(ms);
   }
 
   function stopResearch() {
@@ -384,25 +384,25 @@
     renderSteps();
   }
 
-  function onDone(m) {
-    run.endedAt = Date.now();
-    run.links = m.output || {};
+  async function onDone(m) {
+    const r = run;
+    r.endedAt = Date.now();
+    r.links = m.output || {};
     phase = 'done';
     stopHeartbeat();
     stopRunClock();
     setConn('idle');
     hideNotice();
-    run.step = 4;
+    r.step = 4;
     renderSteps();
     showReportState();
     // The saved Markdown is the report as the downloads hold it (for Detailed, the assembled one).
-    if (run.links.md) {
-      fetch(run.links.md, { cache: 'no-store' })
-        .then((r) => (r.ok ? r.text() : null))
-        .then((md) => { if (md && md.trim() && run && run.links === m.output) { run.md = md; renderReport(true); updateDoneLine(); renderSteps(); } })
-        .catch(() => {});
+    if (r.links.md) {
+      try { const res = await fetch(r.links.md, { cache: 'no-store' }); const md = res.ok ? await res.text() : null; if (md && md.trim()) r.md = md; } catch {}
+      if (run === r) { await renderReport(true); updateDoneLine(); renderSteps(); }
     }
-    saveToHistory();
+    await loadMarkdown();
+    saveToHistory(r);
   }
 
   // ---------- steps ----------
@@ -670,18 +670,26 @@
     $('stepsToggle').textContent = 'Show steps';
     $('doneline').hidden = false;
     updateDoneLine();
-    renderReport(true);
+    renderReport(true).then(updateDoneLine);
     buildDownloads();
     $('actions').hidden = false;
     $('followup').hidden = false;
+  }
+  // A source is a row of the report's Sources list: the done line, History and the JSON download count the same rows.
+  const shownSources = () => $('report').querySelectorAll('.sources li').length;
+  function countSources(md) {
+    const box = document.createElement('div');
+    box.innerHTML = mdToHtml(md);
+    enhanceReport(box, true);
+    return box.querySelectorAll('.sources li').length;
   }
   function updateDoneLine() {
     if (!run) return;
     const parts = [];
     if (run.endedAt && run.startedAt) parts.push(`Done in ${fmtDur(run.endedAt - run.startedAt)}`);
     else if (run.savedAt) parts.push(fmtWhen(run.savedAt));
-    if (run.read) parts.push(plural(run.read, 'source', 'sources'));
-    else if (run.sourceCount) parts.push(plural(run.sourceCount, 'source', 'sources'));
+    const n = shownSources();
+    if (n) parts.push(plural(n, 'source', 'sources'));
     const words = countWords(run.md);
     if (words) parts.push(plural(words, 'word', 'words'));
     $('doneText').textContent = parts.join(' · ');
@@ -865,15 +873,15 @@
     setCookie('conversationHistory', JSON.stringify(slim), 30);
     loadHistory();
   }
-  function saveToHistory() {
-    if (!run || !run.links) return;
-    const l = run.links;
+  function saveToHistory(r) {
+    if (!r || !r.links) return;
+    const l = r.links;
     history.unshift({
-      prompt: run.task,
+      prompt: r.task,
       links: { pdf: l.pdf || '', docx: l.docx || '', md: l.md || '', json: l.json || '' },
       timestamp: new Date().toISOString(),
-      type: run.type,
-      stats: [Math.round((run.endedAt - run.startedAt) / 1000), run.read],
+      type: r.type,
+      stats: [Math.round((r.endedAt - r.startedAt) / 1000), countSources(r.md)],
     });
     persistHistory();
   }
@@ -963,7 +971,7 @@
     run.startedAt = null;
     run.savedAt = e.timestamp;
     run.links = e.links || {};
-    if (Array.isArray(e.stats)) { run.durationMs = e.stats[0] * 1000; run.sourceCount = e.stats[1]; }
+    if (Array.isArray(e.stats)) run.durationMs = e.stats[0] * 1000;
     phase = 'opened';
     setConn('idle');
     showRunView();
@@ -984,10 +992,12 @@
       return;
     }
     run.md = md;
-    renderReport(true);
+    await renderReport(true);
+    if (!run || run.savedAt !== e.timestamp) return;
     const parts = [];
     if (run.durationMs) parts.push(`Done in ${fmtDur(run.durationMs)}`);
-    if (run.sourceCount) parts.push(plural(run.sourceCount, 'source', 'sources'));
+    const n = shownSources();
+    if (n) parts.push(plural(n, 'source', 'sources'));
     parts.push(plural(countWords(md), 'word', 'words'));
     parts.push(fmtWhen(e.timestamp));
     $('doneText').textContent = parts.join(' · ');
