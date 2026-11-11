@@ -619,7 +619,9 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
 .prose table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.5; font-variant-numeric: tabular-nums; }
 .prose :is(th, td) { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
 .prose th { color: var(--ink); font-weight: 600; border-bottom-color: var(--line-strong); }
-@media (max-width: 767px) { .prose :is(th, td) { padding-right: 10px; overflow-wrap: break-word; } .prose table { font-size: 13px; } }
+.prose :is(th, td):last-child { padding-right: 0; }   /* the last column ends on the column's edge */
+/* At phone widths a long word in a narrow column breaks at a hyphen, never mid-syllable, so no table scrolls. */
+@media (max-width: 767px) { .prose :is(th, td) { padding-right: 10px; overflow-wrap: break-word; hyphens: auto; -webkit-hyphens: auto; } .prose table { font-size: 13px; } }
 .prose .cite {
   font-size: 0.78em;
   font-weight: 500;
