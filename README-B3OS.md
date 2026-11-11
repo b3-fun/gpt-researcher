@@ -42,6 +42,8 @@ Upstream files changed (every line, with its reason):
 | `backend/server/app.py` | 124-131 | behind the preview (`X-Forwarded-Prefix` set), a response without `Cache-Control` gets `private, no-cache` | on 2026-11-10 a static file the preview had served once answered every later request with `503 node_unavailable` (a shared cache in front of the node); private responses are not cached there. Browsers still cache and revalidate |
 | `gpt_researcher/scraper/firecrawl/firecrawl.py` | 3, 23-41, 50 | when `FIRECRAWL_SERVER_URL` has a path, endpoints are appended to the whole base | firecrawl-py 4.x builds `urljoin(api_url + "/", "/v2/scrape")`, which drops `/compat/firecrawl`: every scrape went to `127.0.0.1:7700/v2/scrape` and answered 404 |
 | `gpt_researcher/scraper/firecrawl/firecrawl.py` | 92-94 | `scrape(url)` without `formats=["markdown"]` (Markdown is the default) | with any option firecrawl-py 4.55.0 adds its defaults, `fastMode: false` among them, and B3OS's compat layer answers `400 unrecognized_keys: fastMode` |
+| `frontend/scripts.js` | 788-790 | `startResearch` clears `lastRequestData` | upstream bug, not B3OS's: the socket's `onopen` treats `isResearchActive && lastRequestData` as a reconnect and does not send `start`, so a second research in the same page load hung with no message (seen on B3OS 2026-11-11) |
+| `gpt_researcher/skills/deep_research.py` | 4, 17-19 | `MAX_CONTEXT_WORDS` reads `DEEP_RESEARCH_MAX_CONTEXT_WORDS` (default 25000, upstream's) | 25,000 words of web text is about 33k tokens; with 4,096 output tokens the final Deep Research write asked `b3os/default` (32,768 tokens) for more than its window and failed with `400 context_length_exceeded` (`Error: Failed to get response from openai API` on the page). `b3os.yaml` sets 15000 |
 | `.env.example` | renamed `env.example` | content unchanged | B3OS refuses to deploy a service root that tracks a file whose name starts with `.env`, and the GitHub App path has no `--allow-secret-files`. Copy `env.example` to `.env` for a local run, as upstream's README says for `.env.example` |
 
 Checked and left alone: the download links the report message carries (`outputs/<name>.pdf`, `.docx`, `.md`,
@@ -133,7 +135,7 @@ Every value is in `b3os.yaml` (`services[0].env`) and, with comments, in `b3os/e
 search `RETRIEVER=crw` at `CRW_API_URL=http://127.0.0.1:7700/compat/firecrawl`; scrape `SCRAPER=firecrawl` at
 `FIRECRAWL_SERVER_URL` (same URL); token limits `FAST_TOKEN_LIMIT=2000`, `SMART_TOKEN_LIMIT=4096`,
 `STRATEGIC_TOKEN_LIMIT=2000`, `BROWSE_CHUNK_MAX_LENGTH=4000`, `TOTAL_WORDS=900`; `CONTEXT_FILTER=keyword`; scraper
-workers `MAX_SCRAPER_WORKERS=4`, `FIRECRAWL_CONCURRENCY=4`, `DEEP_RESEARCH_CONCURRENCY=2`; keys are the placeholder
+workers `MAX_SCRAPER_WORKERS=4`, `FIRECRAWL_CONCURRENCY=4`, `DEEP_RESEARCH_CONCURRENCY=2`; Deep Research's final context `DEEP_RESEARCH_MAX_CONTEXT_WORDS=15000`; `PYTHONUNBUFFERED=1` so `print()` lines reach `b3os app logs` when printed (block-buffered without a terminal, they waited for the next log record); keys are the placeholder
 `in-sandbox` (not checked inside a sandbox). No secret is needed. An optional frontier planner (`STRATEGIC_LLM` on
 Anthropic) needs a vault connection as a secret and `api.anthropic.com` in egress; see the comments in `b3os.yaml`.
 

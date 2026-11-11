@@ -1,6 +1,7 @@
 from typing import List, Dict, Any, Optional, Set
 import asyncio
 import logging
+import os
 import re
 import time
 from datetime import datetime, timedelta
@@ -14,8 +15,9 @@ from ..actions.query_processing import get_search_results
 
 logger = logging.getLogger(__name__)
 
-# Maximum words allowed in context (25k words for safety margin)
-MAX_CONTEXT_WORDS = 25000
+# Maximum words allowed in context (25k words for safety margin). DEEP_RESEARCH_MAX_CONTEXT_WORDS lowers it for a
+# model with a smaller context: 25k words of web text is about 33k tokens, over a 32k-token model's window.
+MAX_CONTEXT_WORDS = int(os.getenv("DEEP_RESEARCH_MAX_CONTEXT_WORDS", "25000"))
 
 JSON_BLOCK_PATTERNS = [
     re.compile(

@@ -785,6 +785,9 @@ const GPTResearcher = (() => {
     allReports = '';
     currentReport = '';
     isFirstReport = true;
+    // A new research is not a reconnect: without this, onopen sees the previous run's request and does not send
+    // `start`, so a second research in the same page load hangs.
+    lastRequestData = null;
 
     // Hide the download bar
     const stickyDownloadsBar = document.getElementById('stickyDownloadsBar');

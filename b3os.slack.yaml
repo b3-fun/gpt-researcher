@@ -78,7 +78,10 @@ services:
       FIRECRAWL_CONCURRENCY: "4"
       MAX_SCRAPER_WORKERS: "4"
       DEEP_RESEARCH_CONCURRENCY: "2"
+      # Deep Research's final context in words (upstream 25,000, about 33k tokens): under the 32,768-token model
+      DEEP_RESEARCH_MAX_CONTEXT_WORDS: "15000"
       TIKTOKEN_CACHE_DIR: /workspace/app/.tiktoken
+      PYTHONUNBUFFERED: "1" # print() lines reach `b3os app logs` when printed, not at the next log record
       B3OS_PUBLISH: "on" # the hook's switch (backend/server/b3os_publish.py)
       B3OS_PUBLISH_ROUTINE: publish-report
       SLACK_CHANNEL: C0000000000 # placeholder: the channel id the routine posts in
