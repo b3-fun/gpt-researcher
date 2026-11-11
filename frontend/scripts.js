@@ -41,7 +41,7 @@
   let lastRequest = null;   // what "Run again" sends
   let ws = null;
   let wsStats = { attempts: 0, received: 0 };
-  let tick = null, heartbeat = null, retryTimer = null, noticeTimer = null;
+  let tick = null, heartbeat = null, retryTimer = null, noticeTimer = null, noteTimer = null;
   let chat = { thread: [], pending: null };
   let history = [];
   let cookiesEnabled = true;
@@ -128,7 +128,7 @@
   // The server ends a research when its connection drops, so a reconnect starts the research over (once).
   function reconnect(i) {
     setConn('retrying');
-    showNotice('warn', 'Connection lost. Reconnecting…');
+    setFactsNote('Connection lost. Reconnecting…');
     clearTimeout(retryTimer);
     if (i >= BACKOFF.length) return lostForGood();
     retryTimer = setTimeout(async () => {
@@ -141,12 +141,13 @@
       send(`start ${JSON.stringify(run.request)}`);
       startHeartbeat();
       setConn('live');
-      if (hadProgress) { addLog('Reconnected. The server had stopped the run, so it started over.'); showNotice('info', 'Reconnected. The research started over.', [], 8000); }
-      else hideNotice();
+      if (hadProgress) { addLog('Reconnected. The server had stopped the run, so it started over.'); setFactsNote('Reconnected. Started over.', 8000); }
+      else setFactsNote('');
     }, BACKOFF[i]);
   }
   function lostForGood() {
     phase = 'lost';
+    setFactsNote('');
     stopRunClock();
     setConn('lost');
     $('stop').hidden = true;
@@ -155,6 +156,13 @@
   }
 
   // ---------- notices ----------
+  // Passing messages (reconnecting, reconnected) stand in the facts line; the tinted notice is for what ends a run.
+  function setFactsNote(text, hideAfter = 0) {
+    clearTimeout(noteTimer);
+    $('factsNote').textContent = text;
+    $('factsText').hidden = !!text;
+    if (hideAfter) noteTimer = setTimeout(() => setFactsNote(''), hideAfter);
+  }
   function showNotice(tone, text, actions = [], hideAfter = 0) {
     clearTimeout(noticeTimer);
     const n = $('notice');
@@ -262,6 +270,7 @@
       $('titleMore').textContent = 'Show all';
     });
     const running = phase === 'running';
+    setFactsNote('');
     $('runMeta').hidden = !running;
     $('stop').hidden = !running;
     $('doneline').hidden = running;
@@ -289,7 +298,7 @@
     if (!run) return;
     const ms = (run.endedAt || Date.now()) - run.startedAt;
     const [est, words] = ESTIMATE[run.type] || ESTIMATE.research_report;
-    $('facts').textContent = ms < est * 1000 ? `${fmtDur(ms)} of ${words}` : fmtDur(ms);
+    $('factsText').textContent = ms < est * 1000 ? `${fmtDur(ms)} of ${words}` : fmtDur(ms);
   }
 
   function stopResearch() {
@@ -298,6 +307,7 @@
     clearTimeout(retryTimer);
     stopHeartbeat();
     phase = 'stopped';
+    setFactsNote('');
     stopRunClock();
     setConn('idle');
     $('stop').hidden = true;
@@ -309,6 +319,7 @@
 
   function fail(text) {
     phase = 'failed';
+    setFactsNote('');
     closeSocket();
     stopHeartbeat();
     stopRunClock();

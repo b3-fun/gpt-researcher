@@ -439,6 +439,10 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
 .run__more { margin-top: 4px; }
 .run__meta { display: flex; align-items: center; gap: 12px; min-height: 40px; margin-top: 8px; }
 .facts { margin: 0; color: var(--ink-3); font-size: 14px; font-variant-numeric: tabular-nums; }
+/* A passing connection message takes the facts' place: one plain line, nothing moves. */
+.facts__note { color: var(--ink-2); }
+.facts__note:empty { display: none; }
+.facts__note::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 999px; background: var(--warning-dot); vertical-align: 1px; }
 .run__meta .btn { margin-left: auto; }
 
 .notice {
