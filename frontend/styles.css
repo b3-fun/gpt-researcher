@@ -481,9 +481,10 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
 .step[data-state="stopped"] .step__dot { background: var(--ink-4); box-shadow: none; }
 .step__line { margin: 0; color: var(--ink); font: 500 15px/1.5 var(--font-sans); }
 .step[data-state="todo"] .step__line { color: var(--ink-3); font-weight: 400; }
+/* The fact sits beside the name in every state, so a step change moves nothing. */
 .step__fact { color: var(--ink-3); font-weight: 400; font-variant-numeric: tabular-nums; }
-.step[data-state="current"] .step__fact { display: block; color: var(--ink-2); font-size: 14px; }
-.step:is([data-state="done"], [data-state="stopped"], [data-state="todo"]) .step__fact::before { content: " "; white-space: pre; }
+.step__fact::before { content: " "; white-space: pre; }
+.step[data-state="current"] .step__fact { color: var(--ink-2); }
 .domains {
   display: flex;
   flex-wrap: wrap;
@@ -496,6 +497,7 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
   color: var(--ink-3);
   font: 400 12px/18px var(--font-mono);
 }
+.domains:not([hidden]) { min-height: 38px; }   /* both lines reserved when the list first shows */
 .domains li { white-space: nowrap; }
 .domains li[data-more] { color: var(--ink-3); font-family: var(--font-sans); }
 .logbar { display: flex; align-items: center; gap: 16px; margin-top: 12px; padding-left: 32px; }
