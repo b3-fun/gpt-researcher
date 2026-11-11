@@ -228,11 +228,11 @@
       request: req, task: req.task, type: req.report_type,
       startedAt: Date.now(), endedAt: null, restarts: 0, received: 0,
       step: 0, questions: 0, searches: 0, urls: new Set(), pending: [], queued: 0, read: 0, domains: [], starts: 0,
-      sectionsPlanned: 0, sectionsWritten: 0, md: '', links: null, log: [],
+      sectionsPlanned: 0, sectionsWritten: 0, md: '', links: null, log: [], restOpen: false,
     };
   }
   function resetProgress() {
-    Object.assign(run, { startedAt: Date.now(), received: 0, step: 0, reached: 0, questions: 0, searches: 0, urls: new Set(), pending: [], queued: 0, read: 0, domains: [], starts: 0, sectionsPlanned: 0, sectionsWritten: 0, md: '' });
+    Object.assign(run, { startedAt: Date.now(), received: 0, step: 0, reached: 0, questions: 0, searches: 0, urls: new Set(), pending: [], queued: 0, read: 0, domains: [], starts: 0, sectionsPlanned: 0, sectionsWritten: 0, md: '', restOpen: false });
     $('report').replaceChildren();
     renderSteps();
   }
@@ -676,24 +676,51 @@
     }
     if (!refHeading && !order.length) return;
     // Cited sources first (in citation order), then listed ones nobody cited.
+    const cited = order.length;
     for (const k of refs.keys()) if (!numOf.has(k)) { numOf.set(k, order.length + 1); order.push(k); }
     if (!order.length) return;
-    const list = el('ol', { class: 'sources' });
-    for (const k of order) {
+    // A row: number, title, and at the right the domain; when the title is the domain, the page's path.
+    const row = (k) => {
       const r = refs.get(k);
-      list.append(el('li', {}, el('a', { href: r.url, target: '_blank', rel: 'noopener noreferrer' },
+      const right = r.title !== r.domain ? r.domain : pathOf(r.url);
+      return el('li', {}, el('a', { href: r.url, target: '_blank', rel: 'noopener noreferrer' },
         el('span', { class: 'sources__n', text: String(numOf.get(k)) }),
         el('span', { class: 'sources__title', text: r.title }),
-        r.domain && r.title !== r.domain ? el('span', { class: 'sources__domain', text: r.domain }) : null)));
+        right ? el('span', { class: 'sources__domain', text: right }) : null));
+    };
+    // When the text cites sources, the list holds those; pages listed but cited nowhere wait behind a quiet button.
+    const split = cited > 0 && cited < order.length;
+    const blocks = [el('ol', { class: 'sources' }, ...order.slice(0, split ? cited : order.length).map(row))];
+    if (split) {
+      const open = !!(run && run.restOpen);
+      const label = `${open ? 'Hide' : 'Show'} ${nf.format(order.length - cited)} not cited`;
+      blocks.push(el('button', { type: 'button', class: 'linkbtn linkbtn--quiet', 'aria-expanded': String(open), 'data-rest': true }, label));
+      blocks.push(el('ol', { class: 'sources sources--rest', start: String(cited + 1), hidden: !open }, ...order.slice(cited).map(row)));
     }
     const heading = el('h2', { text: 'Sources' });
     if (refHeading) {
       for (const node of refNodes) node.remove();
       refHeading.replaceWith(heading);
-      heading.after(list);
+      heading.after(...blocks);
     } else if (final) {
-      root.append(heading, list);
+      root.append(heading, ...blocks);
     }
+  }
+  const pathOf = (url) => {
+    try {
+      const u = new URL(url);
+      let p = u.pathname + u.search;
+      try { p = decodeURIComponent(p); } catch {}
+      return p.replace(/\/$/, '');
+    } catch { return ''; }
+  };
+  function toggleRest(b) {
+    const list = b.nextElementSibling;
+    const open = list.hidden;
+    list.hidden = !open;
+    b.setAttribute('aria-expanded', String(open));
+    b.textContent = b.textContent.replace(/^(Show|Hide)/, open ? 'Hide' : 'Show');
+    if (run) run.restOpen = open;
   }
 
   // The title of a source that has none: the name the text cites it by and, after a colon, the URL's last path
@@ -708,6 +735,7 @@
       if (w.length > 1 && /^\d+$/.test(w[w.length - 1]) && !/^(19|20)\d\d$/.test(w[w.length - 1])) w.pop();   // "...-says-7"
       words = w.join(' ');
       if (/^[\d\s]*$/.test(words)) words = '';                                        // digits only: an id
+      if (w.filter((x) => /\p{L}{3,}/u.test(x)).length < 3) words = '';               // a code ("Wp2606"), not words
       if (words.length > 80) words = words.slice(0, 80).replace(/\s+\S*$/, '') + '…';
       words = words.charAt(0).toUpperCase() + words.slice(1);
     } catch {}
@@ -730,13 +758,15 @@
     $('actions').hidden = false;
     $('followup').hidden = false;
   }
-  // A source is a row of the report's Sources list: the done line, History and the JSON download count the same rows.
-  const shownSources = () => $('report').querySelectorAll('.sources li').length;
+  // A source is a page the report cites (a row of the first Sources list): the done line, History and the JSON
+  // download count the same rows. The rows behind "Show N not cited" are not counted.
+  const CITED = '.sources:not(.sources--rest) li';
+  const shownSources = () => $('report').querySelectorAll(CITED).length;
   function countSources(md) {
     const box = document.createElement('div');
     box.innerHTML = mdToHtml(md);
     enhanceReport(box, true);
-    return box.querySelectorAll('.sources li').length;
+    return box.querySelectorAll(CITED).length;
   }
   function updateDoneLine() {
     if (!run) return;
@@ -776,7 +806,9 @@
     const links = run.links || {};
     let log = null;
     if (links.json) { try { const r = await fetch(links.json, { cache: 'no-store' }); if (r.ok) log = await r.json(); } catch {} }
-    const sources = [...$('report').querySelectorAll('.sources a')].map((a) => ({ n: +a.querySelector('.sources__n').textContent, title: a.querySelector('.sources__title').textContent, url: a.href }));
+    const rows = (sel) => [...$('report').querySelectorAll(sel)].map((a) => ({ n: +a.querySelector('.sources__n').textContent, title: a.querySelector('.sources__title').textContent, url: a.href }));
+    const sources = rows('.sources:not(.sources--rest) a');
+    const notCited = rows('.sources--rest a');
     const data = {
       question: run.task,
       report_type: run.type,
@@ -784,6 +816,7 @@
       duration_s: run.endedAt && run.startedAt ? Math.round((run.endedAt - run.startedAt) / 1000) : null,
       words: countWords(run.md),
       sources,
+      not_cited: notCited,
       report_markdown: run.md,
       files: { markdown: links.md || null, word: links.docx || null, pdf: links.pdf || null, log: links.json || null },
       log,
@@ -1105,6 +1138,7 @@
       $('titleMore').setAttribute('aria-expanded', String(clamped));
       $('titleMore').textContent = clamped ? 'Show less' : 'Show all';
     });
+    $('run').addEventListener('click', (e) => { const b = e.target.closest('button[data-rest]'); if (b) toggleRest(b); });
     $('copy').addEventListener('click', copyReport);
     $('dlBtn').addEventListener('click', () => ($('dlList').hidden ? openMenu() : closeMenu()));
     $('dlBtn').addEventListener('keydown', (e) => {

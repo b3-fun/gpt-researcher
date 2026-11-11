@@ -631,6 +631,8 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
 .prose .sources { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
 .prose .sources li { margin: 0; border-bottom: 1px solid var(--line); }
 .prose .cites { white-space: nowrap; }
+/* "Show 33 not cited": under the cited rows, its word on the column's edge. */
+.prose .sources + .linkbtn { margin: 6px 0; }
 .prose .sources a {
   display: grid;
   grid-template-columns: 2.2em minmax(0, 1fr) fit-content(45%);   /* the domain may take up to 45% of the row */
@@ -777,7 +779,7 @@ main { flex: 1 0 auto; display: flex; flex-direction: column; }
 /* ---------- Print: the report only ---------- */
 @media print {
   body { background: #fff; color: #000; display: block; }
-  .top, .foot, .ask, .run__meta, .notice, .timeline, .logbar, .log, .doneline, .actions, .followup, .drawer, .run__more { display: none !important; }
+  .top, .foot, .ask, .run__meta, .notice, .timeline, .logbar, .log, .doneline, .actions, .followup, .drawer, .run__more, .prose [data-rest] { display: none !important; }
   .run { padding: 0; }
   .col { max-width: none; padding: 0; }
   .prose { max-width: none; color: #000; font-size: 11pt; }

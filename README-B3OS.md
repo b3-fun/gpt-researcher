@@ -87,8 +87,9 @@ there goes to the log only. Stop closes the socket, and the server cancels a res
 (`handle_websocket_communication`). History is upstream's cookie `conversationHistory` (path `/`), with the report
 length and its numbers added; a row reopens its report from `outputs/`, which a redeploy empties. The server sends
 no PDF link on B3OS (no Pango and Cairo), so the Download menu offers Print to PDF; Download, JSON is built in the
-page and holds the report, its sources and the server's event log. A source is a row of the report's Sources list:
-the done line, History and the JSON count those rows. While a run streams, the facts line gives the time against the
+page and holds the report, its sources and the server's event log. A source is a page the report cites: the Sources
+list holds those rows (pages the server read but the text cites nowhere sit behind "Show N not cited"), and the done
+line, History and the JSON's `sources` count them (the JSON's `not_cited` holds the rest). While a run streams, the facts line gives the time against the
 length's estimate (`ESTIMATE` at the top of `scripts.js`, timed on B3OS: retime it when the model or the box
 changes; the same words show beside Research).
 
