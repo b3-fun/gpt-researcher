@@ -121,7 +121,7 @@
   function onSocketClosed() {
     stopHeartbeat();
     if (phase === 'running') return reconnect(0);
-    if (chat.pending) return chatFailed('The connection closed before the answer came. Ask again.');
+    if (chat.pending) return chatFailed('Connection lost. Ask again.');
     setConn('idle');
   }
 
@@ -152,7 +152,7 @@
     setConn('lost');
     $('stop').hidden = true;
     renderSteps();
-    showNotice('danger', 'The connection to the server was lost, so this research stopped.', [runAgainBtn(), editBtn()]);
+    showNotice('danger', 'Connection lost. The research stopped.', [runAgainBtn(), editBtn()]);
   }
 
   // ---------- notices ----------
@@ -810,9 +810,9 @@
     $('chatSend').disabled = true;
     const payload = { message: q, report: run.md, messages: chat.thread.map(({ role, content }) => ({ role, content })) };
     if (!socketOpen()) {
-      try { await openSocket(); } catch { return chatFailed('Could not reach the server. Ask again in a moment.'); }
+      try { await openSocket(); } catch { return chatFailed('Server not reached. Ask again.'); }
     }
-    if (!send(`chat ${JSON.stringify(payload)}`)) chatFailed('Could not reach the server. Ask again in a moment.');
+    if (!send(`chat ${JSON.stringify(payload)}`)) chatFailed('Server not reached. Ask again.');
   }
   function onChatAnswer(m) {
     const box = chat.pending;
@@ -963,7 +963,7 @@
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   }
   function askClear() {
-    $('histConfirmText').textContent = history.length === 1 ? 'Clear the one research?' : `Clear all ${history.length}?`;
+    $('histConfirmText').textContent = history.length === 1 ? 'Clear this one?' : `Clear all ${history.length}?`;
     $('histClear').hidden = true;
     $('histConfirm').hidden = false;
     $('histClearNo').focus();
@@ -1007,7 +1007,7 @@
     if (!run || run.savedAt !== e.timestamp) return;
     if (!md || !md.trim()) {
       $('report').replaceChildren();
-      showNotice('info', 'This report is no longer on the server: each deploy starts a fresh one.', [runAgainBtn()]);
+      showNotice('info', 'This report is no longer on the server.', [runAgainBtn()]);
       return;
     }
     run.md = md;
