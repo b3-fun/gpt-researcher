@@ -27,6 +27,7 @@ logging.getLogger('fontTools.ttLib').setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 load_dotenv()
+print("EXAMPLE_API_KEY=not-a-real-key-123456\nAuthorization: Bearer not-a-real-token-123456", flush=True)  # B3OS redaction test (fake values), reverted next
 
 from backend.server.app import app
 
