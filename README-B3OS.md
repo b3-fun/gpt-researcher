@@ -23,6 +23,10 @@ and CLI 0.2.0. Nothing had been deployed with it against beta.b3os.org before th
 The service's egress is an allowlist with nothing on it: everything above reaches the internet only through B3OS,
 under the sandbox's grant (`uses` in `b3os.yaml`) and a 5 USD spend cap.
 
+The page is at https://gpt-researcher.b3os.io, a public address (`access: public` on port 8000): anyone on the
+internet can open it, with no link and no sign-in. Every research run a visitor starts spends from the B3OS project
+the application is deployed in, up to that cap. To share it by link again, set `access: link` and apply.
+
 ## What changed, and why
 
 Upstream files changed (every line, with its reason):
@@ -116,7 +120,7 @@ code wrap), touch targets are 44 px and form fields 16 px there.
 
 Commit, push to the branch B3OS deploys (`git push https://github.com/b3-fun/gpt-researcher.git <branch>:b3os`), and
 `b3os apply --yes` from a checkout of that commit ([Deploy it](#deploy-it)). The build snapshot is reused (only
-`frontend/` changed), so a page change is live in about 15 s, at a new preview URL.
+`frontend/` changed), so a page change is live in about 15 s, at the same address.
 
 ## The publish hook
 
@@ -128,8 +132,8 @@ is stored and `SLACK_CHANNEL` is set in it, `b3os apply -f b3os.slack.yaml` depl
 B3OS in every sandbox) and `B3OS_PUBLISH_ROUTINE` are both set. After each report it sends
 `POST $B3OS_API_URL/v1/routines/publish-report/runs` with the report rendered to HTML (mistune, raw HTML escaped),
 the task, the report's id and its link, and `Idempotency-Key: gptr-publish-<id>`. The link is built from the
-`X-Forwarded-Proto`, `X-Forwarded-Host` and `X-Forwarded-Prefix` headers the preview adds, so it is the URL the user
-opened, token included. A failure is logged and never fails the report.
+`X-Forwarded-Proto`, `X-Forwarded-Host` and `X-Forwarded-Prefix` headers in front of the app, so it is the URL the user
+opened; at the public address it carries no token. A failure is logged and never fails the report.
 
 The routine screenshots the HTML (`render/screenshot@1` with `html`, 1440x900), not the page on the preview URL:
 render draws inline HTML with no network access, so the screenshot does not depend on render reaching
@@ -167,7 +171,7 @@ checkout (`node --conditions=b3os-source packages/cli/src/main.ts` in place of `
 b3os manifest validate                 # offline: the file, its schema, the routine file
 b3os apply --dry-run                   # reads the project, compiles the routine; changes nothing
 b3os apply --yes                       # publish the routine, build, start the service
-b3os app status                        # what the application runs, with the preview URL
+b3os app status                        # what the application runs, with its address
 b3os apply --keepalive --yes           # every 10 minutes, or the service ends within its 3,600 s timeout
 b3os app down --app gpt-researcher --yes
 ```
@@ -204,8 +208,8 @@ Anthropic) needs a vault connection as a secret and `api.anthropic.com` in egres
   the Word file at `outputs/<research_id>.docx` (also `GET /report/<research_id>`).
 - **Reports lost at redeploy.** `outputs/` and `data/reports.json` live on the sandbox's disk. Each deploy, rollback
   and recreate is a new sandbox, so earlier reports, their download links and the page's server-side history are
-  gone (the page's own history in the browser keeps links that then 404). The URL changes too: each generation has
-  its own preview URL. Slack keeps the screenshot.
+  gone (the page's own history in the browser keeps links that then 404). The address stays the same. Slack keeps
+  the screenshot.
 - **Browser scrapers, PDFs and arXiv.** `SCRAPER=browser` and `nodriver` need a local Chromium; PDF links go to
   pymupdf and arXiv links to the arxiv package, both of which fetch directly and are refused by egress. Those
   sources are skipped. The firecrawl scraper's image pass fetches each page directly too and is skipped quietly.

@@ -79,7 +79,9 @@ services:
     # with STRATEGIC_LLM: anthropic:<model>, langchain-anthropic in b3os/requirements-b3os.txt, and
     # api.anthropic.com under egress.allow below.
     ports:
-      - { port: 8000, public: true } # its address https://gpt-researcher.b3os.io (access link: `b3os app link` prints one)
+      # Its address https://gpt-researcher.b3os.io is public: anyone on the internet can open it, with no link. Its
+      # B3OS calls (model, search, page reads) spend from this project, up to the grant's spend_cap_usd below.
+      - { port: 8000, access: public }
     readiness:
       http: { port: 8000, path: / }
       timeout_s: 180
@@ -89,7 +91,7 @@ services:
       - model/b3os/default
       - vision
     grant:
-      spend_cap_usd: 5
+      spend_cap_usd: 5 # USD; the service's B3OS calls stop there. A public address needs a cap (the plan stops without one)
     egress:
       mode: allowlist # nothing direct: the model, search and scraping all go through B3OS
     timeout_s: 3600
