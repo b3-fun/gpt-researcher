@@ -91,7 +91,7 @@ services:
     # with STRATEGIC_LLM: anthropic:<model>, langchain-anthropic in b3os/requirements-b3os.txt, and
     # api.anthropic.com under egress.allow below.
     ports:
-      - { port: 8000, public: true } # a 7-day URL per generation; the test opens it in Chrome
+      - { port: 8000, access: public } # the same public address as b3os.yaml: https://gpt-researcher.b3os.io, no link
     readiness:
       http: { port: 8000, path: / }
       timeout_s: 180
